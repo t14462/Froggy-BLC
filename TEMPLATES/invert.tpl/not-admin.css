@@ -1,0 +1,70 @@
+#sitemenu li > a::before {
+    content: '♦';
+    display: inline-block;
+    vertical-align: .07rem;
+    color: #669900;
+    margin-right: .15rem;
+    font-size: 1.15rem;
+    white-space: nowrap;
+    font-style: normal;
+  /* text-shadow: 2px 2px 2px #777; */
+}
+
+
+#sitemenu li > a.active::before {
+    content: '@';
+    display: inline-block;
+    vertical-align: .07rem;
+    color: #C00;
+    margin-right: .15rem;
+    font-size: 1.15rem;
+    white-space: nowrap;
+    font-style: normal;
+}
+
+
+#sitemenu a {
+
+    width: 100% !important;
+
+}
+
+
+/*
+#sitemenu {
+
+    width: calc(34vw - 1.6rem) !important;
+}
+
+#sitemenu li {
+
+    width: calc(34vw - 2.2rem) !important;
+}
+
+#sitemenu li ul li {
+
+    width: calc(34vw - 3.4rem) !important;
+}
+
+#sitemenu li ul li ul li {
+
+    width: calc(34vw - 4.6rem) !important;
+}
+
+#sitemenu li ul li ul li ul li {
+
+    width: calc(34vw - 5.8rem) !important;
+}
+
+#sitemenu li ul li ul li ul li ul li {
+
+    width: calc(34vw - 7rem) !important;
+}
+
+#sitemenu li ul li ul li ul li ul li ul li {
+
+    width: calc(34vw - 8.2rem) !important;
+}
+
+#sitemenu li {border-top: .25rem dotted #999;}
+*/

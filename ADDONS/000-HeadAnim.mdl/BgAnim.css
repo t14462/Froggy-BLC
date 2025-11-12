@@ -1,0 +1,35 @@
+header {
+  background-image: url('argyle.png');
+  background-repeat: repeat;
+  animation: scroll-bg 40s linear infinite;
+}
+
+@keyframes scroll-bg {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: -1060px 960px;
+  }
+}
+
+
+
+
+header strong::after {
+  animation: blink 1.6s steps(2, start) infinite;
+}
+
+/* Анимация "мигания" */
+@keyframes blink {
+  to {
+    visibility: hidden;
+  }
+}
+
+
+
+header strong {
+
+    box-shadow: 5px 5px 15px 5px #000000;
+}

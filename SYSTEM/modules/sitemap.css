@@ -1,0 +1,28 @@
+/* sitemap.css */
+@namespace sm url("http://www.sitemaps.org/schemas/sitemap/0.9");
+
+/* Базовая типографика */
+sm|urlset, sm|sitemapindex {
+    display: block;
+    font: 14px/1.5 system-ui, sans-serif;
+    margin: 16px;
+}
+
+/* Строки */
+sm|url, sm|sitemap {
+    display: block;
+    padding: 8px 0;
+    border-bottom: 1px solid #ccc;
+}
+
+/* Поля */
+sm|loc       { display: block; font-weight: 600; }
+sm|lastmod,
+sm|changefreq,
+sm|priority  { display: inline-block; margin-right: 12px; color: #666; }
+
+/* Небольшие подписи через generated content */
+sm|loc::before        { content: "URL: ";      opacity: .6; margin-right: 6px; }
+sm|lastmod::before    { content: "lastmod: ";  opacity: .6; margin-right: 4px; }
+sm|changefreq::before { content: "change: ";   opacity: .6; margin-right: 4px; }
+sm|priority::before   { content: "prio: ";     opacity: .6; margin-right: 4px; }
