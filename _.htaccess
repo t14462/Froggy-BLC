@@ -1,0 +1,28 @@
+RewriteEngine On
+
+# --- Разрешаем конкретный файл ---
+RewriteCond %{REQUEST_URI} ^/DATABASE/DB/ryba\.jpg$
+RewriteRule ^ - [L]
+
+# --- Разрешаем подпапки внутри /DATABASE/ ---
+RewriteCond %{REQUEST_URI} ^/DATABASE/gallery/ [OR]
+RewriteCond %{REQUEST_URI} ^/DATABASE/fupload/
+RewriteRule ^ - [L]
+
+# --- Запрещаем всё остальное в /DATABASE/ ---
+RewriteRule ^DATABASE/ - [F,L]
+
+# --- Запрещаем доступ к /SYSTEM/PHPLIB/ ---
+RewriteRule ^SYSTEM/PHPLIB/ - [F,L]
+
+# --- Остальные блокировки ---
+RewriteRule ^cgi-bin/ - [F,L]
+
+
+
+<IfModule mod_headers.c>
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set Content-Security-Policy "frame-ancestors 'self';"
+
+    Header always set Cross-Origin-Opener-Policy "same-origin"
+</IfModule>
