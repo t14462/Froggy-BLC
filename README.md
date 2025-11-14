@@ -61,7 +61,6 @@ https://froggy-blc.com/?Froggy-BLC_(Book-Like_CMS)/1
     - `hash`
     - `gd`
     - `intl`
-    - `mbstring`
 - Веб-сервер (Apache, Nginx, Caddy и т.п.), умеющий запускать PHP 8.3.
 - Браузер с поддержкой **HTML5** и **JavaScript** (любой современный браузер).
 
