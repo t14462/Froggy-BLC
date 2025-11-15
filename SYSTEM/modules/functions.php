@@ -1185,7 +1185,7 @@ function dbdone($filename) {
 
     if(is_file($filename.".new")) { 
 
-        rename($filename, $filename.".bak");
+        if(is_file($filename)) rename($filename, $filename.".bak");
     
         rename($filename.".new", $filename);
 
