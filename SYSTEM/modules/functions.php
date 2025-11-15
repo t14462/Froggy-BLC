@@ -391,7 +391,7 @@ function mb_superTrim(string $text): string {
             "&NoBreak;", "&#8288;", "&#x2060;",                 // WORD JOINER (U+2060)
             "&#6158;", "&#x180E;",                              // MONGOLIAN VOWEL SEPARATOR (U+180E, deprecated) — имени нет
             "&zwnj;", "&ZeroWidthNonJoiner;", "&#8204;", "&#x200C;", // ZWNJ (U+200C)
-            "&zwj;",  "&ZeroWidthJoiner;",  "&#8205;", "&#x200D;",   // ZWJ (U+200D)
+            /// "&zwj;",  "&ZeroWidthJoiner;",  "&#8205;", "&#x200D;",   // ZWJ (U+200D)
             "&lrm;", "&LeftToRightMark;", "&#8206;", "&#x200E;",     // LRM (U+200E)
             "&rlm;", "&RightToLeftMark;", "&#8207;", "&#x200F;",     // RLM (U+200F)
 
@@ -415,11 +415,19 @@ function mb_superTrim(string $text): string {
     );
 
 
+    
+    // 2. Удаляем прочие невидимые символы, но оставляем ZWJ
+    $text = preg_replace_callback('/[\p{C}]/u', function ($m) {
+        $ch = $m[0];
 
+        // ZWJ (U+200D) — нужен для эмоджи типа 👩‍💻
+        if ($ch === "\xE2\x80\x8D") { // 0x200D в UTF-8
+            return $ch;
+        }
 
-
-    // 2. Удаляем невидимые символы
-    $text = preg_replace('/[\p{C}]/u', ' ', $text);
+        // Остальное выкидываем
+        return ' ';
+    }, $text);
 
     // 3. Удаляем Unicode-пробелы по краям
     $text = preg_replace('/^[\p{Z}]+|[\p{Z}]+$/u', '', $text);
@@ -439,9 +447,22 @@ function mb_superTrim(string $text): string {
 
 function mb_softTrim(string $text): string {
     
-    // Удаляем прочие невидимые символы, но оставляем \n
+    // Удаляем прочие невидимые символы, но оставляем \n + ZWJ
     $text = preg_replace_callback('/[\p{C}]/u', function ($m) {
-        return ($m[0] === "\n") ? "\n" : '';
+        $ch = $m[0];
+
+        // \n оставляем
+        if ($ch === "\n") {
+            return "\n";
+        }
+
+        // ZWJ (U+200D) — нужен для эмоджи типа 👩‍💻
+        if ($ch === "\xE2\x80\x8D") { // 0x200D в UTF-8
+            return $ch;
+        }
+
+        // Остальное выкидываем
+        return '';
     }, $text);
     
 
@@ -466,7 +487,7 @@ function mb_softTrim(string $text): string {
             "&zwnj;", "&ZeroWidthNonJoiner;", "&#8204;", "&#x200C;",
 
             // ZERO WIDTH JOINER (U+200D)
-            "&zwj;", "&ZeroWidthJoiner;", "&#8205;", "&#x200D;",
+            /// "&zwj;", "&ZeroWidthJoiner;", "&#8205;", "&#x200D;",
 
             // LEFT-TO-RIGHT MARK (U+200E)
             "&lrm;", "&LeftToRightMark;", "&#8206;", "&#x200E;",
