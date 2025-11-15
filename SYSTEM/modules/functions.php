@@ -1124,7 +1124,8 @@ function dbprepCache($filename) {
 
             if(is_file($lockFile)) unlink($lockFile);
 
-            die('<html><body><h1>DEADLOCK RECOVERY</h1></body></html>');
+            ///die('<html><body><h1>DEADLOCK RECOVERY</h1></body></html>');
+            return false;
         }
 
         usleep(25);
