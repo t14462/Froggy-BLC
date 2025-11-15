@@ -933,7 +933,7 @@ function dbprepApnd($filename, $recovery) {
             die('<html><body style="height: 100%; overflow: hidden;"><h1>DEADLOCK RECOVERY</h1><textarea style="width: 95%; min-height: 90vh; padding: 2%; resize: none;" readonly="readonly">'.$recovery.'</textarea></body></html>');
         }
 
-        usleep(1000);
+        usleep(25);
     }
 
 
@@ -997,7 +997,7 @@ function dbprep($filename, $recovery) {
             die('<html><body style="height: 100%; overflow: hidden;"><h1>DEADLOCK RECOVERY</h1><textarea style="width: 95%; min-height: 90vh; padding: 2%; resize: none;" readonly="readonly">'.$recovery.'</textarea></body></html>');
         }
 
-        usleep(1000);
+        usleep(25);
     }
 
 
@@ -1063,7 +1063,7 @@ function dbprepCommCnt($filename) {
             die('<html><body><h1>DEADLOCK RECOVERY</h1></body></html>');
         }
 
-        usleep(1000);
+        usleep(25);
     }
 
     /*
@@ -1127,7 +1127,7 @@ function dbprepCache($filename) {
             die('<html><body><h1>DEADLOCK RECOVERY</h1></body></html>');
         }
 
-        usleep(1000);
+        usleep(25);
     }
 
 
