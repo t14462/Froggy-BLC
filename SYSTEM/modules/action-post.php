@@ -57,10 +57,10 @@ function savePage() {
         $textedit = normalize_entities_my($textedit);
         // $textedit = str_replace("&", "&amp;", $textedit);
         // $textedit = str_ireplace("&amp;amp;", "&amp;", $textedit);
-
-        $textedit = escape_amp_txtarea($textedit);
         
         $textedit = mb_softTrim($textedit);
+
+        $textedit = escape_amp_txtarea($textedit);
 
 
         $pgtitle = normalize_entities_my($pgtitle);
