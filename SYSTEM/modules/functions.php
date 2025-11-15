@@ -1183,15 +1183,18 @@ function dbprepCache($filename) {
 
 function dbdone($filename) {
 
-    if(is_file($filename)) rename($filename, $filename.".bak");
-   
-    if(is_file($filename.".new")) rename($filename.".new", $filename);
+    if(is_file($filename.".lock")) { 
 
-    if(is_file($filename)) touchMy($filename);
+        unlink($filename.".lock");
 
-    // rename($filename.".lock", $filename.".lock.del");
+        rename($filename, $filename.".bak");
+    
+        rename($filename.".new", $filename);
 
-    if(is_file($filename.".lock")) unlink($filename.".lock");
+        touchMy($filename);
+
+        // rename($filename.".lock", $filename.".lock.del");
+    }
 }
 
 
