@@ -1183,9 +1183,7 @@ function dbprepCache($filename) {
 
 function dbdone($filename) {
 
-    if(is_file($filename.".lock")) { 
-
-        unlink($filename.".lock");
+    if(is_file($filename.".new")) { 
 
         rename($filename, $filename.".bak");
     
@@ -1193,7 +1191,7 @@ function dbdone($filename) {
 
         touchMy($filename);
 
-        // rename($filename.".lock", $filename.".lock.del");
+        unlink($filename.".lock");
     }
 }
 
