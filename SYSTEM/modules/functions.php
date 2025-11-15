@@ -949,12 +949,12 @@ function dbprepApnd($filename, $recovery) {
 
     // Создаем файл блокировки
     if(!copy($dummyFile, $lockFile)) {
-        die('<html><body><h1>ОШИБКА.</h1><p><strong>Не удалось создать файл блокировки.</strong></p></body></html>');
+        die('<!DOCTYPE html><html><body><h1>ОШИБКА.</h1><p><strong>Не удалось создать файл блокировки.</strong></p></body></html>');
     }
 
     // Копируем оригинальный файл в новый
     if(!copy($filename, $newFile)) {
-        die('<html><body><h1>ОШИБКА.</h1><p><strong>Не удалось создать новый файл.</strong></p></body></html>');
+        die('<!DOCTYPE html><html><body><h1>ОШИБКА.</h1><p><strong>Не удалось создать новый файл.</strong></p></body></html>');
     }
 
     return true;
@@ -1013,12 +1013,12 @@ function dbprep($filename, $recovery) {
 
     // Создаем файл блокировки
     if(!copy($dummyFile, $lockFile)) {
-        die('<html><body><h1>ОШИБКА.</h1><p><strong>Не удалось создать файл блокировки.</strong></p></body></html>');
+        die('<!DOCTYPE html><html><body><h1>ОШИБКА.</h1><p><strong>Не удалось создать файл блокировки.</strong></p></body></html>');
     }
 
     // Создаем новый файл (dummy)
     if(!copy($dummyFile, $newFile)) {
-        die('<html><body><h1>ОШИБКА.</h1><p><strong>Не удалось создать новый файл.</strong></p></body></html>');
+        die('<!DOCTYPE html><html><body><h1>ОШИБКА.</h1><p><strong>Не удалось создать новый файл.</strong></p></body></html>');
     }
 
     return true;
@@ -1060,7 +1060,7 @@ function dbprepCommCnt($filename) {
 
             if(is_file($lockFile)) unlink($lockFile);
 
-            die('<html><body><h1>DEADLOCK RECOVERY</h1></body></html>');
+            die('<!DOCTYPE html><html><body><h1>DEADLOCK RECOVERY</h1></body></html>');
         }
 
         usleep(25);
@@ -1080,13 +1080,13 @@ function dbprepCommCnt($filename) {
 
     // Создаем файл блокировки
     if(!copy($dummyFile, $lockFile)) {
-        die('<html><body><h1>ОШИБКА.</h1><p><strong>Не удалось создать файл блокировки.</strong></p></body></html>');
+        die('<!DOCTYPE html><html><body><h1>ОШИБКА.</h1><p><strong>Не удалось создать файл блокировки.</strong></p></body></html>');
     }
 
     // Создаем новый файл (dummy)
     /*
     if(!copy($dummyFile, $newFile)) {
-        die('<html><body><h1>ОШИБКА.</h1><p><strong>Не удалось создать новый файл.</strong></p></body></html>');
+        die('<!DOCTYPE html><html><body><h1>ОШИБКА.</h1><p><strong>Не удалось создать новый файл.</strong></p></body></html>');
     }
     */
 }
@@ -1124,7 +1124,7 @@ function dbprepCache($filename) {
 
             if(is_file($lockFile)) unlink($lockFile);
 
-            ///die('<html><body><h1>DEADLOCK RECOVERY</h1></body></html>');
+            ///die('<!DOCTYPE html><html><body><h1>DEADLOCK RECOVERY</h1></body></html>');
             return false;
         }
 
@@ -1146,13 +1146,13 @@ function dbprepCache($filename) {
 
     // Создаем файл блокировки
     if(!copy($dummyFile, $lockFile)) {
-        die('<html><body><h1>ОШИБКА.</h1><p><strong>Не удалось создать файл блокировки.</strong></p></body></html>');
+        die('<!DOCTYPE html><html><body><h1>ОШИБКА.</h1><p><strong>Не удалось создать файл блокировки.</strong></p></body></html>');
     }
 
     // Создаем новый файл (dummy)
     /*
     if(!copy($dummyFile, $newFile)) {
-        die('<html><body><h1>ОШИБКА.</h1><p><strong>Не удалось создать новый файл.</strong></p></body></html>');
+        die('<!DOCTYPE html><html><body><h1>ОШИБКА.</h1><p><strong>Не удалось создать новый файл.</strong></p></body></html>');
     }
     */
 
