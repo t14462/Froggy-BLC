@@ -923,15 +923,17 @@ function dbprepApnd($filename, $recovery) {
     $recovery = str_ireplace("<br!>", "\n", $recovery);
     
     while(is_file($lockFile)) {
-        usleep(200000);
+        ///usleep(200000);
 
         if((time() - $tmark) > $maxWaitTime) {
             // rename($lockFile, $lockFile . ".del"); // Перемещение файла блокировки
 
-            unlink($lockFile);
+            if(is_file($lockFile)) unlink($lockFile);
 
             die('<html><body style="height: 100%; overflow: hidden;"><h1>DEADLOCK RECOVERY</h1><textarea style="width: 95%; min-height: 90vh; padding: 2%; resize: none;" readonly="readonly">'.$recovery.'</textarea></body></html>');
         }
+
+        usleep(1000);
     }
 
 
@@ -985,15 +987,17 @@ function dbprep($filename, $recovery) {
     $recovery = str_ireplace("<br!>", "\n", $recovery);
 
     while(is_file($lockFile)) {
-        usleep(200000);
+        ///usleep(200000);
 
         if((time() - $tmark) > $maxWaitTime) {
             // rename($lockFile, $lockFile . ".del"); // Перемещение файла блокировки
 
-            unlink($lockFile);
+            if(is_file($lockFile)) unlink($lockFile);
 
             die('<html><body style="height: 100%; overflow: hidden;"><h1>DEADLOCK RECOVERY</h1><textarea style="width: 95%; min-height: 90vh; padding: 2%; resize: none;" readonly="readonly">'.$recovery.'</textarea></body></html>');
         }
+
+        usleep(1000);
     }
 
 
@@ -1049,15 +1053,17 @@ function dbprepCommCnt($filename) {
     */
 
     while(is_file($lockFile)) {
-        usleep(200000);
+        ///usleep(200000);
 
         if((time() - $tmark) > $maxWaitTime) {
             // rename($lockFile, $lockFile . ".del"); // Перемещение файла блокировки
 
-            unlink($lockFile);
+            if(is_file($lockFile)) unlink($lockFile);
 
             die('<html><body><h1>DEADLOCK RECOVERY</h1></body></html>');
         }
+
+        usleep(1000);
     }
 
     /*
@@ -1111,15 +1117,17 @@ function dbprepCache($filename) {
     // $recovery = str_ireplace("textarea>", "textarea&gt;", $recovery);
 
     while(is_file($lockFile)) {
-        usleep(200000);
+        ///usleep(200000);
 
         if((time() - $tmark) > $maxWaitTime) {
             // rename($lockFile, $lockFile . ".del"); // Перемещение файла блокировки
 
-            unlink($lockFile);
+            if(is_file($lockFile)) unlink($lockFile);
 
             die('<html><body><h1>DEADLOCK RECOVERY</h1></body></html>');
         }
+
+        usleep(1000);
     }
 
 
@@ -1155,13 +1163,13 @@ function dbdone($filename) {
 
     if(is_file($filename)) rename($filename, $filename.".bak");
    
-    rename($filename.".new", $filename);
+    if(is_file($filename.".new")) rename($filename.".new", $filename);
 
-    touchMy($filename);
+    if(is_file($filename)) touchMy($filename);
 
     // rename($filename.".lock", $filename.".lock.del");
 
-    unlink($filename.".lock");
+    if(is_file($filename.".lock")) unlink($filename.".lock");
 }
 
 
