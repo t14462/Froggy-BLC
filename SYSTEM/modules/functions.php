@@ -939,7 +939,7 @@ function dbprepApnd($filename, $recovery) {
 
     if($changeTime !== filemtimeMy($filename)) {
 
-        $errmsg = "<h1>ОШИБКА.</h1><p class='big'><strong>База Данных была изменена внешним процессом.</strong></p>";
+        $errmsg = "<h1>RECOVERY.</h1><p class='big'><strong>База Данных была изменена внешним процессом.</strong></p>";
 
         $content = "<textarea style='width: 95%; min-height: 65vh; padding: 2%; resize: none;' readonly='readonly'>".$recovery."</textarea>";
 
@@ -1003,7 +1003,7 @@ function dbprep($filename, $recovery) {
 
     if($changeTime !== filemtimeMy($filename)) {
 
-        $errmsg = "<h1>ОШИБКА.</h1><p class='big'><strong>База Данных была изменена внешним процессом.</strong></p>";
+        $errmsg = "<h1>RECOVERY.</h1><p class='big'><strong>База Данных была изменена внешним процессом.</strong></p>";
 
         $content = "<textarea style='width: 95%; min-height: 65vh; padding: 2%; resize: none;' readonly='readonly'>".$recovery."</textarea>";
 
