@@ -8,3 +8,4 @@ sitemap.txt.time
 sitemap.xml.time
 
 *.bak
+*.lock
