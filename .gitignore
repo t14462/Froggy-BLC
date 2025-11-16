@@ -9,3 +9,15 @@ sitemap.xml.time
 
 *.bak
 *.lock
+
+DATABASE/lock/*
+!DATABASE/lock/.gitkeep
+
+DATABASE/comments/lock/*
+!DATABASE/comments/lock/.gitkeep
+
+DATABASE/comments/capt/*
+!DATABASE/comments/capt/.gitkeep
+
+DATABASE/VisitorsOnline/*
+!DATABASE/VisitorsOnline/.gitkeep
