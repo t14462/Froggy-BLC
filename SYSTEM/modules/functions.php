@@ -900,15 +900,15 @@ function filter_filename($filename) {
     // Убрать ведущие точки/дефисы
     /// $filename = ltrim($filename, '.-');
 
+    // Финальная зачистка хвостовых точек/пробелов/дефисов (совместимость с Windows)
+    $filename = trim($filename, ". \t\r\n\0\x0B-_");
+
     // Обрезка до 255 байт (UTF-8)
     $ext  = pathinfo($filename, PATHINFO_EXTENSION);
     $base = pathinfo($filename, PATHINFO_FILENAME);
     $limit = 255 - ($ext ? mb_strlen($ext, 'UTF-8') + 1 : 0);
     $base  = mb_strcut($base, 0, max(1, $limit), 'UTF-8');
     $filename = $ext ? ($base . '.' . $ext) : $base;
-
-    // Финальная зачистка хвостовых точек/пробелов/дефисов (совместимость с Windows)
-    $filename = trim($filename, ". \t\r\n\0\x0B-_");
 
     return $filename;
 }
