@@ -49,7 +49,6 @@ html {
     background-image: url('paper-min.png');
     background-color: #F5F5F5;
     scroll-behavior: smooth;
-    -webkit-text-size-adjust: 100%;
 }
 
 article {

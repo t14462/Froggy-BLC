@@ -25,14 +25,13 @@ html, body {
 html {
     font-family: monospace;
     cursor: url('default.cur.svg'), default;
-    font-size: 128%;
+    font-size: clamp(13px, 0.85vw, 18px);
     scrollbar-color: darkorange darkgray;
     scrollbar-width: auto;
     overflow-y: scroll;
     background-image: url('paper-min.png');
     background-color: #F5F5F5;
     scroll-behavior: smooth;
-    -webkit-text-size-adjust: 100%;
 }
 
 article {
