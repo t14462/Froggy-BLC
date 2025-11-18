@@ -1134,6 +1134,7 @@ nav#TOC {
     padding: 1rem;
     margin-left: 0;
     padding-left: 0;
+    max-width: 55%;
 }
 
 
