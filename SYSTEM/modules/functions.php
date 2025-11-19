@@ -958,7 +958,7 @@ function dbprepApnd($filename, $recovery) {
     }
 
 
-    if($changeTime !== filemtimeMy($filename)) {
+    if(is_file($newFile) || $changeTime !== filemtimeMy($filename)) {
 
         $errmsg = "<h1>RECOVERY.</h1><p class='big'><strong>База Данных была изменена внешним процессом.</strong></p>";
 
@@ -1022,7 +1022,7 @@ function dbprep($filename, $recovery) {
     }
 
 
-    if($changeTime !== filemtimeMy($filename)) {
+    if(is_file($newFile) || $changeTime !== filemtimeMy($filename)) {
 
         $errmsg = "<h1>RECOVERY.</h1><p class='big'><strong>База Данных была изменена внешним процессом.</strong></p>";
 
@@ -1125,7 +1125,7 @@ function dbprepCache($filename) {
     // global $errmsg, $content;
 
     $lockFile = $filename . ".lock";
-    // $newFile = $filename . ".new";
+    $newFile = $filename . ".new";
     $dummyFile = "SYSTEM/modules/dummy.txt";
 
     // Попытка получить значение max_execution_time, если не удалось, использовать 7
@@ -1154,7 +1154,7 @@ function dbprepCache($filename) {
 
 
     
-    if($changeTime !== filemtimeMy($filename)) {
+    if(is_file($newFile) || $changeTime !== filemtimeMy($filename)) {
 
         // $errmsg = "<h1>ОШИБКА.</h1><p class='big'><strong>База Данных была изменена внешним процессом.</strong></p>";
 
