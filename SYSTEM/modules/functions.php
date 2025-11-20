@@ -946,8 +946,6 @@ function dbprepApnd($filename, $recovery) {
     while(is_file($lockFile)) {
         ///usleep(200000);
 
-        usleep(10000);
-
         if((time() - $tmark) > $maxWaitTime) {
             // rename($lockFile, $lockFile . ".del"); // Перемещение файла блокировки
 
@@ -955,6 +953,8 @@ function dbprepApnd($filename, $recovery) {
 
             die('<html><body style="height: 100%; overflow: hidden;"><h1>DEADLOCK RECOVERY</h1><textarea style="width: 95%; min-height: 90vh; padding: 2%; resize: none;" readonly="readonly">'.$recovery.'</textarea></body></html>');
         }
+
+        usleep(10000);
     }
 
 
@@ -1010,8 +1010,6 @@ function dbprep($filename, $recovery) {
     while(is_file($lockFile)) {
         ///usleep(200000);
 
-        usleep(10000);
-
         if((time() - $tmark) > $maxWaitTime) {
             // rename($lockFile, $lockFile . ".del"); // Перемещение файла блокировки
 
@@ -1019,6 +1017,8 @@ function dbprep($filename, $recovery) {
 
             die('<html><body style="height: 100%; overflow: hidden;"><h1>DEADLOCK RECOVERY</h1><textarea style="width: 95%; min-height: 90vh; padding: 2%; resize: none;" readonly="readonly">'.$recovery.'</textarea></body></html>');
         }
+
+        usleep(10000);
     }
 
 
@@ -1076,8 +1076,6 @@ function dbprepCommCnt($filename) {
     while(is_file($lockFile)) {
         ///usleep(200000);
 
-        usleep(10000);
-
         if((time() - $tmark) > $maxWaitTime) {
             // rename($lockFile, $lockFile . ".del"); // Перемещение файла блокировки
 
@@ -1085,6 +1083,8 @@ function dbprepCommCnt($filename) {
 
             die('<!DOCTYPE html><html><head><meta charset="utf-8" /><title>DEADLOCK RECOVERY</title></head><body><h1>DEADLOCK RECOVERY</h1></body></html>');
         }
+
+        usleep(10000);
     }
 
     /*
@@ -1140,8 +1140,6 @@ function dbprepCache($filename) {
     while(is_file($lockFile)) {
         ///usleep(200000);
 
-        usleep(10000);
-
         if((time() - $tmark) > $maxWaitTime) {
             // rename($lockFile, $lockFile . ".del"); // Перемещение файла блокировки
 
@@ -1150,6 +1148,8 @@ function dbprepCache($filename) {
             ///die('<!DOCTYPE html><html><head><meta charset="utf-8" /><title>DEADLOCK RECOVERY</title></head><body><h1>DEADLOCK RECOVERY</h1></body></html>');
             return false;
         }
+
+        usleep(10000);
     }
 
 
