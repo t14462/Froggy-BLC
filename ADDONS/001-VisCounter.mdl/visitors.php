@@ -18,7 +18,7 @@ require_once "../GetRootStandalone.php";
 require_once getcwd() . "/SYSTEM/modules/functions.php";
 
 $dbfile = getcwd() . "/DATABASE/VisitorsOnline/visitors.db";
-$expire = 720;
+$expire = 300;
 
 if (!is_file($dbfile)) {
     putFileOrDie($dbfile, serialize([])); // создаём пустой
@@ -75,7 +75,7 @@ $visitors_online = CountVisitors();
 <html>
 <head>
     <meta charset="UTF-8" />
-    <meta http-equiv="refresh" content="15" />
+    <meta http-equiv="refresh" content="12" />
     <title>Visitors</title>
     <style>
         body {
