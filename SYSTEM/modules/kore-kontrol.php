@@ -409,7 +409,7 @@ if(    is_file("DATABASE/DB/DB-TOC-Cache.txt")
 
         if(dbprepCache("DATABASE/DB/DB-TOC-Cache.txt")) {
 
-            putFileOrDie("DATABASE/DB/DB-TOC-Cache.txt.new", $mydumptxt);
+            putFileOrDie("DATABASE/DB/DB-TOC-Cache.txt.new", $mydumptxt, LOCK_EX);
 
             dbdone("DATABASE/DB/DB-TOC-Cache.txt");
 
@@ -426,7 +426,7 @@ if(    is_file("DATABASE/DB/DB-TOC-Cache.txt")
 
         if(dbprepCache("DATABASE/DB/SEO-Cache.txt")) {
 
-            putFileOrDie("DATABASE/DB/SEO-Cache.txt.new", $seodumptxt);
+            putFileOrDie("DATABASE/DB/SEO-Cache.txt.new", $seodumptxt, LOCK_EX);
 
             dbdone("DATABASE/DB/SEO-Cache.txt");
 
@@ -443,7 +443,7 @@ if(    is_file("DATABASE/DB/DB-TOC-Cache.txt")
 
         if(dbprepCache("DATABASE/DB/MenuCache.txt")) {
 
-            putFileOrDie("DATABASE/DB/MenuCache.txt.new", $mCACHE);
+            putFileOrDie("DATABASE/DB/MenuCache.txt.new", $mCACHE, LOCK_EX);
 
             dbdone("DATABASE/DB/MenuCache.txt");
 
@@ -536,7 +536,7 @@ function sitemapflush() {
     fclose($filedest);
     */
 
-    putFileOrDie("sitemap.txt.new", $sitemaptxtvar);
+    putFileOrDie("sitemap.txt.new", $sitemaptxtvar, LOCK_EX);
 
     dbdone("sitemap.txt");
 
@@ -589,7 +589,7 @@ function sitemapflushXml() {
     fclose($filedest);
     */
     
-    putFileOrDie("sitemap.xml.new", $sitemapxmlvar);
+    putFileOrDie("sitemap.xml.new", $sitemapxmlvar, LOCK_EX);
 
     dbdone("sitemap.xml");
 

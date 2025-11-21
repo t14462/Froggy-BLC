@@ -792,7 +792,7 @@ function repeatCaptcha($userInput) {
     }
 
     // Сохраняем обновленные данные обратно в файл
-    putFileOrDie($sessionFile, json_encode($sessionData));
+    putFileOrDie($sessionFile, json_encode($sessionData), LOCK_EX);
 
     return true; // Ввод уникален, возвращаем true
 }
@@ -821,7 +821,7 @@ function canProceed($datip) {
 
     // Обновляем временную метку
     $lockData = ['last_call' => time()];
-    putFileOrDie($lockFile, json_encode($lockData));
+    putFileOrDie($lockFile, json_encode($lockData), LOCK_EX);
 
     return true; // Можно продолжать
 }

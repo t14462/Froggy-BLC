@@ -1309,7 +1309,7 @@ function commentReply() {
 
             $commcnt++;
 
-            putFileOrDie("DATABASE/comm.count/".$commaddr.".new", $commcnt);
+            putFileOrDie("DATABASE/comm.count/".$commaddr.".new", $commcnt, LOCK_EX);
 
             dbdone("DATABASE/comm.count/".$commaddr);
 
@@ -1710,7 +1710,7 @@ function postComment() {
 
             $commcnt++;
 
-            putFileOrDie("DATABASE/comm.count/".$commaddr.".new", $commcnt);
+            putFileOrDie("DATABASE/comm.count/".$commaddr.".new", $commcnt, LOCK_EX);
 
             dbdone("DATABASE/comm.count/".$commaddr);
 
@@ -1783,7 +1783,7 @@ function loginPost() {
 
             $errmsg = "<h1>ОШИБКА.</h1><p class='big'><strong>Неправильное сочетание логина и пароля. Ждите 10 минут.</strong></p>";
 
-            putFileOrDie("DATABASE/lock/".$hashh, time());
+            putFileOrDie("DATABASE/lock/".$hashh, time(), LOCK_EX);
 
             mylog("<strong style='color:DarkRed'>Попытка авторизации. ".$ip."</strong>");
         }
