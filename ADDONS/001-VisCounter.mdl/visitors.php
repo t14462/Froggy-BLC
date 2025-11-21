@@ -58,12 +58,18 @@ function CountVisitors() {
     if (!isset($data[$visitorID])) {
         $data[$visitorID] = $now;
 
+        /*
         dbprepCache($dbfile) or die('<!DOCTYPE html><html><head><meta http-equiv="refresh" content="1" /></head><body style="background: transparent;">&nbsp;</body></html>
         ');
 
         putFileOrDie($dbfile.".new", serialize($data));
 
         dbdone($dbfile);
+        */
+
+        file_put_contents($dbfile, serialize($data), LOCK_EX) or die('<!DOCTYPE html><html><head><meta http-equiv="refresh" content="1" /></head><body style="background: transparent;">&nbsp;</body></html>
+        ');
+
     }
 
     return str_pad(count($data), 4, '0', STR_PAD_LEFT);
