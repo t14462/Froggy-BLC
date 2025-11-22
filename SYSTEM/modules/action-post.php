@@ -1305,7 +1305,7 @@ function commentReply() {
 
             dbprepCommCnt("DATABASE/comm.count/".$commaddr);
 
-            $commcnt = (int)rtrim(getFileOrDie("DATABASE/comm.count/".$commaddr));
+            $commcnt = (int)getFileOrDie("DATABASE/comm.count/".$commaddr);
 
             $commcnt++;
 
@@ -1706,7 +1706,7 @@ function postComment() {
 
             dbprepCommCnt("DATABASE/comm.count/".$commaddr);
 
-            $commcnt = (int)rtrim(getFileOrDie("DATABASE/comm.count/".$commaddr));
+            $commcnt = (int)getFileOrDie("DATABASE/comm.count/".$commaddr);
 
             $commcnt++;
 
