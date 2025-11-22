@@ -773,7 +773,7 @@ function commentRemove() {
             $firstChunkEnd = $filesource->ftell();
 
 
-            $file = fopenOrDie("DATABASE/comments/".$commaddr.".new", "r+");
+            $file = fopenOrDie("DATABASE/comments/".$commaddr.".new." . getmypid(), "r+");
             ftruncateOrDie($file,$firstChunkEnd);
             fclose($file);
 
@@ -781,7 +781,7 @@ function commentRemove() {
             $filesource->fgetsOrDie();
 
 
-            $filedest = openFileOrDie("DATABASE/comments/".$commaddr.".new", 'ab');
+            $filedest = openFileOrDie("DATABASE/comments/".$commaddr.".new." . getmypid(), 'ab');
 
             $filedest->fwriteOrDie($commdataline."\n");
 
@@ -1312,7 +1312,7 @@ function addPage() {
 
             if(!dbprepApnd("DATABASE/DB/data.html", "БАЗА ДАННЫХ БЫЛА ИЗМЕНЕНА ИЛИ ЗАБЛОКИРОВАНА ВНЕШНИМ ПРОЦЕССОМ")) return false;
 
-            $filedest = openFileOrDie("DATABASE/DB/data.html.new", 'ab');
+            $filedest = openFileOrDie("DATABASE/DB/data.html.new." . getmypid(), 'ab');
 
             $filedest->fwriteOrDie($line);
 
@@ -1374,11 +1374,11 @@ function addPage() {
 
                 $firstChunkEnd = $filesource->ftell();
 
-                $file = fopenOrDie("DATABASE/DB/data.html.new", "r+");
+                $file = fopenOrDie("DATABASE/DB/data.html.new." . getmypid(), "r+");
                 ftruncateOrDie($file,$firstChunkEnd);
                 fclose($file);
 
-                $filedest = openFileOrDie("DATABASE/DB/data.html.new", 'ab');
+                $filedest = openFileOrDie("DATABASE/DB/data.html.new." . getmypid(), 'ab');
 
                 $filedest->fwriteOrDie($line);
 
@@ -1490,11 +1490,11 @@ function movePageDown() {
 
             $firstChunkEnd = $filesource->ftell();
 
-            $file = fopenOrDie("DATABASE/DB/data.html.new", "r+");
+            $file = fopenOrDie("DATABASE/DB/data.html.new." . getmypid(), "r+");
             ftruncateOrDie($file,$firstChunkEnd);
             fclose($file);
 
-            $filedest = openFileOrDie("DATABASE/DB/data.html.new", 'ab');
+            $filedest = openFileOrDie("DATABASE/DB/data.html.new." . getmypid(), 'ab');
 
             $prevline = $filesource->fgetsOrDie();
             $nextline = $filesource->fgetsOrDie();
@@ -1559,11 +1559,11 @@ function movePageUp() {
 
             $firstChunkEnd = $filesource->ftell();
 
-            $file = fopenOrDie("DATABASE/DB/data.html.new", "r+");
+            $file = fopenOrDie("DATABASE/DB/data.html.new." . getmypid(), "r+");
             ftruncateOrDie($file,$firstChunkEnd);
             fclose($file);
 
-            $filedest = openFileOrDie("DATABASE/DB/data.html.new", 'ab');
+            $filedest = openFileOrDie("DATABASE/DB/data.html.new." . getmypid(), 'ab');
 
 
             $prevline = $filesource->fgetsOrDie();
@@ -1829,7 +1829,7 @@ function deletePage() {
 
                 $firstChunkEnd = $filesource->ftell();
 
-                $file = fopenOrDie("DATABASE/DB/data.html.new", "r+");
+                $file = fopenOrDie("DATABASE/DB/data.html.new." . getmypid(), "r+");
                 ftruncateOrDie($file,$firstChunkEnd);
                 fclose($file);
 
@@ -1840,7 +1840,7 @@ function deletePage() {
 
 
 
-                $filedest = openFileOrDie("DATABASE/DB/data.html.new", 'ab');
+                $filedest = openFileOrDie("DATABASE/DB/data.html.new." . getmypid(), 'ab');
 
                 if(is_file("DATABASE/comments/".$pageid)) {
 

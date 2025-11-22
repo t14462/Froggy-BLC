@@ -633,7 +633,7 @@ function savePage() {
 
                 $firstChunkEnd = $filesource->ftell();
 
-                $file = fopenOrDie("DATABASE/DB/data.html.new", "r+");
+                $file = fopenOrDie("DATABASE/DB/data.html.new." . getmypid(), "r+");
                 ftruncateOrDie($file,$firstChunkEnd);
                 fclose($file);
 
@@ -647,7 +647,7 @@ function savePage() {
 
                 $textedit = '<head'.$htag.'>'.$pgtitle.'</head'.$htag.'>'.$seoPgNum.'<!1!>'.time().'<!2!><br!>'.$textedit;
 
-                $filedest = openFileOrDie("DATABASE/DB/data.html.new", 'ab');
+                $filedest = openFileOrDie("DATABASE/DB/data.html.new." . getmypid(), 'ab');
 
                 $filedest->fwriteOrDie($pageid.$textedit."\n");
 
@@ -1220,7 +1220,7 @@ function commentReply() {
             $firstChunkEnd = $filesource->ftell();
 
 
-            $file = fopenOrDie("DATABASE/comments/".$commaddr.".new", "r+");
+            $file = fopenOrDie("DATABASE/comments/".$commaddr.".new." . getmypid(), "r+");
             ftruncateOrDie($file,$firstChunkEnd);
             fclose($file);
 
@@ -1228,7 +1228,7 @@ function commentReply() {
             $filesource->fgetsOrDie();
 
 
-            $filedest = openFileOrDie("DATABASE/comments/".$commaddr.".new", 'ab');
+            $filedest = openFileOrDie("DATABASE/comments/".$commaddr.".new." . getmypid(), 'ab');
 
             $filedest->fwriteOrDie($commdataline."\n");
 
@@ -1309,7 +1309,7 @@ function commentReply() {
 
             $commcnt++;
 
-            putFileOrDie("DATABASE/comm.count/".$commaddr.".new", $commcnt, LOCK_EX);
+            putFileOrDie("DATABASE/comm.count/".$commaddr.".new." . getmypid(), $commcnt, LOCK_EX);
 
             dbdone("DATABASE/comm.count/".$commaddr);
 
@@ -1675,7 +1675,7 @@ function postComment() {
 
 
 
-            $file = fopenOrDie("DATABASE/comments/".$commaddr.".new", "ab");
+            $file = fopenOrDie("DATABASE/comments/".$commaddr.".new." . getmypid(), "ab");
             fwriteOrDie($file, $commpost."\n");
             fclose($file);
             
@@ -1710,7 +1710,7 @@ function postComment() {
 
             $commcnt++;
 
-            putFileOrDie("DATABASE/comm.count/".$commaddr.".new", $commcnt, LOCK_EX);
+            putFileOrDie("DATABASE/comm.count/".$commaddr.".new." . getmypid(), $commcnt, LOCK_EX);
 
             dbdone("DATABASE/comm.count/".$commaddr);
 

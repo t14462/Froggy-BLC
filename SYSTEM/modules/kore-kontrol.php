@@ -409,7 +409,7 @@ if(    is_file("DATABASE/DB/DB-TOC-Cache.txt")
 
         if(dbprepCache("DATABASE/DB/DB-TOC-Cache.txt")) {
 
-            putFileOrDie("DATABASE/DB/DB-TOC-Cache.txt.new", $mydumptxt, LOCK_EX);
+            putFileOrDie("DATABASE/DB/DB-TOC-Cache.txt.new." . getmypid(), $mydumptxt, LOCK_EX);
 
             dbdone("DATABASE/DB/DB-TOC-Cache.txt");
 
@@ -426,7 +426,7 @@ if(    is_file("DATABASE/DB/DB-TOC-Cache.txt")
 
         if(dbprepCache("DATABASE/DB/SEO-Cache.txt")) {
 
-            putFileOrDie("DATABASE/DB/SEO-Cache.txt.new", $seodumptxt, LOCK_EX);
+            putFileOrDie("DATABASE/DB/SEO-Cache.txt.new." . getmypid(), $seodumptxt, LOCK_EX);
 
             dbdone("DATABASE/DB/SEO-Cache.txt");
 
@@ -443,7 +443,7 @@ if(    is_file("DATABASE/DB/DB-TOC-Cache.txt")
 
         if(dbprepCache("DATABASE/DB/MenuCache.txt")) {
 
-            putFileOrDie("DATABASE/DB/MenuCache.txt.new", $mCACHE, LOCK_EX);
+            putFileOrDie("DATABASE/DB/MenuCache.txt.new." . getmypid(), $mCACHE, LOCK_EX);
 
             dbdone("DATABASE/DB/MenuCache.txt");
 
@@ -505,7 +505,7 @@ function sitemapflush() {
 
     if(!dbprep("sitemap.txt", "")) return false;
 
-    $filedest = fopenOrDie("sitemap.txt.new", "r+");
+    $filedest = fopenOrDie("sitemap.txt.new." . getmypid(), "r+");
         fwrite($filedest, $sitemaptxtvar);
         fclose($filedest);
     
@@ -531,12 +531,12 @@ function sitemapflush() {
     if(!dbprepCache("sitemap.txt")) return false;
 
     /*
-    $filedest = fopenOrDie("sitemap.txt.new", "r+");
+    $filedest = fopenOrDie("sitemap.txt.new." . getmypid(), "r+");
     fwriteOrDie($filedest, $sitemaptxtvar);
     fclose($filedest);
     */
 
-    putFileOrDie("sitemap.txt.new", $sitemaptxtvar, LOCK_EX);
+    putFileOrDie("sitemap.txt.new." . getmypid(), $sitemaptxtvar, LOCK_EX);
 
     dbdone("sitemap.txt");
 
@@ -584,12 +584,12 @@ function sitemapflushXml() {
     if(!dbprepCache("sitemap.xml")) return false;
 
     /*
-    $filedest = fopenOrDie("sitemap.xml.new", "r+");
+    $filedest = fopenOrDie("sitemap.xml.new." . getmypid(), "r+");
     fwriteOrDie($filedest, $sitemapxmlvar);
     fclose($filedest);
     */
     
-    putFileOrDie("sitemap.xml.new", $sitemapxmlvar, LOCK_EX);
+    putFileOrDie("sitemap.xml.new." . getmypid(), $sitemapxmlvar, LOCK_EX);
 
     dbdone("sitemap.xml");
 

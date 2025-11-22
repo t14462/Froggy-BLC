@@ -928,8 +928,8 @@ function dbprepApnd($filename, $recovery) {
     global $errmsg, $content;
 
     $lockFile = $filename . ".lock";
-    $newFile = $filename . ".new";
-    $dummyFile = "SYSTEM/modules/dummy.txt";
+    $newFile = $filename . ".new." . getmypid();
+    // $dummyFile = "SYSTEM/modules/dummy.txt";
 
     // Попытка получить значение max_execution_time, если не удалось, использовать 7
     $maxWaitTime = (ini_get('max_execution_time') !== false) ? ((int)ini_get('max_execution_time') - 5) : 7;
@@ -958,7 +958,7 @@ function dbprepApnd($filename, $recovery) {
     }
 
 
-    if(is_file($newFile) || $changeTime !== filemtimeMy($filename)) {
+    if($changeTime !== filemtimeMy($filename)) {
 
         $errmsg = "<h1>RECOVERY.</h1><p class='big'><strong>База Данных была изменена внешним процессом.</strong></p>";
 
@@ -969,9 +969,12 @@ function dbprepApnd($filename, $recovery) {
 
 
     // Создаем файл блокировки
+    /*
     if(!copy($dummyFile, $lockFile)) {
         die('<!DOCTYPE html><html><head><meta charset="utf-8" /><title>Ошибка</title></head><body><h1>ОШИБКА.</h1><p><strong>Не удалось создать файл блокировки.</strong></p></body></html>');
     }
+    */
+    putFileOrDie($lockFile, getmypid(), LOCK_EX);
 
     // Копируем оригинальный файл в новый
     if(!copy($filename, $newFile)) {
@@ -992,7 +995,7 @@ function dbprep($filename, $recovery) {
     global $errmsg, $content;
 
     $lockFile = $filename . ".lock";
-    $newFile = $filename . ".new";
+    $newFile = $filename . ".new." . getmypid();
     $dummyFile = "SYSTEM/modules/dummy.txt";
 
     // Попытка получить значение max_execution_time, если не удалось, использовать 7
@@ -1022,7 +1025,7 @@ function dbprep($filename, $recovery) {
     }
 
 
-    if(is_file($newFile) || $changeTime !== filemtimeMy($filename)) {
+    if($changeTime !== filemtimeMy($filename)) {
 
         $errmsg = "<h1>RECOVERY.</h1><p class='big'><strong>База Данных была изменена внешним процессом.</strong></p>";
 
@@ -1033,9 +1036,12 @@ function dbprep($filename, $recovery) {
 
 
     // Создаем файл блокировки
+    /*
     if(!copy($dummyFile, $lockFile)) {
         die('<!DOCTYPE html><html><head><meta charset="utf-8" /><title>Ошибка</title></head><body><h1>ОШИБКА.</h1><p><strong>Не удалось создать файл блокировки.</strong></p></body></html>');
     }
+    */
+    putFileOrDie($lockFile, getmypid(), LOCK_EX);
 
     // Создаем новый файл (dummy)
     if(!copy($dummyFile, $newFile)) {
@@ -1059,8 +1065,8 @@ function dbprepCommCnt($filename) {
     // global $errmsg, $content;
 
     $lockFile = $filename . ".lock";
-    /// $newFile = $filename . ".new";
-    $dummyFile = "SYSTEM/modules/dummy.txt";
+    /// $newFile = $filename . ".new." . getmypid();
+    // $dummyFile = "SYSTEM/modules/dummy.txt";
 
     // Попытка получить значение max_execution_time, если не удалось, использовать 7
     $maxWaitTime = (ini_get('max_execution_time') !== false) ? ((int)ini_get('max_execution_time') - 5) : 7;
@@ -1100,9 +1106,12 @@ function dbprepCommCnt($filename) {
 
 
     // Создаем файл блокировки
+    /*
     if(!copy($dummyFile, $lockFile)) {
         die('<!DOCTYPE html><html><head><meta charset="utf-8" /><title>Ошибка</title></head><body><h1>ОШИБКА.</h1><p><strong>Не удалось создать файл блокировки.</strong></p></body></html>');
     }
+    */
+    putFileOrDie($lockFile, getmypid(), LOCK_EX);
 
     // Создаем новый файл (dummy)
     /*
@@ -1125,8 +1134,8 @@ function dbprepCache($filename) {
     // global $errmsg, $content;
 
     $lockFile = $filename . ".lock";
-    $newFile = $filename . ".new";
-    $dummyFile = "SYSTEM/modules/dummy.txt";
+    // $newFile = $filename . ".new." . getmypid();
+    // $dummyFile = "SYSTEM/modules/dummy.txt";
 
     // Попытка получить значение max_execution_time, если не удалось, использовать 7
     $maxWaitTime = (ini_get('max_execution_time') !== false) ? ((int)ini_get('max_execution_time') - 5) : 7;
@@ -1154,7 +1163,7 @@ function dbprepCache($filename) {
 
 
     
-    if(is_file($newFile) || $changeTime !== filemtimeMy($filename)) {
+    if($changeTime !== filemtimeMy($filename)) {
 
         // $errmsg = "<h1>ОШИБКА.</h1><p class='big'><strong>База Данных была изменена внешним процессом.</strong></p>";
 
@@ -1166,9 +1175,12 @@ function dbprepCache($filename) {
 
 
     // Создаем файл блокировки
+    /*
     if(!copy($dummyFile, $lockFile)) {
         die('<!DOCTYPE html><html><head><meta charset="utf-8" /><title>Ошибка</title></head><body><h1>ОШИБКА.</h1><p><strong>Не удалось создать файл блокировки.</strong></p></body></html>');
     }
+    */
+    putFileOrDie($lockFile, getmypid(), LOCK_EX);
 
     // Создаем новый файл (dummy)
     /*
@@ -1183,15 +1195,19 @@ function dbprepCache($filename) {
 
 function dbdone($filename) {
 
-    if(is_file($filename.".new")) { 
+    $lockvar = (int)getFileOrDie($filename.".lock");
+
+    if($lockvar === getmypid()) {
 
         if(is_file($filename)) rename($filename, $filename.".bak");
     
-        rename($filename.".new", $filename);
+        rename($filename.".new." . getmypid(), $filename);
 
         touchMy($filename);
 
         unlink($filename.".lock");
+
+        dbCleanupAllNewFiles($filename);
     }
 }
 
@@ -1208,7 +1224,7 @@ function mylog($line) {
 
     if(!dbprepApnd("DATABASE/DB/sys.log", "")) return false;
 
-    $file = fopenOrDie("DATABASE/DB/sys.log.new", "ab");
+    $file = fopenOrDie("DATABASE/DB/sys.log.new." . getmypid(), "ab");
     fwriteOrDie($file, $mydate.": ".$line."<br />\n");
     fclose($file);
     
@@ -2447,3 +2463,21 @@ function remove_entities(string $text): string {
 
     return $text;
 }
+
+
+
+
+
+
+
+
+function dbCleanupAllNewFiles(string $filename): void {
+    $pattern = $filename . '.new.*';
+
+    foreach (glob($pattern) as $path) {
+        if (is_file($path)) {
+            @unlink($path);
+        }
+    }
+}
+
