@@ -951,7 +951,7 @@ function dbprepApnd($filename, $recovery) {
 
             if(is_file($lockFile)) unlink($lockFile);
 
-            die('<html><body style="height: 100%; overflow: hidden;"><h1>DEADLOCK RECOVERY</h1><textarea style="width: 95%; min-height: 90vh; padding: 2%; resize: none;" readonly="readonly">'.$recovery.'</textarea></body></html>');
+            die('<!DOCTYPE html><html><head><meta charset="utf-8" /><title>DEADLOCK RECOVERY</title></head><body style="height: 100%; overflow: hidden;"><h1>DEADLOCK RECOVERY</h1><textarea style="width: 95%; min-height: 90vh; padding: 2%; resize: none;" readonly="readonly">'.$recovery.'</textarea></body></html>');
         }
 
         usleep(200000);
@@ -1018,7 +1018,7 @@ function dbprep($filename, $recovery) {
 
             if(is_file($lockFile)) unlink($lockFile);
 
-            die('<html><body style="height: 100%; overflow: hidden;"><h1>DEADLOCK RECOVERY</h1><textarea style="width: 95%; min-height: 90vh; padding: 2%; resize: none;" readonly="readonly">'.$recovery.'</textarea></body></html>');
+            die('<!DOCTYPE html><html><head><meta charset="utf-8" /><title>DEADLOCK RECOVERY</title></head><body style="height: 100%; overflow: hidden;"><h1>DEADLOCK RECOVERY</h1><textarea style="width: 95%; min-height: 90vh; padding: 2%; resize: none;" readonly="readonly">'.$recovery.'</textarea></body></html>');
         }
 
         usleep(200000);
