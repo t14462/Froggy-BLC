@@ -1195,7 +1195,7 @@ function dbprepCache($filename) {
 
 function dbdone($filename) {
 
-    $lockvar = (int)getFileOrDie($filename.".lock");
+    $lockvar = (int)@file_get_contents($filename.".lock");
 
     if($lockvar === getmypid()) {
 
@@ -1207,7 +1207,9 @@ function dbdone($filename) {
 
         unlink($filename.".lock");
 
-        dbCleanupAllNewFiles($filename);
+    } else {
+
+        unlink($filename.".new." . getmypid());
     }
 }
 
@@ -2469,7 +2471,7 @@ function remove_entities(string $text): string {
 
 
 
-
+/*
 
 function dbCleanupAllNewFiles(string $filename): void {
     $pattern = $filename . '.new.*';
@@ -2480,4 +2482,6 @@ function dbCleanupAllNewFiles(string $filename): void {
         }
     }
 }
+
+*/
 
