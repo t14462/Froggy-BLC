@@ -690,7 +690,7 @@ select[name="h"] {
 
 #txtpath em {
 
-    font-family: 'Georgia', serif;
+    font-family: Georgia, "Noto Color Emoji", "Segoe UI Emoji", "Apple Color Emoji", serif;
     font-style: italic;
     white-space: nowrap;
     display: inline-block;
