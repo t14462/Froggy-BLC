@@ -1269,7 +1269,10 @@ function commentReply() {
 
             ###############################################
 
-            $currentPage = ceil(($pgcommnum + 1) / 8) - 1;
+            ///$currentPage = ceil(($pgcommnum + 1) / 8) - 1;
+
+            /// То-же самое, но проще.
+            $currentPage = intdiv($pgcommnum, 8); // при 0-based индексе
 
             $comTotalPages = calcTotPages($commaddr, 8);
 

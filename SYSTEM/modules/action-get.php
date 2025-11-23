@@ -597,7 +597,7 @@ function pageload() {
             $pager = "<nav class='pager'>";
             for($i = 0; $i <= $total_commpages; $i++) {
 
-                if($commpage == $i) {
+                if($commpage === $i) {
 
                     $pgNumLink = " <strong>$i</strong> ";
 
