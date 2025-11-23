@@ -39,7 +39,7 @@ function lockByName(string $username): bool {
         }
         return false; // Заблокирована другим
     }
-    return file_put_contents(DBLOCK_FILE, $username . "\n") !== false;
+    return file_put_contents(DBLOCK_FILE, $username . "\n", LOCK_EX) !== false;
 }
 
 /**
