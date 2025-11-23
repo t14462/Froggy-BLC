@@ -172,7 +172,7 @@ function viewLog() {
 
 function purgelog() {
 
-    global $errmsg, $checkpermission, $checkpermission;
+    global $errmsg, $checkpermission;
 
     if( $checkpermission < 4 ) {
 
@@ -702,7 +702,7 @@ function commentRemove() {
 
     global $safeGet, $idcache, $errmsg, $checkpermission;
 
-    if( $checkpermission == 3 || $checkpermission == 1 ) {
+    if( $checkpermission == 3 || $checkpermission < 2 ) {
 
         $errmsg = pforbidden();
 
