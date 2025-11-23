@@ -931,8 +931,8 @@ function dbprepApnd($filename, $recovery) {
     $newFile = $filename . ".new." . getmypid();
     // $dummyFile = "SYSTEM/modules/dummy.txt";
 
-    // Попытка получить значение max_execution_time, если не удалось, использовать 7
-    $maxWaitTime = (ini_get('max_execution_time') !== false) ? ((int)ini_get('max_execution_time') - 5) : 7;
+    // Попытка получить значение max_execution_time, если не удалось, использовать 8
+    $maxWaitTime = (ini_get('max_execution_time') !== false) ? ((int)ini_get('max_execution_time') - 5) : 8;
 
     $tmark = time();
 
@@ -998,8 +998,8 @@ function dbprep($filename, $recovery) {
     $newFile = $filename . ".new." . getmypid();
     $dummyFile = "SYSTEM/modules/dummy.txt";
 
-    // Попытка получить значение max_execution_time, если не удалось, использовать 7
-    $maxWaitTime = (ini_get('max_execution_time') !== false) ? ((int)ini_get('max_execution_time') - 5) : 7;
+    // Попытка получить значение max_execution_time, если не удалось, использовать 8
+    $maxWaitTime = (ini_get('max_execution_time') !== false) ? ((int)ini_get('max_execution_time') - 5) : 8;
 
     $tmark = time();
 
@@ -1068,8 +1068,8 @@ function dbprepCommCnt($filename) {
     /// $newFile = $filename . ".new." . getmypid();
     // $dummyFile = "SYSTEM/modules/dummy.txt";
 
-    // Попытка получить значение max_execution_time, если не удалось, использовать 7
-    $maxWaitTime = (ini_get('max_execution_time') !== false) ? ((int)ini_get('max_execution_time') - 5) : 7;
+    // Попытка получить значение max_execution_time, если не удалось, использовать 8
+    $maxWaitTime = (ini_get('max_execution_time') !== false) ? ((int)ini_get('max_execution_time') - 5) : 8;
 
     $tmark = time();
 
@@ -1137,8 +1137,8 @@ function dbprepCache($filename) {
     // $newFile = $filename . ".new." . getmypid();
     // $dummyFile = "SYSTEM/modules/dummy.txt";
 
-    // Попытка получить значение max_execution_time, если не удалось, использовать 7
-    $maxWaitTime = (ini_get('max_execution_time') !== false) ? ((int)ini_get('max_execution_time') - 5) : 7;
+    // Попытка получить значение max_execution_time, если не удалось, использовать 8
+    $maxWaitTime = (ini_get('max_execution_time') !== false) ? ((int)ini_get('max_execution_time') - 5) : 8;
 
     $tmark = time();
 
