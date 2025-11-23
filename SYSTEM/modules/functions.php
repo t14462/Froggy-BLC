@@ -1856,19 +1856,19 @@ function calcTotPages($commaddr,  $limit) {
 
     // Считаем количество комментариев
     while($buffer = $file->freadOrDie($bufferSize)) {
-         // Читаем 64 КБ
+         // Читаем 128 КБ
         $commcount += substr_count($buffer, "\n"); // Считаем количество \n в сегменте
     }
 
     $file = null; // Закрываем файл
 
-    // Рассчитываем количество страниц
-    $totalPages = ceil(($commcount + 1) / (int)$limit) - 1; // Общее количество страниц
 
-    // Убираем пустую страницу, если количество комментариев делится на лимит без остатка
-    if($commcount % (int)$limit == 0 && $totalPages > 0) {
-        $totalPages -= 1;
+    if ($commcount <= 0) {
+        $totalPages = 0;      // или -1, если хочешь "нет страниц"
+    } else {
+        $totalPages = (int)ceil($commcount / (int)$limit) - 1;
     }
+
 
     return $totalPages;
 }
