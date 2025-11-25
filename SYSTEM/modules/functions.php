@@ -2493,3 +2493,26 @@ function dbCleanupAllNewFiles(string $filename): void {
 
 */
 
+
+
+function atomicCounterIncrement($path) {
+
+    $fp = @fopen($path, 'c+'); // создаст файл при отсутствии
+    if ($fp) {
+        if (flock($fp, LOCK_EX)) {
+            $val  = 0;
+            $data = stream_get_contents($fp);
+            $data = trim((string)$data);
+            if ($data !== '' && ctype_digit($data)) {
+                $val = (int)$data;
+            }
+            $val++;
+            rewind($fp);
+            ftruncate($fp, 0);
+            fwrite($fp, (string)$val);
+            fflush($fp);
+            flock($fp, LOCK_UN);
+        }
+        fclose($fp);
+    }
+}

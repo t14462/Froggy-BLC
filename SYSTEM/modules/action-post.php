@@ -1298,7 +1298,7 @@ function commentReply() {
 
 
 
-
+            /*
 
             if(!is_file("DATABASE/comm.count/".$commaddr)) {
 
@@ -1315,6 +1315,12 @@ function commentReply() {
             putFileOrDie("DATABASE/comm.count/".$commaddr.".new." . getmypid(), $commcnt, LOCK_EX);
 
             dbdone("DATABASE/comm.count/".$commaddr);
+
+            */
+
+            ###############################################
+
+            atomicCounterIncrement("DATABASE/comm.count/".$commaddr);
 
             ###############################################
 
@@ -1699,7 +1705,7 @@ function postComment() {
 
 
 
-
+            /*
 
             if(!is_file("DATABASE/comm.count/".$commaddr)) {
 
@@ -1717,6 +1723,11 @@ function postComment() {
 
             dbdone("DATABASE/comm.count/".$commaddr);
 
+            */
+
+            ##########################
+
+            atomicCounterIncrement("DATABASE/comm.count/".$commaddr);
 
             ##########################
             // mylog("<em style='color:DarkGreen'>Добавлен комментарий <a href='".$url."?".explode("&", $_SERVER['QUERY_STRING'])[0]."&commpage=".$comTotalPages."'>".$commaddr."</a> ".$ip."</em>");
