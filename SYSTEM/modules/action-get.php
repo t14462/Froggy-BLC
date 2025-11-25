@@ -734,7 +734,10 @@ function commentRemove() {
 
             $commdataline = "";
 
-            $commpage = ceil(($pgcommnum + 1) / 8) - 1; // Используем номер строки для вычисления страницы
+            ///$commpage = ceil(($pgcommnum + 1) / 8) - 1; // Используем номер строки для вычисления страницы
+
+            /// То-же самое, но проще.
+            $commpage = intdiv($pgcommnum, 8); // при 0-based индексе
 
 
             if(!dbprepApnd("DATABASE/comments/".$commaddr, "")) return false;
