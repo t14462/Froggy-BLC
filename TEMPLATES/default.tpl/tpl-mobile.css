@@ -25,7 +25,9 @@ html, body {
 html {
     font-family: monospace;
     cursor: url('default.cur.svg'), default;
-    font-size: 100%;
+    font-size: clamp(14px, 100%, 18px);
+    text-size-adjust: 100%;
+    -webkit-text-size-adjust: 100%;
     scrollbar-color: darkorange darkgray;
     scrollbar-width: auto;
     overflow-y: scroll;

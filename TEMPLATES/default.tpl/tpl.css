@@ -25,7 +25,7 @@ html, body {
 html {
     font-family: monospace;
     cursor: url('default.cur.svg'), default;
-    font-size: clamp(13px, 0.85vw, 18px);
+    font-size: clamp(14px, .85vw, 18px);
     scrollbar-color: darkorange darkgray;
     scrollbar-width: auto;
     overflow-y: scroll;
