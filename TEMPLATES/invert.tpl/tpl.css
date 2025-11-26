@@ -42,7 +42,9 @@ html, body {
 html {
     font-family: monospace;
     cursor: url('default.cur.svg'), default;
-    font-size: clamp(14px, 0.85vw, 18px);
+    font-size: clamp(14px, .85vw, 18px);
+    text-size-adjust: 100%;
+    -webkit-text-size-adjust: 100%;
     scrollbar-color: darkorange darkgray;
     scrollbar-width: auto;
     overflow-y: scroll;
