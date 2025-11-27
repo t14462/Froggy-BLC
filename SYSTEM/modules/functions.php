@@ -1424,7 +1424,7 @@ function urlPrep($st) {
 
 
     // Транслитерация символов
-    $translit = "Any-Latin; NFD; [:Nonspacing Mark:] Remove; NFC;";
+    $translit = "Any-Latin; Latin-ASCII; [:Nonspacing Mark:] Remove; NFC;";
     $st = transliterator_transliterate($translit, $st);
 
 
@@ -1589,7 +1589,7 @@ function urlPrep2($st) {
 
 
     // Транслитерация символов
-    $translit = "Any-Latin; NFD; [:Nonspacing Mark:] Remove; NFC;";
+    $translit = "Any-Latin; Latin-ASCII; [:Nonspacing Mark:] Remove; NFC;";
     $st = transliterator_transliterate($translit, $st);
 
     // Убираем лишние пробелы, знаки и символы
@@ -1611,6 +1611,42 @@ function urlPrep2($st) {
     // $st = str_replace(";.", ";", $st);
 
     // $st = preg_replace('/[.,!?;:)\]\}\'"…]+$/u', '', $st);
+
+    return $st;
+}
+
+
+
+
+
+
+function urlPrep3($st) {
+
+    //$st = ltrim($st, '?');
+
+    //$st = normalize_entities_my($st);
+
+    $st = remove_entities($st);
+
+    //$st = mb_superTrim($st);
+
+
+    $st = rusTranslitHelper($st);
+
+
+    // Транслитерация символов
+    $translit = "Any-Latin; Latin-ASCII; [:Nonspacing Mark:] Remove; NFC;";
+    $st = transliterator_transliterate($translit, $st);
+
+
+    $st = preg_replace('/[^A-Za-z0-9]/u', '', $st);
+    
+
+    // $st = str_replace(";.", ";", $st);
+
+    // $st = preg_replace('/[.,!?;:)\]\}\'"…]+$/u', '', $st);
+
+    // return '?'.$st;
 
     return $st;
 }
