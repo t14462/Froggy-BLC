@@ -1622,34 +1622,26 @@ function urlPrep2($st) {
 
 function urlPrep3($st) {
 
-    //$st = ltrim($st, '?');
-
-    //$st = normalize_entities_my($st);
-
+    // 1) вычищаем HTML-сущности (&nbsp; &#160; &#xA0; и т.п.)
     $st = remove_entities($st);
 
-    //$st = mb_superTrim($st);
-
-
+    // 2) сначала твой кастомный транслит для русского
     $st = rusTranslitHelper($st);
 
-
-    // Транслитерация символов
+    // 3) потом общий ICU-транслит:
+    //    - Any-Latin      — всё в латиницу
+    //    - Latin-ASCII    — латиница → максимально "плоский" ASCII (é → e, ß → ss и т.п.)
+    //    - [:Nonspacing Mark:] Remove — убирает диакритику, если осталась
+    //    - NFC            — нормализует
     $translit = "Any-Latin; Latin-ASCII; [:Nonspacing Mark:] Remove; NFC;";
     $st = transliterator_transliterate($translit, $st);
 
-
-    $st = preg_replace('/[^A-Za-z0-9]/u', '', $st);
-    
-
-    // $st = str_replace(";.", ";", $st);
-
-    // $st = preg_replace('/[.,!?;:)\]\}\'"…]+$/u', '', $st);
-
-    // return '?'.$st;
+    // 4) оставляем только A–Z, a–z, 0–9
+    $st = preg_replace('/[^a-z0-9]/i', '', $st);
 
     return $st;
 }
+
 
 
 
