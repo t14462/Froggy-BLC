@@ -906,9 +906,18 @@ function filter_filename($filename) {
     // Обрезка до 255 байт (UTF-8)
     $ext  = pathinfo($filename, PATHINFO_EXTENSION);
     $base = pathinfo($filename, PATHINFO_FILENAME);
-    $limit = 255 - ($ext ? mb_strlen($ext, 'UTF-8') + 1 : 0);
-    $base  = mb_strcut($base, 0, max(1, $limit), 'UTF-8');
-    $filename = $ext ? ($base . '.' . $ext) : $base;
+
+    if ($ext !== '') {
+        $extBytes = strlen($ext); // байты в UTF-8
+        $limit = 255 - ($extBytes + 1); // +1 за точку
+    } else {
+        $limit = 255;
+    }
+
+    $limit = max(1, $limit);
+    $base  = mb_strcut($base, 0, $limit, 'UTF-8');
+    $filename = $ext !== '' ? ($base . '.' . $ext) : $base;
+
 
     return $filename;
 }
