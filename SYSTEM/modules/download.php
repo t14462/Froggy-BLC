@@ -7,6 +7,8 @@ ignore_user_abort(true);
 // На всякий случай уберём лимит времени (долгие загрузки больших файлов)
 @set_time_limit(0);
 
+$conAborted = false;
+
 // ─── Утилиты санитизации имени файла ───────────────────────────────
 
 function rusTranslitHelper($st) {
@@ -164,27 +166,6 @@ if (!is_dir($COUNT_DIR)) {
 }
 $cntFile = $COUNT_DIR . '/' . $file . '.dlcnt';
 
-// ─── Атомарный инкремент счётчика ──────────────────────────────────
-
-$fp = @fopen($cntFile, 'c+'); // создаст файл при отсутствии
-if ($fp) {
-    if (flock($fp, LOCK_EX)) {
-        $val  = 0;
-        $data = stream_get_contents($fp);
-        $data = trim((string)$data);
-        if ($data !== '' && ctype_digit($data)) {
-            $val = (int)$data;
-        }
-        $val++;
-        rewind($fp);
-        ftruncate($fp, 0);
-        fwrite($fp, (string)$val);
-        fflush($fp);
-        flock($fp, LOCK_UN);
-    }
-    fclose($fp);
-}
-
 // ─── Заголовки ответа ──────────────────────────────────────────────
 
 // $downloadName = preg_replace('/[\r\n"]+/', '', $file); // защита от инъекций в заголовки
@@ -241,13 +222,46 @@ $chunk = 32768;
 while (!feof($fh)) {
     $buf = fread($fh, $chunk);
     if ($buf === false) {
+        $conAborted = true;
+
         break; // ошибка чтения
     }
     echo $buf;
     flush();
     if (connection_aborted()) {
+        $conAborted = true;
+        
         break; // клиент ушёл — прекращаем чтение
     }
 }
 fclose($fh);
+
+$method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+$range = $_SERVER['HTTP_RANGE'] ?? '';
+
+if(!$conAborted && strcasecmp($method, 'GET') === 0 && $range === '') {
+
+    // ─── Атомарный инкремент счётчика ──────────────────────────────────
+
+    $fp = @fopen($cntFile, 'c+'); // создаст файл при отсутствии
+    if ($fp) {
+        if (flock($fp, LOCK_EX)) {
+            $val  = 0;
+            $data = stream_get_contents($fp);
+            $data = trim((string)$data);
+            if ($data !== '' && ctype_digit($data)) {
+                $val = (int)$data;
+            }
+            $val++;
+            rewind($fp);
+            ftruncate($fp, 0);
+            fwrite($fp, (string)$val);
+            fflush($fp);
+            flock($fp, LOCK_UN);
+        }
+        fclose($fp);
+    }
+}
+
+
 exit;
