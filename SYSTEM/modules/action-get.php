@@ -533,6 +533,8 @@ function pageload() {
 
 
 
+        $content = ru_nbsp_typograf($content);
+
 
 
         if((string)$commRecov !== '') {
