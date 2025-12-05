@@ -53,6 +53,10 @@ html {
     scroll-behavior: smooth;
 }
 
+.nobr {
+    white-space: nowrap;
+}
+
 article {
     font-size: 1.15rem;
     margin: 0;

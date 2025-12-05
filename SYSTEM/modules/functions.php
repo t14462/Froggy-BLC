@@ -2719,15 +2719,40 @@ function ru_nbsp_typograf(string $text, bool $useHtmlNbsp = true): string
 
     $text = str_replace($searchWords, $replaceWords, $text);
 
+
     // ── 3) Частицы "же", "ли", "бы", "б" ───────────────────────────
-    //    NBSP СЛЕВА: "как же выйти" → "как&nbsp;же выйти"
-    //    Шаблоны простые: только вариант " ... же ..." с пробелами.
-    //    Случаи "как же." (без пробела справа) не ловим — сознательно, без preg_*.
+    // NBSP СЛЕВА: "как же выйти" → "как&nbsp;же выйти"
 
-    $searchParticles  = [' же ',      ' ли ',      ' бы ',      ' б '];
-    $replaceParticles = [$nbsp.'же ', $nbsp.'ли ', $nbsp.'бы ', $nbsp.'б '];
-
-    $text = str_replace($searchParticles, $replaceParticles, $text);
+    $text = preg_replace(
+        "/ (же\b|ли\b|бы\b|б\b)/u",
+        $nbsp . '$1',
+        $text
+    );
 
     return $text;
+}
+
+
+
+
+
+
+
+
+
+/**
+ * Шаблон: {{nobr|ТЕКСТ}}
+ * Вывод:  <span class="nobr">ТЕКСТ</span>
+ *
+ * Можно прогонять по HTML статьи перед выводом.
+ */
+function tpl_nobr(string $text): string
+{
+    return preg_replace_callback(
+        '/\{\{nobr\|(.+?)\}\}/us',
+        static function ($m) {
+            return '<span class="nobr">' . $m[1] . '</span>';
+        },
+        $text
+    );
 }

@@ -19,6 +19,10 @@ html {
     font-family: monospace;
 }
 
+.nobr {
+    white-space: nowrap;
+}
+
 p {
     margin: .75rem 0;
 }

@@ -535,7 +535,9 @@ function pageload() {
 
         $content = ru_nbsp_typograf($content);
 
+        $content = tpl_nobr($content);
 
+        
 
         if((string)$commRecov !== '') {
 
