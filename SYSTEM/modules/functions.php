@@ -2564,7 +2564,7 @@ function atomicCounterIncrement($path) {
 
 
 /**
- * Добавляет неразрывные пробелы к русским предлогам, союзам и сокращениям.
+ * Добавляет неразрывные пробелы к русским предлогам, союзам, сокращениям и частицам.
  *
  * @param string $text          Входной текст
  * @param bool   $useHtmlNbsp   true  = использовать "&nbsp;"
@@ -2658,14 +2658,12 @@ function ru_nbsp_typograf(string $text, bool $useHtmlNbsp = true): string
     $text = str_replace($search, $replace, $text);
 
     // ── 2) Короткие союзы/предлоги ─────────────────────────────────
-    //    Тут делаем магию с вариантами:
-    //    - ' в '   → ' в&nbsp;'
-    //    - 'В '    → 'В&nbsp;'
-    //    - '&nbsp;в ' → '&nbsp;в&nbsp;'  (учитываем уже обработанное слово слева)
+    //    - ' в '      → ' в&nbsp;'
+    //    - 'В '       → 'В&nbsp;'
+    //    - '&nbsp;в ' → '&nbsp;в&nbsp;'
     //    - '&nbsp;В ' → '&nbsp;В&nbsp;'
     //
-    //    Благодаря этому цепочки вида "но с ним", "и в то же время"
-    //    превращаются в "но&nbsp;с&nbsp;ним", "и&nbsp;в&nbsp;то&nbsp;же&nbsp;время".
+    //    Цепочки "но с ним", "и в то же время" → "но&nbsp;с&nbsp;ним", "и&nbsp;в&nbsp;то&nbsp;же&nbsp;время".
 
     $shortSpecs = [
         ['а',   'А'],
@@ -2689,6 +2687,13 @@ function ru_nbsp_typograf(string $text, bool $useHtmlNbsp = true): string
         ['для','Для'],
         ['без','Без'],
         ['на', 'На'],
+        ['ни', 'Ни'],
+        ['не', 'Не'],
+        ['во', 'Во'],
+        ['со',  'Со'],
+        ['ко',  'Ко'],
+        ['обо', 'Обо'],
+        ['безо','Безо'],
     ];
 
     $searchWords  = [];
@@ -2713,6 +2718,16 @@ function ru_nbsp_typograf(string $text, bool $useHtmlNbsp = true): string
     }
 
     $text = str_replace($searchWords, $replaceWords, $text);
+
+    // ── 3) Частицы "же", "ли", "бы", "б" ───────────────────────────
+    //    NBSP СЛЕВА: "как же выйти" → "как&nbsp;же выйти"
+    //    Шаблоны простые: только вариант " ... же ..." с пробелами.
+    //    Случаи "как же." (без пробела справа) не ловим — сознательно, без preg_*.
+
+    $searchParticles  = [' же ',      ' ли ',      ' бы ',      ' б '];
+    $replaceParticles = [$nbsp.'же ', $nbsp.'ли ', $nbsp.'бы ', $nbsp.'б '];
+
+    $text = str_replace($searchParticles, $replaceParticles, $text);
 
     return $text;
 }
