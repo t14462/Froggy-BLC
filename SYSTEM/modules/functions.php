@@ -2572,7 +2572,7 @@ function atomicCounterIncrement($path) {
  *
  * @return string
  */
-function ru_nbsp_typograf(string $text, bool $useHtmlNbsp = false): string
+function ru_nbsp_typograf(string $text, bool $useHtmlNbsp = true): string
 {
     // Неразрывный пробел и тире
     $nbsp  = $useHtmlNbsp ? '&nbsp;' : "\u{00A0}";
@@ -2724,7 +2724,7 @@ function ru_nbsp_typograf(string $text, bool $useHtmlNbsp = false): string
     // NBSP СЛЕВА: "как же выйти" → "как&nbsp;же выйти"
 
     $text = preg_replace(
-        "/ (же\b|ли\b|бы\b|б\b)/u",
+        "/ (же\b|ли\b|бы\b|б\b|&mdash;|—)/u",
         $nbsp . '$1',
         $text
     );
