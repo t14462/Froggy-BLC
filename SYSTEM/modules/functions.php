@@ -2572,7 +2572,7 @@ function atomicCounterIncrement($path) {
  *
  * @return string
  */
-function ru_nbsp_typograf(string $text, bool $useHtmlNbsp = true): string
+function ru_nbsp_typograf(string $text, bool $useHtmlNbsp = false): string
 {
     // Неразрывный пробел и тире
     $nbsp  = $useHtmlNbsp ? '&nbsp;' : "\u{00A0}";
