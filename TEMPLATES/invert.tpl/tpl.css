@@ -1143,10 +1143,13 @@ nav#TOC {
     max-width: 55%;
 }
 
-
 nav#TOC ol {
-    list-style-position: inside;
     padding-left: 1.3rem;
+}
+
+nav#TOC > ol {
+
+    margin-left: 2rem;
 }
 
 
