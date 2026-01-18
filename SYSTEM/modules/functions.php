@@ -2811,7 +2811,7 @@ function ru_nbsp_typograf(string $text, bool $useHtmlNbsp = true): string
     // NBSP СЛЕВА: "как же выйти" → "как&nbsp;же выйти"
 
     $text = preg_replace(
-        "/ (же\b|ли\b|бы\b|б\b|&mdash;|—)/u",
+        "/ (же\b|ли\b|бы\b|б\b|&mdash;|—|&ndash;|–)/u",
         $nbsp . '$1',
         $text
     );
