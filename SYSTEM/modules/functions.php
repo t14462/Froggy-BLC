@@ -2562,6 +2562,85 @@ function atomicCounterIncrement($path) {
 
 
 
+/**
+ * 1) Перед типографом: прячет " -- " только внутри <code ...>...</code>
+ *    Возвращает новый HTML, а уникальный токен кладёт в $ctx['ddash_token'].
+ */
+function protect_code_double_hyphen($html, &$ctx)
+{
+    // Уникальный токен на прогон (ASCII-only, чтобы типограф точно не "улучшил")
+    if (empty($ctx['ddash_token'])) {
+        $ctx['ddash_token'] = '[[DDASH_' . bin2hex(random_bytes(8)) . ']]';
+    }
+    $token = $ctx['ddash_token'];
+
+    $out = '';
+    $pos = 0;
+
+    while (true) {
+        $start = stripos($html, '<code', $pos);
+        if ($start === false) {
+            $out .= substr($html, $pos);
+            break;
+        }
+
+        // Всё до <code...
+        $out .= substr($html, $pos, $start - $pos);
+
+        // Конец открывающего тега <code ...>
+        $tagEnd = strpos($html, '>', $start);
+        if ($tagEnd === false) {
+            // битый HTML — дописываем остаток как есть
+            $out .= substr($html, $start);
+            break;
+        }
+
+        $openTag = substr($html, $start, $tagEnd - $start + 1);
+        $out .= $openTag;
+
+        $contentStart = $tagEnd + 1;
+
+        // Ищем закрывающий </code>
+        $close = stripos($html, '</code>', $contentStart);
+        if ($close === false) {
+            // нет закрывающего тега — дописываем остаток как есть
+            $out .= substr($html, $contentStart);
+            break;
+        }
+
+        // Содержимое code (как сырой HTML/текст)
+        $content = substr($html, $contentStart, $close - $contentStart);
+
+        // Прячем только точное " -- " (пробелы по краям)
+        $content = str_replace(' -- ', $token, $content);
+
+        $out .= $content;
+        $out .= '</code>';
+
+        $pos = $close + strlen('</code>');
+    }
+
+    return $out;
+}
+
+/**
+ * 2) После типографа: возвращает плейсхолдер обратно в " -- "
+ */
+function restore_code_double_hyphen($html, $ctx)
+{
+    $token = isset($ctx['ddash_token']) ? $ctx['ddash_token'] : '';
+    if ($token === '') {
+        return $html;
+    }
+    return str_replace($token, ' -- ', $html);
+}
+
+
+
+
+
+
+
 
 /**
  * Добавляет неразрывные пробелы к русским предлогам, союзам, сокращениям и частицам.
@@ -2574,6 +2653,14 @@ function atomicCounterIncrement($path) {
  */
 function ru_nbsp_typograf(string $text, bool $useHtmlNbsp = true): string
 {
+
+
+    $ctx = array();
+
+    $text = protect_code_double_hyphen($text, $ctx);
+
+
+
     // Неразрывный пробел и тире
     $nbsp  = $useHtmlNbsp ? '&nbsp;' : "\u{00A0}";
     $mdash = $useHtmlNbsp ? '&mdash;' : '—';
@@ -2728,6 +2815,12 @@ function ru_nbsp_typograf(string $text, bool $useHtmlNbsp = true): string
         $nbsp . '$1',
         $text
     );
+
+
+
+    $text = restore_code_double_hyphen($text, $ctx);
+
+
 
     return $text;
 }
