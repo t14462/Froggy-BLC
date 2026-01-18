@@ -584,7 +584,7 @@ function savePage() {
             <p>Для Вставки <em>ВИДЕО YouTube</em> используйте шаблон <strong>{{youtube|VIDID|Ширина}}</strong> ; (Ширина является необязательным аттрибутом, и указывается в Процентах, без указания <strong>%</strong>).<br />Также поддерживаются <strong>{{dailymotion|VIDID|Ширина}}</strong> и <strong>{{vimeo|VIDID|Ширина}}</strong>.</p><p>Для вставки <em>Спойлера</em>, <em>Цитаты</em> или <em>Инфобокса</em> используйте шаблон из меню редактора <strong>\"Стили\"</strong>.</p>
             <p>Доступны также Шаблоны <strong>{{clear}}</strong> и <strong>{{nobr|ТЕКСТ}}</strong></p>
             <p><strong>{{download|DATABASE/fupload/Example.zip}}</strong>&nbsp;&mdash; Используйте это для вставки URL загрузок.</p>
-            <p>&nbsp;&mdash; <em>Длинное Тире с Неразрывным Пробелом вначале, для копирования.</em></p>
+            <p>Для вставки Тире используйте \" -- \" (без кавычек, с пробелами по краям)</p>
             <p><strong>{{lambda}} FROG!!!</strong></p>
             
 
