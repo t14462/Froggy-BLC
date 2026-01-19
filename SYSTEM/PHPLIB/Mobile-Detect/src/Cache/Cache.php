@@ -32,8 +32,6 @@ class Cache implements CacheInterface
                 return $this->cache[$key]['content'];
             }
 
-            // @Note: this is an interpretation of "Definitions" -> "Expiration"
-            // Implementing Libraries MAY expire an item before its requested Expiration Time, but MUST treat an item as expired once its Expiration Time is reached.
             $this->deleteSingle($key);
         }
 
@@ -94,12 +92,23 @@ class Cache implements CacheInterface
         return true;
     }
 
-    /** @inheritdoc */
+    /**
+     * @inheritdoc
+     * @throws CacheInvalidArgumentException
+     */
     public function has(string $key): bool
     {
-        $key = $this->checkKey($key);
+        $this->checkKey($key);
 
-        return isset($this->cache[$key]);
+        if (isset($this->cache[$key])) {
+            if ($this->cache[$key]['ttl'] === null || $this->cache[$key]['ttl'] > time()) {
+                return true;
+            }
+
+            $this->deleteSingle($key);
+        }
+
+        return false;
     }
 
     /** @inheritdoc */
@@ -166,23 +175,50 @@ class Cache implements CacheInterface
     }
 
     /**
-     * Checks if at least one of the values is FALSE, then returns FALSE.
-     *
-     * @param bool[] $booleans
+     * @param bool[]|int[] $booleans
      */
     protected function checkReturn(array $booleans): bool
     {
-        return !in_array(false, $booleans, true);
+        foreach ($booleans as $boolean) {
+            if (!$boolean) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**
      * Get all cache keys.
      *
      * @internal Needed for testing purposes.
-     * @return string[]
+     * @return array{string}
      */
     public function getKeys(): array
     {
         return array_keys($this->cache);
+    }
+
+    /**
+     * Evict all expired items from the cache.
+     *
+     * Useful for long-running processes (CLI scripts, workers, daemons)
+     * to periodically clean up expired entries and free memory.
+     *
+     * @return int Number of items evicted
+     */
+    public function evictExpired(): int
+    {
+        $evicted = 0;
+        $now = time();
+
+        foreach ($this->cache as $key => $item) {
+            if ($item['ttl'] !== null && $item['ttl'] <= $now) {
+                unset($this->cache[$key]);
+                $evicted++;
+            }
+        }
+
+        return $evicted;
     }
 }
