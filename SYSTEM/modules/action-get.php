@@ -148,6 +148,10 @@ function viewLog() {
 
         fseekOrDie($file, $offset);
 
+        ////
+
+        ensure_html_purifier_loaded();
+
         $config = HTMLPurifier_Config::createDefault();
         $config->set('Core.Encoding', 'UTF-8');
         $config->set('HTML.Doctype', 'XHTML 1.1');

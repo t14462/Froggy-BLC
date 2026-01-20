@@ -138,6 +138,8 @@ function savePage() {
         ##############################################
         ##############################################
 
+        ensure_html_purifier_loaded();
+
         $config = HTMLPurifier_Config::createDefault();
         $config->set('Core.Encoding', 'UTF-8');
         $config->set('HTML.Doctype', 'XHTML 1.1');
@@ -1058,6 +1060,8 @@ function commentReply() {
                 //$commpost = str_replace("&", "&amp;", $commpost);
                 //$commpost = str_replace("&amp;amp;", "&amp;", $commpost);
 
+                ensure_html_purifier_loaded();
+
                 $config = HTMLPurifier_Config::createDefault();
                 $config->set('Core.Encoding', 'UTF-8');
                 $config->set('HTML.Doctype', 'XHTML 1.1');
@@ -1503,6 +1507,8 @@ function postComment() {
 
                 //$commpost = str_replace("&", "&amp;", $commpost);
                 //$commpost = str_replace("&amp;amp;", "&amp;", $commpost);
+
+                ensure_html_purifier_loaded();
 
                 $config = HTMLPurifier_Config::createDefault();
                 $config->set('Core.Encoding', 'UTF-8');
