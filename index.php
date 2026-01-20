@@ -132,6 +132,7 @@ require_once "SYSTEM/modules/locker.php";
 require_once "SYSTEM/modules/mobile-detect.php";
 require_once "SYSTEM/modules/post-get-filter.php";
 require_once "SYSTEM/api-keys.php";
+require_once "SYSTEM/modules/init-libs.php";
 require_once "SYSTEM/modules/functions.php";
 
 
