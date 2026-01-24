@@ -472,17 +472,17 @@ function pageload() {
         }
 
 
-        $html = parseSpoilers($html);
+        // Генератор Обёртки из Alt
+        $html = wrap_images_with_figure($html);
+
+        $html = replaceSemanticSpans($html);
 
         // Шаблон ЦИТАТА
         $html = convertQuotBlocks($html);
 
-        // Генератор Обёртки из Alt
-        $html = wrap_images_with_figure($html);
-
         $html = convert_infoboxes_to_aside($html);
 
-        $html = replaceSemanticSpans($html);
+        $html = parseSpoilers($html);
 
         $content = $html->save();
 
