@@ -472,10 +472,10 @@ function pageload() {
         }
 
 
+        $html = replaceSemanticSpans($html);
+
         // Генератор Обёртки из Alt
         $html = wrap_images_with_figure($html);
-
-        $html = replaceSemanticSpans($html);
 
         // Шаблон ЦИТАТА
         $html = convertQuotBlocks($html);
