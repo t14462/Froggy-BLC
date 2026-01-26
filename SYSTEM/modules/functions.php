@@ -2562,6 +2562,17 @@ function atomicCounterIncrement($path) {
 
 
 
+// Небольшой генератор ASCII-токена (на случай старых PHP без random_bytes)
+function _typo_token($prefix)
+{
+    if (function_exists('random_bytes')) {
+        return '[[' . $prefix . '_' . bin2hex(random_bytes(8)) . ']]';
+    }
+    $u = uniqid($prefix . '_', true);
+    $u = str_replace(array('.', ' '), '', $u);
+    return '[[' . $u . ']]';
+}
+
 /**
  * 1) Перед типографом: прячет " -- " только внутри <code ...>...</code>
  *    Возвращает новый HTML, а уникальный токен кладёт в $ctx['ddash_token'].
@@ -2570,7 +2581,8 @@ function protect_code_double_hyphen($html, &$ctx)
 {
     // Уникальный токен на прогон (ASCII-only, чтобы типограф точно не "улучшил")
     if (empty($ctx['ddash_token'])) {
-        $ctx['ddash_token'] = '[[DDASH_' . bin2hex(random_bytes(8)) . ']]';
+        /// $ctx['ddash_token'] = '[[DDASH_' . bin2hex(random_bytes(8)) . ']]';
+        $ctx['ddash_token'] =  _typo_token('DDASH');
     }
     $token = $ctx['ddash_token'];
 
@@ -2642,6 +2654,295 @@ function restore_code_double_hyphen($html, $ctx)
 
 
 
+
+/**
+ * Кавычкер «ёлочки» со скоупом по HTML-тегам.
+ * - " и &quot; вне тегов превращает в « » попарно
+ * - кавычки НЕ "перепрыгивают" границы тегов (стек по вложенности)
+ * - если внутри конкретного тега кавычек нечётное число — откатывает последнюю « в исходный токен
+ * - стек хранит имя тега и закрывается по имени, а не "поп наугад"
+ */
+function typograph_guillemets($html)
+{
+    $out = array();
+    $len = strlen($html);
+
+    // Состояние кавычек на уровне тега:
+    // tag: имя тега (lowercase) или null для корня
+    // open: ждём закрывающую?
+    // lastOpenIdx: индекс « в $out
+    // lastOpenTok: чем заменить при откате: '"' или '&quot;' (в исходном регистре)
+    $stack = array();
+    $stack[] = array('tag' => null, 'open' => false, 'lastOpenIdx' => null, 'lastOpenTok' => null);
+
+    // HTML void elements (не имеют закрывающего тега)
+    $void = array(
+        'area'=>1,'base'=>1,'br'=>1,'col'=>1,'embed'=>1,'hr'=>1,'img'=>1,'input'=>1,'link'=>1,
+        'meta'=>1,'param'=>1,'source'=>1,'track'=>1,'wbr'=>1
+    );
+
+    $i = 0;
+    while ($i < $len) {
+        $ch = $html[$i];
+
+        // ── 1) ТЕГ / КОММЕНТ / DOCTYPE / PI ─────────────────────────────
+        if ($ch === '<') {
+
+            // HTML comment <!-- ... -->
+            if ($i + 4 <= $len && substr($html, $i, 4) === '<!--') {
+                $end = strpos($html, '-->', $i + 4);
+                if ($end === false) {
+                    $out[] = substr($html, $i);
+                    break;
+                }
+                $out[] = substr($html, $i, $end - $i + 3);
+                $i = $end + 3;
+                continue;
+            }
+
+            // Находим конец тега '>' с учётом кавычек в атрибутах
+            $j = $i + 1;
+            $q = null; // '"' или "'"
+            while ($j < $len) {
+                $c = $html[$j];
+                if ($q !== null) {
+                    if ($c === $q) $q = null;
+                } else {
+                    if ($c === '"' || $c === "'") $q = $c;
+                    else if ($c === '>') break;
+                }
+                $j++;
+            }
+
+            if ($j >= $len) {
+                $out[] = substr($html, $i);
+                break;
+            }
+
+            $tag = substr($html, $i, $j - $i + 1);
+            $out[] = $tag;
+
+            // Пропускаем <!DOCTYPE ...>, < ? ... ? > и прочие декларации
+            $tag2 = ltrim($tag);
+            if (isset($tag2[1]) && ($tag2[1] === '!' || $tag2[1] === '?')) {
+                $i = $j + 1;
+                continue;
+            }
+
+            $isClose = (isset($tag2[1]) && $tag2[1] === '/');
+
+            $trimTag = rtrim($tag);
+            $isSelf = (substr($trimTag, -2) === '/>');
+
+            // Имя тега
+            $name = '';
+            if ($isClose) {
+                $k = 2; // после "</"
+                while ($k < strlen($tag2) && $tag2[$k] === ' ') $k++;
+                while ($k < strlen($tag2)) {
+                    $c = $tag2[$k];
+                    if ($c === '>' || $c === ' ' || $c === "\t" || $c === "\r" || $c === "\n" || $c === '/') break;
+                    $name .= $c;
+                    $k++;
+                }
+            } else {
+                $k = 1; // после "<"
+                while ($k < strlen($tag2) && $tag2[$k] === ' ') $k++;
+                while ($k < strlen($tag2)) {
+                    $c = $tag2[$k];
+                    if ($c === '>' || $c === ' ' || $c === "\t" || $c === "\r" || $c === "\n" || $c === '/') break;
+                    $name .= $c;
+                    $k++;
+                }
+            }
+            $nameLower = strtolower($name);
+
+            if ($isClose) {
+
+                // 1) Ищем соответствующий открытый тег в стеке (сверху вниз)
+                $match = -1;
+                for ($s = count($stack) - 1; $s > 0; $s--) { // >0: корень не закрываем
+                    if ($stack[$s]['tag'] === $nameLower) {
+                        $match = $s;
+                        break;
+                    }
+                }
+
+                if ($match !== -1) {
+                    // 2) Откатываем незакрытую « на всех уровнях, которые сейчас будут закрыты
+                    for ($s = count($stack) - 1; $s >= $match; $s--) {
+                        if ($stack[$s]['open'] && $stack[$s]['lastOpenIdx'] !== null) {
+                            $idx = $stack[$s]['lastOpenIdx'];
+                            $tok = $stack[$s]['lastOpenTok'];
+                            $out[$idx] = ($tok !== null) ? $tok : '"';
+                        }
+                    }
+
+                    // 3) Pop до уровня $match (включая сам закрываемый тег)
+                    while (count($stack) > $match) {
+                        array_pop($stack);
+                    }
+                } else {
+                    // Лишний </...> (не найден в стеке) — игнорируем, стек не трогаем
+                }
+
+            } else {
+                // Открывающий тег: push, если он не void и не self-closing
+                if (!$isSelf && $nameLower !== '' && !isset($void[$nameLower])) {
+                    $stack[] = array('tag' => $nameLower, 'open' => false, 'lastOpenIdx' => null, 'lastOpenTok' => null);
+                }
+            }
+
+            $i = $j + 1;
+            continue;
+        }
+
+        // ── 2) ТЕКСТ (вне '<...>'), обрабатываем " и &quot; ─────────────
+        $top = count($stack) - 1;
+
+        // &quot; / &QUOT; (в тексте)
+        if ($ch === '&' && $i + 6 <= $len) {
+            $cand = substr($html, $i, 6);
+            if (strcasecmp($cand, '&quot;') === 0) {
+                if (!$stack[$top]['open']) {
+                    $out[] = '«';
+                    $stack[$top]['open'] = true;
+                    $stack[$top]['lastOpenIdx'] = count($out) - 1;
+                    $stack[$top]['lastOpenTok'] = $cand; // сохраняем регистр
+                } else {
+                    $out[] = '»';
+                    $stack[$top]['open'] = false;
+                    $stack[$top]['lastOpenIdx'] = null;
+                    $stack[$top]['lastOpenTok'] = null;
+                }
+                $i += 6;
+                continue;
+            }
+        }
+
+        // обычная "
+        if ($ch === '"') {
+            if (!$stack[$top]['open']) {
+                $out[] = '«';
+                $stack[$top]['open'] = true;
+                $stack[$top]['lastOpenIdx'] = count($out) - 1;
+                $stack[$top]['lastOpenTok'] = '"';
+            } else {
+                $out[] = '»';
+                $stack[$top]['open'] = false;
+                $stack[$top]['lastOpenIdx'] = null;
+                $stack[$top]['lastOpenTok'] = null;
+            }
+            $i++;
+            continue;
+        }
+
+        $out[] = $ch;
+        $i++;
+    }
+
+    // Финальный откат на текущем верхнем уровне (если осталось открытое в самом конце)
+    $top = count($stack) - 1;
+    if ($top >= 0 && $stack[$top]['open'] && $stack[$top]['lastOpenIdx'] !== null) {
+        $idx = $stack[$top]['lastOpenIdx'];
+        $tok = $stack[$top]['lastOpenTok'];
+        $out[$idx] = ($tok !== null) ? $tok : '"';
+    }
+
+    return implode('', $out);
+}
+
+
+
+
+
+
+
+/**
+ * Перед типографом: прячет кавычки внутри <code>:
+ *   1) "      -> DQUOTE token
+ *   2) &quot;  -> EQUOT token (ТОЛЬКО нижний регистр, без &QUOT;)
+ *
+ * Хранит токены в $ctx['dquote_token'], $ctx['equot_token']
+ */
+function protect_code_quotes($html, &$ctx)
+{
+    if (empty($ctx['dquote_token'])) $ctx['dquote_token'] = _typo_token('DQUOTE');
+    if (empty($ctx['equot_token']))  $ctx['equot_token']  = _typo_token('EQUOTE');
+
+    $dq = $ctx['dquote_token'];
+    $eq = $ctx['equot_token'];
+
+    $out = '';
+    $pos = 0;
+
+    while (true) {
+        $start = stripos($html, '<code', $pos);
+        if ($start === false) {
+            $out .= substr($html, $pos);
+            break;
+        }
+
+        $out .= substr($html, $pos, $start - $pos);
+
+        $tagEnd = strpos($html, '>', $start);
+        if ($tagEnd === false) {
+            $out .= substr($html, $start);
+            break;
+        }
+
+        $out .= substr($html, $start, $tagEnd - $start + 1);
+
+        $contentStart = $tagEnd + 1;
+
+        $close = stripos($html, '</code>', $contentStart);
+        if ($close === false) {
+            $out .= substr($html, $contentStart);
+            break;
+        }
+
+        $content = substr($html, $contentStart, $close - $contentStart);
+
+        // 1) Прячем обычные "
+        $content = str_replace('"', $dq, $content);
+
+        // 2) Прячем только &quot; (нижний регистр)
+        $content = str_replace('&quot;', $eq, $content);
+
+        $out .= $content;
+        $out .= '</code>';
+
+        $pos = $close + 7; // strlen('</code>') == 7
+    }
+
+    return $out;
+}
+
+/**
+ * После типографа: возвращает кавычки внутри <code> обратно.
+ */
+function restore_code_quotes($html, $ctx)
+{
+    $dq = isset($ctx['dquote_token']) ? $ctx['dquote_token'] : '';
+    $eq = isset($ctx['equot_token'])  ? $ctx['equot_token']  : '';
+
+    if ($dq !== '') {
+        $html = str_replace($dq, '"', $html);
+    }
+
+    if ($eq !== '') {
+        $html = str_replace($eq, '&quot;', $html);
+    }
+
+    return $html;
+}
+
+
+
+
+
+
+
 /**
  * Добавляет неразрывные пробелы к русским предлогам, союзам, сокращениям и частицам.
  *
@@ -2658,6 +2959,8 @@ function ru_nbsp_typograf(string $text, bool $useHtmlNbsp = true): string
     $ctx = array();
 
     $text = protect_code_double_hyphen($text, $ctx);
+
+    $text = protect_code_quotes($text, $ctx);   // новая: " -> токен
 
 
 
@@ -2816,10 +3119,13 @@ function ru_nbsp_typograf(string $text, bool $useHtmlNbsp = true): string
         $text
     );
 
+    $text = typograph_guillemets($text);             // «ёлочки»
+
 
 
     $text = restore_code_double_hyphen($text, $ctx);
 
+    $text = restore_code_quotes($text, $ctx);
 
 
     return $text;
