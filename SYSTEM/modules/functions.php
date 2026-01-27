@@ -2656,33 +2656,37 @@ function restore_code_double_hyphen($html, $ctx)
 
 
 /**
- * Кавычкер «ёлочки» со скоупом по HTML-тегам.
- * - " и &quot; вне тегов превращает в « » попарно
- * - кавычки НЕ "перепрыгивают" границы тегов (стек по вложенности)
- * - если внутри конкретного тега кавычек нечётное число — откатывает последнюю « в исходный токен
- * - стек хранит имя тега и закрывается по имени, а не "поп наугад"
+ * Быстрый кавычкер «ёлочки» со скоупом по HTML-тегам.
+ * Оптимизация: пишет в выход кусками.
+ * Важно: распознаёт только "&quot;" (нижний регистр), без "&QUOT;".
  */
 function typograph_guillemets($html)
 {
-    $out = array();
     $len = strlen($html);
+    $chunks = array();
 
-    // Состояние кавычек на уровне тега:
-    // tag: имя тега (lowercase) или null для корня
-    // open: ждём закрывающую?
-    // lastOpenIdx: индекс « в $out
-    // lastOpenTok: чем заменить при откате: '"' или '&quot;' (в исходном регистре)
     $stack = array();
     $stack[] = array('tag' => null, 'open' => false, 'lastOpenIdx' => null, 'lastOpenTok' => null);
 
-    // HTML void elements (не имеют закрывающего тега)
-    $void = array(
-        'area'=>1,'base'=>1,'br'=>1,'col'=>1,'embed'=>1,'hr'=>1,'img'=>1,'input'=>1,'link'=>1,
-        'meta'=>1,'param'=>1,'source'=>1,'track'=>1,'wbr'=>1
-    );
+    static $void = null;
+    if ($void === null) {
+        $void = array(
+            'area'=>1,'base'=>1,'br'=>1,'col'=>1,'embed'=>1,'hr'=>1,'img'=>1,'input'=>1,'link'=>1,
+            'meta'=>1,'param'=>1,'source'=>1,'track'=>1,'wbr'=>1
+        );
+    }
 
     $i = 0;
     while ($i < $len) {
+
+        // Быстро скидываем обычный текст куском до ближайшего спец-символа (<, ", &)
+        $span = strcspn($html, '<"&', $i);
+        if ($span > 0) {
+            $chunks[] = substr($html, $i, $span);
+            $i += $span;
+            continue;
+        }
+
         $ch = $html[$i];
 
         // ── 1) ТЕГ / КОММЕНТ / DOCTYPE / PI ─────────────────────────────
@@ -2692,17 +2696,17 @@ function typograph_guillemets($html)
             if ($i + 4 <= $len && substr($html, $i, 4) === '<!--') {
                 $end = strpos($html, '-->', $i + 4);
                 if ($end === false) {
-                    $out[] = substr($html, $i);
+                    $chunks[] = substr($html, $i);
                     break;
                 }
-                $out[] = substr($html, $i, $end - $i + 3);
+                $chunks[] = substr($html, $i, $end - $i + 3);
                 $i = $end + 3;
                 continue;
             }
 
-            // Находим конец тега '>' с учётом кавычек в атрибутах
+            // Ищем '>' с учётом кавычек в атрибутах
             $j = $i + 1;
-            $q = null; // '"' или "'"
+            $q = null;
             while ($j < $len) {
                 $c = $html[$j];
                 if ($q !== null) {
@@ -2715,14 +2719,14 @@ function typograph_guillemets($html)
             }
 
             if ($j >= $len) {
-                $out[] = substr($html, $i);
+                $chunks[] = substr($html, $i);
                 break;
             }
 
             $tag = substr($html, $i, $j - $i + 1);
-            $out[] = $tag;
+            $chunks[] = $tag;
 
-            // Пропускаем <!DOCTYPE ...>, < ? ... ? > и прочие декларации
+            // Декларации пропускаем
             $tag2 = ltrim($tag);
             if (isset($tag2[1]) && ($tag2[1] === '!' || $tag2[1] === '?')) {
                 $i = $j + 1;
@@ -2730,64 +2734,55 @@ function typograph_guillemets($html)
             }
 
             $isClose = (isset($tag2[1]) && $tag2[1] === '/');
-
             $trimTag = rtrim($tag);
-            $isSelf = (substr($trimTag, -2) === '/>');
+            $isSelf  = (substr($trimTag, -2) === '/>');
 
             // Имя тега
             $name = '';
+            $tlen = strlen($tag2);
+
             if ($isClose) {
-                $k = 2; // после "</"
-                while ($k < strlen($tag2) && $tag2[$k] === ' ') $k++;
-                while ($k < strlen($tag2)) {
+                $k = 2;
+                while ($k < $tlen && $tag2[$k] === ' ') $k++;
+                while ($k < $tlen) {
                     $c = $tag2[$k];
                     if ($c === '>' || $c === ' ' || $c === "\t" || $c === "\r" || $c === "\n" || $c === '/') break;
                     $name .= $c;
                     $k++;
                 }
             } else {
-                $k = 1; // после "<"
-                while ($k < strlen($tag2) && $tag2[$k] === ' ') $k++;
-                while ($k < strlen($tag2)) {
+                $k = 1;
+                while ($k < $tlen && $tag2[$k] === ' ') $k++;
+                while ($k < $tlen) {
                     $c = $tag2[$k];
                     if ($c === '>' || $c === ' ' || $c === "\t" || $c === "\r" || $c === "\n" || $c === '/') break;
                     $name .= $c;
                     $k++;
                 }
             }
+
             $nameLower = strtolower($name);
 
             if ($isClose) {
-
-                // 1) Ищем соответствующий открытый тег в стеке (сверху вниз)
                 $match = -1;
-                for ($s = count($stack) - 1; $s > 0; $s--) { // >0: корень не закрываем
-                    if ($stack[$s]['tag'] === $nameLower) {
-                        $match = $s;
-                        break;
-                    }
+                for ($s = count($stack) - 1; $s > 0; $s--) {
+                    if ($stack[$s]['tag'] === $nameLower) { $match = $s; break; }
                 }
 
                 if ($match !== -1) {
-                    // 2) Откатываем незакрытую « на всех уровнях, которые сейчас будут закрыты
                     for ($s = count($stack) - 1; $s >= $match; $s--) {
                         if ($stack[$s]['open'] && $stack[$s]['lastOpenIdx'] !== null) {
                             $idx = $stack[$s]['lastOpenIdx'];
                             $tok = $stack[$s]['lastOpenTok'];
-                            $out[$idx] = ($tok !== null) ? $tok : '"';
+                            $chunks[$idx] = ($tok !== null) ? $tok : '"';
                         }
                     }
-
-                    // 3) Pop до уровня $match (включая сам закрываемый тег)
                     while (count($stack) > $match) {
                         array_pop($stack);
                     }
-                } else {
-                    // Лишний </...> (не найден в стеке) — игнорируем, стек не трогаем
                 }
 
             } else {
-                // Открывающий тег: push, если он не void и не self-closing
                 if (!$isSelf && $nameLower !== '' && !isset($void[$nameLower])) {
                     $stack[] = array('tag' => $nameLower, 'open' => false, 'lastOpenIdx' => null, 'lastOpenTok' => null);
                 }
@@ -2797,20 +2792,20 @@ function typograph_guillemets($html)
             continue;
         }
 
-        // ── 2) ТЕКСТ (вне '<...>'), обрабатываем " и &quot; ─────────────
+        // ── 2) ТЕКСТ: " и &quot; ─────────────────────────────────────────
         $top = count($stack) - 1;
 
-        // &quot; / &QUOT; (в тексте)
+        // Только &quot; (строго нижний регистр)
         if ($ch === '&' && $i + 6 <= $len) {
             $cand = substr($html, $i, 6);
-            if (strcasecmp($cand, '&quot;') === 0) {
+            if ($cand === '&quot;') {
                 if (!$stack[$top]['open']) {
-                    $out[] = '«';
+                    $chunks[] = '«';
                     $stack[$top]['open'] = true;
-                    $stack[$top]['lastOpenIdx'] = count($out) - 1;
-                    $stack[$top]['lastOpenTok'] = $cand; // сохраняем регистр
+                    $stack[$top]['lastOpenIdx'] = count($chunks) - 1;
+                    $stack[$top]['lastOpenTok'] = '&quot;'; // фиксировано
                 } else {
-                    $out[] = '»';
+                    $chunks[] = '»';
                     $stack[$top]['open'] = false;
                     $stack[$top]['lastOpenIdx'] = null;
                     $stack[$top]['lastOpenTok'] = null;
@@ -2818,17 +2813,21 @@ function typograph_guillemets($html)
                 $i += 6;
                 continue;
             }
+
+            $chunks[] = '&';
+            $i++;
+            continue;
         }
 
         // обычная "
         if ($ch === '"') {
             if (!$stack[$top]['open']) {
-                $out[] = '«';
+                $chunks[] = '«';
                 $stack[$top]['open'] = true;
-                $stack[$top]['lastOpenIdx'] = count($out) - 1;
+                $stack[$top]['lastOpenIdx'] = count($chunks) - 1;
                 $stack[$top]['lastOpenTok'] = '"';
             } else {
-                $out[] = '»';
+                $chunks[] = '»';
                 $stack[$top]['open'] = false;
                 $stack[$top]['lastOpenIdx'] = null;
                 $stack[$top]['lastOpenTok'] = null;
@@ -2837,20 +2836,22 @@ function typograph_guillemets($html)
             continue;
         }
 
-        $out[] = $ch;
+        $chunks[] = $ch;
         $i++;
     }
 
-    // Финальный откат на текущем верхнем уровне (если осталось открытое в самом конце)
-    $top = count($stack) - 1;
-    if ($top >= 0 && $stack[$top]['open'] && $stack[$top]['lastOpenIdx'] !== null) {
-        $idx = $stack[$top]['lastOpenIdx'];
-        $tok = $stack[$top]['lastOpenTok'];
-        $out[$idx] = ($tok !== null) ? $tok : '"';
+    // Финальный откат всех уровней
+    for ($s = count($stack) - 1; $s >= 0; $s--) {
+        if ($stack[$s]['open'] && $stack[$s]['lastOpenIdx'] !== null) {
+            $idx = $stack[$s]['lastOpenIdx'];
+            $tok = $stack[$s]['lastOpenTok'];
+            $chunks[$idx] = ($tok !== null) ? $tok : '"';
+        }
     }
 
-    return implode('', $out);
+    return implode('', $chunks);
 }
+
 
 
 
@@ -3005,6 +3006,7 @@ function ru_nbsp_typograf(string $text, bool $useHtmlNbsp = true): string
 
         // 4) &mdash; (типографское тире)
         ' -- ',
+        '&amp;@amp;',
     ];
 
     $replace = [
@@ -3042,6 +3044,7 @@ function ru_nbsp_typograf(string $text, bool $useHtmlNbsp = true): string
 
         // 4) тире: неразрывный пробел + тире + обычный пробел
         $nbsp . $mdash . ' ',
+        '&amp;',
     ];
 
     // Сначала фиксируем устойчивые конструкции, чтобы потом не разломать их предлогами

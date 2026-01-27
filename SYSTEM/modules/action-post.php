@@ -587,6 +587,7 @@ function savePage() {
             <p>Доступны также Шаблоны <strong>{{clear}}</strong> и <strong>{{nobr|ТЕКСТ}}</strong></p>
             <p><strong>{{download|DATABASE/fupload/Example.zip}}</strong>&nbsp;&mdash; Используйте это для вставки URL загрузок.</p>
             <p>Для вставки Тире используйте \" -- \" (без кавычек, с пробелами по краям)</p>
+            <p>Для байпасса кода сущности используйте &@amp;</p>
             <p><strong>{{lambda}} FROG!!!</strong></p>
             
 
