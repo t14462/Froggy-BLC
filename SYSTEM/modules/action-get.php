@@ -314,46 +314,40 @@ function pageload() {
         $mainPageTitle = $ptitle[2];
 
         
-
-
-        # В PageLoad не используется HTML-Purifier
-        # Воизбежание поломки всех сущностей --
-        # мы должны позволить Simple-HTML-DOM
-        # декодировать &amp; а не экранировать его
         
         $ptitle[2] = str_ireplace(
             [
                 // Именованные сущности
-                '&lt;', '&gt;', '&quot;', '&#039;', '&apos;', // '&amp;',
+                '&lt;', '&gt;', '&quot;', '&#039;', '&apos;', '&amp;',
                 
                 // Десятичные числовые
                 '&#60;',  // <
                 '&#62;',  // >
                 '&#34;',  // "
                 '&#39;',  // '
-                //'&#38;',  // &
+                '&#38;',  // &
                 
                 // Шестнадцатеричные числовые
                 '&#x3C;', '&#x3c;', // <
                 '&#x3E;', '&#x3e;', // >
                 '&#x22;',           // "
                 '&#x27;',           // '
-                //'&#x26;'            // &
+                '&#x26;'            // &
             ],
             [
-                '&@lt;', '&@gt;', '&@quot;', '&@apos;', '&@apos;', // '&@amp;',
+                '&@lt;', '&@gt;', '&@quot;', '&@apos;', '&@apos;', '&@amp;',
                 
                 '&@lt;',
                 '&@gt;',
                 '&@quot;',
                 '&@apos;',
-                // '&@amp;',
+                '&@amp;',
                 
                 '&@lt;', '&@lt;',
                 '&@gt;', '&@gt;',
                 '&@quot;',
                 '&@apos;',
-                // '&@amp;'
+                '&@amp;'
             ],
             $ptitle[2]
         );
@@ -364,36 +358,36 @@ function pageload() {
         $article = str_ireplace(
             [
                 // Именованные сущности
-                '&lt;', '&gt;', '&quot;', '&#039;', '&apos;', // '&amp;',
+                '&lt;', '&gt;', '&quot;', '&#039;', '&apos;', '&amp;',
                 
                 // Десятичные числовые
                 '&#60;',  // <
                 '&#62;',  // >
                 '&#34;',  // "
                 '&#39;',  // '
-                //'&#38;',  // &
+                '&#38;',  // &
                 
                 // Шестнадцатеричные числовые
                 '&#x3C;', '&#x3c;', // <
                 '&#x3E;', '&#x3e;', // >
                 '&#x22;',           // "
                 '&#x27;',           // '
-                //'&#x26;'            // &
+                '&#x26;'            // &
             ],
             [
-                '&@lt;', '&@gt;', '&@quot;', '&@apos;', '&@apos;', // '&@amp;',
+                '&@lt;', '&@gt;', '&@quot;', '&@apos;', '&@apos;', '&@amp;',
                 
                 '&@lt;',
                 '&@gt;',
                 '&@quot;',
                 '&@apos;',
-                // '&@amp;',
+                '&@amp;',
                 
                 '&@lt;', '&@lt;',
                 '&@gt;', '&@gt;',
                 '&@quot;',
                 '&@apos;',
-                // '&@amp;'
+                '&@amp;'
             ],
             $article
         );
@@ -490,8 +484,8 @@ function pageload() {
         unset($html);    // удаляем переменную
 
         $content = str_ireplace(
-            ['&@lt;', '&@gt;', '&@quot;', '&@apos;' /* , '&@amp;' */ ],
-            ['&lt;',  '&gt;',  '&quot;',  '&#039;' /* , '&amp;' */],
+            ['&@lt;', '&@gt;', '&@quot;', '&@apos;', '&@amp;' ],
+            ['&lt;',  '&gt;',  '&quot;',  '&#039;', '&amp;'],
             $content
         );
 
@@ -869,6 +863,10 @@ function pageEdit() {
                                 { name: 'about', groups: [ 'about' ] }
                             ];
 
+                            config.protectedSource.push(/&amp;[a-zA-Z][a-zA-Z0-9_]*;/g);
+                            config.protectedSource.push(/&amp;#\d+;/g);
+                            config.protectedSource.push(/&amp;#x[0-9a-fA-F]+;/g);
+
                         };
 
                         CKEDITOR.config.fontSize_sizes = '0.7em;0.8em;0.9em;1em;1.1em;1.2em;1.3em;1.4em;1.5em;1.6em;1.7em;1.8em;1.9em;2em;2.1em;2.2em;2.3em;2.4em';
@@ -1178,7 +1176,6 @@ function pageEdit() {
         <p>Доступны также Шаблоны <strong>{{clear}}</strong> и <strong>{{nobr|ТЕКСТ}}</strong></p>
         <p><strong>{{download|DATABASE/fupload/Example.zip}}</strong>&nbsp;&mdash; Используйте это для вставки URL загрузок.</p>
         <p>Для вставки Тире используйте \" -- \" (без кавычек, с пробелами по краям)</p>
-        <p>Для байпасса кода сущности используйте &@amp;</p>
         <p><strong>{{lambda}} FROG!!!</strong></p>";
 
         $file = fopenOrDie("DATABASE/DB/data.html", "rb");
@@ -1187,6 +1184,8 @@ function pageEdit() {
             
         $line = fgetsOrDie($file);
         // $line = preg_replace("/(<\/head[1-6]>)/", "$1\n", $line);
+        
+        fclose($file);
 
         $line = str_replace("<!2!>", "<!2!>\n", $line);
 
@@ -1216,11 +1215,15 @@ function pageEdit() {
 
         $hsel = str_replace("<option value='".$htag."'>", "<option selected='selected' value='".$htag."'>", $hsel);
 
+        // $line = protect_amp_entities_for_textarea($line);
+
+        $line = escape_amp_txtarea($line);
+        
+
         $content .= "
 
                     <input id='edpagetitle' type='text' name='title' value='".$ptitle."' />".$hsel.
                     "<textarea rows='9' name='textedit' id='textedit'>".$line."</textarea>";
-        fclose($file);
 
         
 

@@ -2077,8 +2077,10 @@ function wrap_images_with_figure(simple_html_dom $html): simple_html_dom {
         $alt = mb_superTrim($img->getAttribute('alt') ?? '');
         if ($alt !== '') {
             $imgHtml = $img->outertext;
-            $altEscaped = mb_superTrim(htmlspecialchars(strip_tags($alt), ENT_QUOTES | ENT_HTML5 | ENT_SUBSTITUTE, 'UTF-8', false));
-            $figureHtml = '<figure class="fig-img clearfix">' . $imgHtml . '<figcaption>' . $altEscaped . '</figcaption></figure>';
+            // $altEscaped = mb_superTrim(htmlspecialchars(strip_tags($alt), ENT_QUOTES | ENT_HTML5 | ENT_SUBSTITUTE, 'UTF-8', false));
+            // $altEscaped = str_ireplace('&amp;@', '&', $altEscaped);
+            // $figureHtml = '<figure class="fig-img clearfix">' . $imgHtml . '<figcaption>' . $altEscaped . '</figcaption></figure>';
+            $figureHtml = '<figure class="fig-img clearfix">' . $imgHtml . '<figcaption>' . $alt . '</figcaption></figure>';
 
             $img->outertext = $figureHtml;
         }
@@ -2482,14 +2484,18 @@ function normalize_entities_my(string $text): string {
 
 
 
-function escape_amp_txtarea(string $text): string {
-    
-    $text = str_ireplace('&', '&amp;', $text);
-    
-    $text = str_ireplace('&amp;amp;', '&amp;', $text);
 
-    return $text;
+
+
+
+
+function escape_amp_txtarea(string $text): string
+{
+    return str_replace("&", "&amp;", $text);
 }
+
+
+
 
 
 
@@ -3006,7 +3012,7 @@ function ru_nbsp_typograf(string $text, bool $useHtmlNbsp = true): string
 
         // 4) &mdash; (типографское тире)
         ' -- ',
-        '&amp;@amp;',
+        // '&amp;@amp;',
     ];
 
     $replace = [
@@ -3044,7 +3050,7 @@ function ru_nbsp_typograf(string $text, bool $useHtmlNbsp = true): string
 
         // 4) тире: неразрывный пробел + тире + обычный пробел
         $nbsp . $mdash . ' ',
-        '&amp;',
+        // '&amp;',
     ];
 
     // Сначала фиксируем устойчивые конструкции, чтобы потом не разломать их предлогами
@@ -3158,3 +3164,11 @@ function tpl_nobr(string $text): string
         $text
     );
 }
+
+
+
+
+
+
+
+

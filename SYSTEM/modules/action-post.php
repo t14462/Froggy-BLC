@@ -60,8 +60,7 @@ function savePage() {
         
         $textedit = mb_softTrim($textedit);
 
-        $textedit = escape_amp_txtarea($textedit);
-
+        // $textedit = escape_amp_txtarea($textedit);
 
         $pgtitle = normalize_entities_my($pgtitle);
 
@@ -264,6 +263,10 @@ function savePage() {
                                     { name: 'colors', groups: [ 'colors' ] },
                                     { name: 'about', groups: [ 'about' ] }
                                 ];
+
+                                config.protectedSource.push(/&amp;[a-zA-Z][a-zA-Z0-9_]*;/g);
+                                config.protectedSource.push(/&amp;#\d+;/g);
+                                config.protectedSource.push(/&amp;#x[0-9a-fA-F]+;/g);
 
                             };
 
@@ -580,6 +583,11 @@ function savePage() {
         $mainPageTitle = "Редактирование: ".$pgtitle;
 
 
+
+        // $textedit2 = protect_amp_entities_for_textarea($textedit);
+
+        $textedit2 = escape_amp_txtarea($textedit);
+
         $dumpEdit = "<form method='post'>
             <fieldset><legend>Редактирование страницы:</legend>
             <p>Для включения <em>Содержания</em> используйте <em>Директиву</em> <strong>__TOC__</strong> вначале кода, на первой строке.</p>
@@ -587,13 +595,12 @@ function savePage() {
             <p>Доступны также Шаблоны <strong>{{clear}}</strong> и <strong>{{nobr|ТЕКСТ}}</strong></p>
             <p><strong>{{download|DATABASE/fupload/Example.zip}}</strong>&nbsp;&mdash; Используйте это для вставки URL загрузок.</p>
             <p>Для вставки Тире используйте \" -- \" (без кавычек, с пробелами по краям)</p>
-            <p>Для байпасса кода сущности используйте &@amp;</p>
             <p><strong>{{lambda}} FROG!!!</strong></p>
             
 
             <input id='edpagetitle' type='text' name='title' value='".$pgtitle."' />".$hsel.
             "<textarea rows='9' name='textedit' id='textedit'>"
-            .$textedit."</textarea><div class='el-in-line'> <input type='submit' value='💾 Отправить' />
+            .$textedit2."</textarea><div class='el-in-line'> <input type='submit' value='💾 Отправить' />
 
             <a href='?".explode('&', $_SERVER['QUERY_STRING'])[0]."&amp;leaveedit=1'>Отменить ⬅️</a>
             <a href='?".explode("&", $_SERVER['QUERY_STRING'])[0]."&amp;pagedel=1' id='pagedelbutton'>❌ Удалить страницу</a>
@@ -620,7 +627,9 @@ function savePage() {
                 // $textedit = str_replace("&", "&amp;", $textedit);
                 // $textedit = str_replace("&amp;amp;", "&amp;", $textedit);
         
-                $textedit = escape_amp_txtarea($textedit);
+                // $textedit = escape_amp_txtarea($textedit);
+
+                // $textedit = protect_amp_entities_for_textarea($textedit);
 
 
                 // moved
