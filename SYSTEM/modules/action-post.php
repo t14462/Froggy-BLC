@@ -639,6 +639,8 @@ function savePage() {
 
                 if(!dbprepApnd("DATABASE/DB/data.html", $textedit)) return false;
 
+                $textedit3 = $textedit;
+
                 $filesource = openFileOrDie("DATABASE/DB/data.html", 'rb');
 
                 $filesource->seekOrDie($pagenum);
@@ -673,8 +675,7 @@ function savePage() {
                 $filesource = null;
                 
 
-                dbdone("DATABASE/DB/data.html");
-
+                if(!dbdone("DATABASE/DB/data.html", $textedit3)) return false;
 
                 mylog("<em style='color:DarkOrange'>Страница сохранена. (" . explode("&", $_SERVER['QUERY_STRING'])[0] . " - " . $_SESSION["username"].").</em>");
 
@@ -1212,6 +1213,8 @@ function commentReply() {
 
             if(!dbprepApnd("DATABASE/comments/".$commaddr, escape_amp_txtarea($commpost))) return false;
 
+            $commpost2 = $commpost;
+
             $commpost = str_replace("\r", "", $commpost);
             $commpost = str_replace("<br />\n", "<br />", $commpost);
             $commpost = str_replace("\n<br />", "<br />", $commpost);
@@ -1255,7 +1258,7 @@ function commentReply() {
             $filesource = null;
             
 
-            dbdone("DATABASE/comments/".$commaddr);
+            if(!dbdone("DATABASE/comments/".$commaddr, $commpost2)) return false;
 
 
 
@@ -1666,6 +1669,8 @@ function postComment() {
 
             if(!dbprepApnd("DATABASE/comments/".$commaddr, escape_amp_txtarea($commpost))) return false;
 
+            $commpost2 = $commpost;
+
 
             $lastLineNumber = 0;
             $bufferSize = 128 * 1024; // 128 КБ
@@ -1703,7 +1708,7 @@ function postComment() {
             fclose($file);
             
 
-            dbdone("DATABASE/comments/".$commaddr);
+            if(!dbdone("DATABASE/comments/".$commaddr, $commpost2)) return false;
 
 
             $comTotalPages = calcTotPages($commaddr, 8);

@@ -948,6 +948,8 @@ function dbprepApnd($filename, $recovery) {
     $recovery = str_ireplace("<textarea", "&lt;textarea", $recovery);
     $recovery = str_ireplace("</textarea", "&lt;/textarea", $recovery);
     $recovery = str_ireplace("textarea>", "textarea&gt;", $recovery);
+
+    $recovery = escape_amp_txtarea($recovery);
     /// $recovery = str_ireplace("&", "&amp;", $recovery);
     /// $recovery = str_ireplace("&amp;amp;", "&amp;", $recovery);
     $recovery = str_ireplace("<br!>", "\n", $recovery);
@@ -1017,6 +1019,8 @@ function dbprep($filename, $recovery) {
     $recovery = str_ireplace("<textarea", "&lt;textarea", $recovery);
     $recovery = str_ireplace("</textarea", "&lt;/textarea", $recovery);
     $recovery = str_ireplace("textarea>", "textarea&gt;", $recovery);
+
+    $recovery = escape_amp_txtarea($recovery);
     /// $recovery = str_ireplace("&", "&amp;", $recovery);
     /// $recovery = str_ireplace("&amp;amp;", "&amp;", $recovery);
     $recovery = str_ireplace("<br!>", "\n", $recovery);
@@ -1210,7 +1214,9 @@ function dbprepCache($filename) {
 }
 
 
-function dbdone($filename) {
+function dbdone($filename, $recovery="") {
+
+    global $errmsg, $content;
 
     $lockvar = (int)@file_get_contents($filename.".lock");
 
@@ -1224,9 +1230,28 @@ function dbdone($filename) {
 
         unlink($filename.".lock");
 
+        return true;
+
     } else {
 
         unlink($filename.".new." . getmypid());
+
+        if($recovery !== "") {
+
+            $recovery = str_ireplace("<textarea", "&lt;textarea", $recovery);
+            $recovery = str_ireplace("</textarea", "&lt;/textarea", $recovery);
+            $recovery = str_ireplace("textarea>", "textarea&gt;", $recovery);
+
+            $recovery = escape_amp_txtarea($recovery);
+
+            $errmsg = "<h1>RECOVERY.</h1><p class='big'><strong>База Данных была изменена внешним процессом.</strong></p>";
+
+            $content = "<textarea style='width: 95%; min-height: 65vh; padding: 2%; resize: none;' readonly='readonly'>".$recovery."</textarea>";
+
+            return false;
+        }
+
+        return true;
     }
 }
 
