@@ -1211,7 +1211,7 @@ function commentReply() {
 
 
 
-            if(!dbprepApnd("DATABASE/comments/".$commaddr, escape_amp_txtarea($commpost))) return false;
+            if(!dbprepApnd("DATABASE/comments/".$commaddr, $commpost)) return false;
 
             $commpost2 = $commpost;
 
@@ -1667,7 +1667,7 @@ function postComment() {
 
 
 
-            if(!dbprepApnd("DATABASE/comments/".$commaddr, escape_amp_txtarea($commpost))) return false;
+            if(!dbprepApnd("DATABASE/comments/".$commaddr, $commpost)) return false;
 
             $commpost2 = $commpost;
 
