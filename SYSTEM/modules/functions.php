@@ -2469,7 +2469,7 @@ function normalize_entities_my(string $text): string {
     }, $text);
 
     // 3) Именованные → нижний регистр (канон для HTML)
-    $text = preg_replace_callback('/&[a-z][a-z0-9]+;/i', function ($m) {
+    $text = preg_replace_callback('/&[a-z][a-z0-9]*;/i', function ($m) {
         return strtolower($m[0]);
     }, $text);
 
@@ -2504,7 +2504,7 @@ function escape_amp_txtarea(string $text): string
 
 function remove_entities(string $text): string {
     // 1) именованные (&nbsp;)  2) десятичные (&#160;)  3) шестн. (&#xA0;)
-    $text = preg_replace('/&[a-z][a-z0-9]+;/i', '', $text);
+    $text = preg_replace('/&[a-z][a-z0-9]*;/i', '', $text);
     $text = preg_replace('/&#\d+;/', '', $text);
     $text = preg_replace('/&#x[0-9a-f]+;/i', '', $text);
 

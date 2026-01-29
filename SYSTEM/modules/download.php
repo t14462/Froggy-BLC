@@ -34,7 +34,7 @@ function emojiToHtmlEntities(string $string): string {
 }
 
 function remove_entities(string $text): string {
-    $text = preg_replace('/&[a-z][a-z0-9]+;/i', '', $text);
+    $text = preg_replace('/&[a-z][a-z0-9]*;/i', '', $text);
     $text = preg_replace('/&#\d+;/', '', $text);
     $text = preg_replace('/&#x[0-9a-f]+;/i', '', $text);
     $text = preg_replace('/&(?:nbsp|thinsp|ensp|emsp|zwnj|zwj|lrm|rlm)(?!;)\b/i', '', $text);
