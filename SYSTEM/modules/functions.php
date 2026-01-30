@@ -948,11 +948,12 @@ function dbprepApnd($filename, $recovery) {
     $recovery = str_ireplace("<textarea", "&lt;textarea", $recovery);
     $recovery = str_ireplace("</textarea", "&lt;/textarea", $recovery);
     $recovery = str_ireplace("textarea>", "textarea&gt;", $recovery);
+    
+    $recovery = str_ireplace("<br!>", "\n", $recovery);
 
     $recovery = escape_amp_txtarea($recovery);
     /// $recovery = str_ireplace("&", "&amp;", $recovery);
     /// $recovery = str_ireplace("&amp;amp;", "&amp;", $recovery);
-    $recovery = str_ireplace("<br!>", "\n", $recovery);
     
     while(is_file($lockFile)) {
         ///usleep(200000);
@@ -1019,11 +1020,12 @@ function dbprep($filename, $recovery) {
     $recovery = str_ireplace("<textarea", "&lt;textarea", $recovery);
     $recovery = str_ireplace("</textarea", "&lt;/textarea", $recovery);
     $recovery = str_ireplace("textarea>", "textarea&gt;", $recovery);
+    
+    $recovery = str_ireplace("<br!>", "\n", $recovery);
 
     $recovery = escape_amp_txtarea($recovery);
     /// $recovery = str_ireplace("&", "&amp;", $recovery);
     /// $recovery = str_ireplace("&amp;amp;", "&amp;", $recovery);
-    $recovery = str_ireplace("<br!>", "\n", $recovery);
 
     while(is_file($lockFile)) {
         ///usleep(200000);

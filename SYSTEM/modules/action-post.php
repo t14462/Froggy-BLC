@@ -617,6 +617,8 @@ function savePage() {
 
                 // $pagenum = seoLinkDecode($pagenum) - 1;
                 $textedit = str_replace("\r", "", $textedit);
+
+                $textedit3 = $textedit;
                 /// $textedit = str_replace("<br />\n", "<br!>", $textedit);
                 /// $textedit = str_replace("\n<br />", "<br!>", $textedit);
                 /// $textedit = str_replace("<br />"  , "<br!>", $textedit);
@@ -637,9 +639,7 @@ function savePage() {
 
                 $pagenum = seoNumGet() - 1;
 
-                if(!dbprepApnd("DATABASE/DB/data.html", $textedit)) return false;
-
-                $textedit3 = $textedit;
+                if(!dbprepApnd("DATABASE/DB/data.html", $textedit3)) return false;
 
                 $filesource = openFileOrDie("DATABASE/DB/data.html", 'rb');
 
@@ -888,6 +888,8 @@ function commentReply() {
 
         $commpost = mb_softTrim($commpost);
 
+        $commpost = str_replace("\r", "", $commpost);
+
 
 
         $pgcommnum = (int)substr($pgcommnum, 0, 10);
@@ -1052,6 +1054,9 @@ function commentReply() {
 
         } else {
 
+            
+            $commpost2 = $commpost;
+
             // unset($_SESSION['captcha']);
 
             $commpost = str_replace("%QUERYSTRING%", "", $commpost);
@@ -1211,11 +1216,8 @@ function commentReply() {
 
 
 
-            if(!dbprepApnd("DATABASE/comments/".$commaddr, $commpost)) return false;
+            if(!dbprepApnd("DATABASE/comments/".$commaddr, $commpost2)) return false;
 
-            $commpost2 = $commpost;
-
-            $commpost = str_replace("\r", "", $commpost);
             $commpost = str_replace("<br />\n", "<br />", $commpost);
             $commpost = str_replace("\n<br />", "<br />", $commpost);
             /// $commpost = str_replace("<br />"  , "<br!>", $commpost);
@@ -1384,6 +1386,8 @@ function postComment() {
 
         $commpost = mb_softTrim($commpost);
 
+        $commpost = str_replace("\r", "", $commpost);
+
 
 
         $captcha = substr($captcha, 0, 6);
@@ -1501,6 +1505,9 @@ function postComment() {
 
         } else {
 
+            
+            $commpost2 = $commpost;
+
             // unset($_SESSION['captcha']);
 
             $commpost = str_replace("%QUERYSTRING%", "", $commpost);
@@ -1534,7 +1541,6 @@ function postComment() {
                 $commpost = $purifier->purify($commpost);
 
                 /// $commpost = str_replace("\n", "<br!>", $commpost);
-
                 
 
 
@@ -1667,9 +1673,7 @@ function postComment() {
 
 
 
-            if(!dbprepApnd("DATABASE/comments/".$commaddr, $commpost)) return false;
-
-            $commpost2 = $commpost;
+            if(!dbprepApnd("DATABASE/comments/".$commaddr, $commpost2)) return false;
 
 
             $lastLineNumber = 0;
@@ -1688,8 +1692,6 @@ function postComment() {
             $file = null;
 
 
-
-            $commpost = str_replace("\r", "", $commpost);
             $commpost = str_replace("<br />\n", "<br />", $commpost);
             $commpost = str_replace("\n<br />", "<br />", $commpost);
             /// $commpost = str_replace("<br />"  , "<br!>", $commpost);
