@@ -1232,7 +1232,7 @@ function dbdone($filename, $recovery="") {
 
         unlink($filename.".lock");
 
-        return true;
+        /// return true;
 
     } else {
 
@@ -1253,8 +1253,10 @@ function dbdone($filename, $recovery="") {
             return false;
         }
 
-        return true;
+        /// return true;
     }
+    
+    return true;
 }
 
 
