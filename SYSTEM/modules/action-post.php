@@ -128,6 +128,8 @@ function savePage() {
 
 
 
+        $textedit3 = $textedit;
+
 
 
 
@@ -617,8 +619,6 @@ function savePage() {
 
                 // $pagenum = seoLinkDecode($pagenum) - 1;
                 $textedit = str_replace("\r", "", $textedit);
-
-                $textedit3 = $textedit;
                 /// $textedit = str_replace("<br />\n", "<br!>", $textedit);
                 /// $textedit = str_replace("\n<br />", "<br!>", $textedit);
                 /// $textedit = str_replace("<br />"  , "<br!>", $textedit);
