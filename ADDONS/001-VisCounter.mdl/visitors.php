@@ -24,9 +24,11 @@ if (!is_file($dbfile)) {
     putFileOrDie($dbfile, serialize([])); // создаём пустой
 }
 
+/*
 if (!is_writable($dbfile)) {
     die("Error: Data file $dbfile is NOT writable. CHMOD 666.");
 }
+*/
 
 function getVisitorID() {
     global $userAgent;
@@ -59,12 +61,13 @@ function CountVisitors() {
         $data[$visitorID] = $now;
 
         
-        dbprepCache($dbfile) or die('<!DOCTYPE html><html><head><meta http-equiv="refresh" content="1" /></head><body style="background: transparent;">&nbsp;</body></html>
-        ');
+        /// dbprepCache($dbfile);
 
-        putFileOrDie($dbfile.".new." . getmypid(), serialize($data));
+        /// putFileOrDie($dbfile.".new." . getmypid(), serialize($data), LOCK_EX);
 
-        dbdone($dbfile);
+        /// dbdone($dbfile, "");
+
+        putFileOrDie($dbfile, serialize($data), LOCK_EX);
         
 
         /*

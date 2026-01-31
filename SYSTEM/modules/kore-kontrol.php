@@ -407,11 +407,11 @@ if(    is_file("DATABASE/DB/DB-TOC-Cache.txt")
 
         $mydumptxt = serialize($mydump);
 
-        if(dbprepCache("DATABASE/DB/DB-TOC-Cache.txt")) {
+        dbprepCache("DATABASE/DB/DB-TOC-Cache.txt");
 
-            putFileOrDie("DATABASE/DB/DB-TOC-Cache.txt.new." . getmypid(), $mydumptxt, LOCK_EX);
+        putFileOrDie("DATABASE/DB/DB-TOC-Cache.txt.new." . getmypid(), $mydumptxt, LOCK_EX);
 
-            dbdone("DATABASE/DB/DB-TOC-Cache.txt");
+        if(dbdone("DATABASE/DB/DB-TOC-Cache.txt", "")) {
 
             touchMy("DATABASE/DB/DB-TOC-Cache.txt", $chTimeDB);
         }
@@ -424,11 +424,11 @@ if(    is_file("DATABASE/DB/DB-TOC-Cache.txt")
 
         $seodumptxt = serialize($seoNumEncode);
 
-        if(dbprepCache("DATABASE/DB/SEO-Cache.txt")) {
+        dbprepCache("DATABASE/DB/SEO-Cache.txt");
 
-            putFileOrDie("DATABASE/DB/SEO-Cache.txt.new." . getmypid(), $seodumptxt, LOCK_EX);
+        putFileOrDie("DATABASE/DB/SEO-Cache.txt.new." . getmypid(), $seodumptxt, LOCK_EX);
 
-            dbdone("DATABASE/DB/SEO-Cache.txt");
+        if(dbdone("DATABASE/DB/SEO-Cache.txt", "")) {
 
             touchMy("DATABASE/DB/SEO-Cache.txt", $chTimeDB);
         }
@@ -441,14 +441,13 @@ if(    is_file("DATABASE/DB/DB-TOC-Cache.txt")
 
         $mCACHE = "<nav itemscope='itemscope' itemtype='https://schema.org/SiteNavigationElement'>".$mCACHE."</nav>";
 
-        if(dbprepCache("DATABASE/DB/MenuCache.txt")) {
+        dbprepCache("DATABASE/DB/MenuCache.txt");
 
-            putFileOrDie("DATABASE/DB/MenuCache.txt.new." . getmypid(), $mCACHE, LOCK_EX);
+        putFileOrDie("DATABASE/DB/MenuCache.txt.new." . getmypid(), $mCACHE, LOCK_EX);
 
-            dbdone("DATABASE/DB/MenuCache.txt");
+        dbdone("DATABASE/DB/MenuCache.txt", "");
 
             /// touchMy("DATABASE/DB/MenuCache.txt", $chTimeDB);
-        }
     }
 
 
@@ -528,7 +527,7 @@ function sitemapflush() {
 
     $sitemaptxtvar = join("\n", $sitemaptxt);
 
-    if(!dbprepCache("sitemap.txt")) return false;
+    dbprepCache("sitemap.txt");
 
     /*
     $filedest = fopenOrDie("sitemap.txt.new." . getmypid(), "r+");
@@ -538,7 +537,7 @@ function sitemapflush() {
 
     putFileOrDie("sitemap.txt.new." . getmypid(), $sitemaptxtvar, LOCK_EX);
 
-    dbdone("sitemap.txt");
+    if(!dbdone("sitemap.txt", "")) return false;
 
     touchMy("sitemap.txt", $chTimeDB);
 
@@ -581,7 +580,7 @@ function sitemapflushXml() {
 
     // $sitemaptxtvar = join("\n", $sitemaptxt);
 
-    if(!dbprepCache("sitemap.xml")) return false;
+    dbprepCache("sitemap.xml");
 
     /*
     $filedest = fopenOrDie("sitemap.xml.new." . getmypid(), "r+");
@@ -591,7 +590,7 @@ function sitemapflushXml() {
     
     putFileOrDie("sitemap.xml.new." . getmypid(), $sitemapxmlvar, LOCK_EX);
 
-    dbdone("sitemap.xml");
+    if(!dbdone("sitemap.xml", "")) return false;
 
     touchMy("sitemap.xml", $chTimeDB);
 

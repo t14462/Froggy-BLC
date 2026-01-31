@@ -187,9 +187,11 @@ function purgelog() {
     } else {
 
 
-        if(!dbprep("DATABASE/DB/sys.log", "ЛОГ БЫЛ ИЗМЕНЁН ИЛИ ЗАБЛОКИРОВАН ВНЕШНИМ ПРОЦЕССОМ")) return false;
+        // dbprep("DATABASE/DB/sys.log");
 
-        dbdone("DATABASE/DB/sys.log");
+        // if(!dbdone("DATABASE/DB/sys.log", "ЛОГ БЫЛ ИЗМЕНЁН ИЛИ ЗАБЛОКИРОВАН ВНЕШНИМ ПРОЦЕССОМ")) return false;
+
+        unlink("DATABASE/DB/sys.log");
 
         mylog("<strong style='color:DarkRed'>Лог был очищен. (".$_SESSION["username"].").</strong>");
 
@@ -742,7 +744,7 @@ function commentRemove() {
             $commpage = intdiv($pgcommnum, 8); // при 0-based индексе
 
 
-            if(!dbprepApnd("DATABASE/comments/".$commaddr, "")) return false;
+            dbprepApnd("DATABASE/comments/".$commaddr);
 
             $filesource = openFileOrDie("DATABASE/comments/".$commaddr, 'rb');
 
@@ -800,7 +802,7 @@ function commentRemove() {
             $filesource = null;
             
 
-            dbdone("DATABASE/comments/".$commaddr);
+            if(!dbdone("DATABASE/comments/".$commaddr, "")) return false;
 
 
 
@@ -1325,7 +1327,7 @@ function addPage() {
             $line = $idKey."<head1>New</head1>$seoPgIndex<!1!>".$time."<!2!><br!><br!><p>Чтобы показать заказчику эскизы сайта, нужно где-то найти тексты и картинки. Как правило, ни того, ни другого в момент показа эскизов у дизайнера нету.</p><br!><br!><p>Что же делает дизайнер? Он делает рыбу.</p><br!><br!><p>Рыбу можно вставлять, использовать, вешать, заливать, показывать, запихивать... Словом, с ней можно делать что угодно, лишь бы эскиз был максимально похож на готовую работу.</p><br!><br!><p>Если в качестве рыбных картинок использовать цветные прямоугольники, а вместо текста слова «тут будет текст тут будет текст тут будет текст тут будет текст», эскиз будет выглядеть неестественно.</p><br!><br!><p>Очень часто рыба становится частью готового сайта — так она нравится клиенту.</p><br!><br!><p>Рыба — это креатив чистой воды®</p><br!><br!><br!><p><img src='DATABASE/DB/ryba.jpg' alt='Рыба на подносе'></p><span class='big'><strong>Из жизни рыбы:</strong></span><br!><br!><p>Во время создания серии сайтов для Яндекса было решено придумать каждому проекту по слогану. Для проекта Почта.Яндекса был придуман рыбный слоган «Посылают все!», который успешно использовался и после открытия сайта.</p><br!><br!><p>На сайте компании «Арсеналъ» был сделан рыбный текст для графического заголовка: «Лучшее российское программное обеспечение». Эта фраза висела на сайте компании несколько лет и осталась даже при смене дизайна.</p><br!><br!><p>Для презентационного сайта о пластиковых карточках «VISA-Альфамобиль» вместо рубрик было написано: «во-первых», «во-вторых», «и, конечно», «а еще», «кроме того», «да что там». Все эти надписи сохранились в готовом сайте и висят там до сих пор.</p><br!><br!><p>А уж как часто рыбные картинки остаются жить в открытых сайтах… вы даже не представляете!</p>\n";
 
 
-            if(!dbprepApnd("DATABASE/DB/data.html", "БАЗА ДАННЫХ БЫЛА ИЗМЕНЕНА ИЛИ ЗАБЛОКИРОВАНА ВНЕШНИМ ПРОЦЕССОМ")) return false;
+            dbprepApnd("DATABASE/DB/data.html");
 
             $filedest = openFileOrDie("DATABASE/DB/data.html.new." . getmypid(), 'ab');
 
@@ -1334,7 +1336,7 @@ function addPage() {
             $filedest = null;
             
 
-            dbdone("DATABASE/DB/data.html");
+            if(!dbdone("DATABASE/DB/data.html", "БАЗА ДАННЫХ БЫЛА ИЗМЕНЕНА ИЛИ ЗАБЛОКИРОВАНА ВНЕШНИМ ПРОЦЕССОМ")) return false;
 
             mylog("<em style='color:DarkGreen'>В конец добавлена страница. (".$_SESSION["username"].").</em>");
 
@@ -1381,7 +1383,7 @@ function addPage() {
 
             if(sanCheckAdd($numlvl[0], $numlvl[1])) {
 
-                if(!dbprepApnd("DATABASE/DB/data.html", "БАЗА ДАННЫХ БЫЛА ИЗМЕНЕНА ИЛИ ЗАБЛОКИРОВАНА ВНЕШНИМ ПРОЦЕССОМ")) return false;
+                dbprepApnd("DATABASE/DB/data.html");
 
                 $filesource = openFileOrDie("DATABASE/DB/data.html", 'rb');
 
@@ -1406,7 +1408,7 @@ function addPage() {
                 $filesource = null;
                 
 
-                dbdone("DATABASE/DB/data.html");
+                if(!dbdone("DATABASE/DB/data.html", "БАЗА ДАННЫХ БЫЛА ИЗМЕНЕНА ИЛИ ЗАБЛОКИРОВАНА ВНЕШНИМ ПРОЦЕССОМ")) return false;
 
                 mylog("<em style='color:DarkGreen'>В середине меню добавлена страница. (".$_SESSION["username"].").</em>");
 
@@ -1496,7 +1498,7 @@ function movePageDown() {
 
         if(sanCheckDown()) {
 
-            if(!dbprepApnd("DATABASE/DB/data.html", "БАЗА ДАННЫХ БЫЛА ИЗМЕНЕНА ИЛИ ЗАБЛОКИРОВАНА ВНЕШНИМ ПРОЦЕССОМ")) return false;
+            dbprepApnd("DATABASE/DB/data.html");
 
             $filesource = openFileOrDie("DATABASE/DB/data.html", 'rb');
 
@@ -1525,7 +1527,7 @@ function movePageDown() {
             $filesource = null;
             
 
-            dbdone("DATABASE/DB/data.html");
+            if(!dbdone("DATABASE/DB/data.html", "БАЗА ДАННЫХ БЫЛА ИЗМЕНЕНА ИЛИ ЗАБЛОКИРОВАНА ВНЕШНИМ ПРОЦЕССОМ")) return false;
         
             /// unlockByName($_SESSION['username'] ?? ""); ///
 
@@ -1565,7 +1567,7 @@ function movePageUp() {
 
         if(sanCheckUp()) {
 
-            if(!dbprepApnd("DATABASE/DB/data.html", "БАЗА ДАННЫХ БЫЛА ИЗМЕНЕНА ИЛИ ЗАБЛОКИРОВАНА ВНЕШНИМ ПРОЦЕССОМ")) return false;
+            dbprepApnd("DATABASE/DB/data.html");
 
             $filesource = openFileOrDie("DATABASE/DB/data.html", 'rb');
 
@@ -1595,7 +1597,7 @@ function movePageUp() {
             $filesource = null;
             
 
-            dbdone("DATABASE/DB/data.html");
+            if(!dbdone("DATABASE/DB/data.html", "БАЗА ДАННЫХ БЫЛА ИЗМЕНЕНА ИЛИ ЗАБЛОКИРОВАНА ВНЕШНИМ ПРОЦЕССОМ")) return false;
         
             /// unlockByName($_SESSION['username'] ?? ""); ///
 
@@ -1835,7 +1837,7 @@ function deletePage() {
 
 
 
-                if(!dbprepApnd("DATABASE/DB/data.html", "БАЗА ДАННЫХ БЫЛА ИЗМЕНЕНА ИЛИ ЗАБЛОКИРОВАНА ВНЕШНИМ ПРОЦЕССОМ")) return false;
+                dbprepApnd("DATABASE/DB/data.html");
 
 
                 $filesource = openFileOrDie("DATABASE/DB/data.html", 'rb');
@@ -1899,7 +1901,7 @@ function deletePage() {
                 $filesource = null;
                 
 
-                dbdone("DATABASE/DB/data.html");
+                if(!dbdone("DATABASE/DB/data.html", "БАЗА ДАННЫХ БЫЛА ИЗМЕНЕНА ИЛИ ЗАБЛОКИРОВАНА ВНЕШНИМ ПРОЦЕССОМ")) return false;
         
                 /// unlockByName($_SESSION['username'] ?? ""); ///
 

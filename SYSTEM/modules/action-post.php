@@ -639,7 +639,7 @@ function savePage() {
 
                 $pagenum = seoNumGet() - 1;
 
-                if(!dbprepApnd("DATABASE/DB/data.html", $textedit3)) return false;
+                dbprepApnd("DATABASE/DB/data.html");
 
                 $filesource = openFileOrDie("DATABASE/DB/data.html", 'rb');
 
@@ -888,7 +888,7 @@ function commentReply() {
 
         $commpost = mb_softTrim($commpost);
 
-        $commpost = str_replace("\r", "", $commpost);
+        /// $commpost = str_replace("\r", "", $commpost);
 
 
 
@@ -1216,7 +1216,7 @@ function commentReply() {
 
 
 
-            if(!dbprepApnd("DATABASE/comments/".$commaddr, $commpost2)) return false;
+            dbprepApnd("DATABASE/comments/".$commaddr);
 
             $commpost = str_replace("<br />\n", "<br />", $commpost);
             $commpost = str_replace("\n<br />", "<br />", $commpost);
@@ -1225,10 +1225,28 @@ function commentReply() {
 
             $commdataline = rtrim($commdataline);
 
-            $commid = bin2hex(random_bytes(20)); // sha1(microtime().$ip.$userAgent);
+
+            while(true) {
+
+                $commid = bin2hex(random_bytes(20)); // sha1(microtime().$ip.$userAgent);
+
+                /// $commtmp = str_replace("<$repcommid />", "<ul><li><$commid>$visitor2<d>$commpost</d><a href='?%QUERYSTRING%&amp;creply=<id>{$pgcommnum}-$commid#R'>rep.</a> <a href='?%QUERYSTRING%&amp;cmove=<id>{$pgcommnum}-$commid'>del.</a><$commid><$commid /></li></ul><$repcommid />", $commdataline);
+
+                /// $commarrtmp = explode("<$commid>", $commtmp);
+
+                $commarrtmp = explode("<$commid>", $commdataline);
+
+                if((string)$commid !== (string)$repcommid && count($commarrtmp) === 1) {
+
+                    break;
+                }
+            }
+
 
             $commdataline = str_replace("<$repcommid />", "<ul><li><$commid>$visitor2<d>$commpost</d><a href='?%QUERYSTRING%&amp;creply=<id>{$pgcommnum}-$commid#R'>rep.</a> <a href='?%QUERYSTRING%&amp;cmove=<id>{$pgcommnum}-$commid'>del.</a><$commid><$commid /></li></ul><$repcommid />", $commdataline);
 
+
+            
 
 
             $filesource = openFileOrDie("DATABASE/comments/".$commaddr, 'rb');
@@ -1386,7 +1404,7 @@ function postComment() {
 
         $commpost = mb_softTrim($commpost);
 
-        $commpost = str_replace("\r", "", $commpost);
+        /// $commpost = str_replace("\r", "", $commpost);
 
 
 
@@ -1673,7 +1691,7 @@ function postComment() {
 
 
 
-            if(!dbprepApnd("DATABASE/comments/".$commaddr, $commpost2)) return false;
+            dbprepApnd("DATABASE/comments/".$commaddr);
 
 
             $lastLineNumber = 0;
