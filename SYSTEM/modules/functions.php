@@ -626,13 +626,16 @@ $replacementDLCNT = function ($m) {
         $safeName = htmlspecialchars($file, ENT_QUOTES | ENT_HTML5 | ENT_SUBSTITUTE, 'UTF-8');
         $dlcntFmt = number_format($dlcnt, 0, ',', ' ');
 
+        $targetIframe = urlPrep2($safeName);
+
         $href = 'SYSTEM/modules/download.php?file=' . rawurlencode($file);
         return "<table class='dl-tpl'><tbody>
-        <tr><td colspan='2'><a href=\"{$href}\">Скачать <strong>{$safeName}</strong></a></td></tr>
+        <tr><td colspan='2'><a href=\"{$href}\" target='auxFrame-$targetIframe'>Скачать <strong>{$safeName}</strong></a></td></tr>
 
         <tr><td class='a3'>Размер на диске: </td><td class='a4'>{$dlSize} КиБ</td></tr>
 
-        <tr><td class='a3'>Всего загрузок: </td><td class='a4'>{$dlcntFmt}</td></tr>
+        <tr><td class='a3'>Всего загрузок: </td><td class='a4'>{$dlcntFmt}<iframe name='auxFrame-$targetIframe' width='15' height='15' style='background: transparent'></iframe></td></tr>
+
         </tbody></table>";
 
     } else {
@@ -880,7 +883,7 @@ function filter_filename($filename) {
 
     // Запрещённые символы → '-'
     $filename = preg_replace('~
-        [<>:"/\\\|?*]     |   # файловые зарезервированные
+        [<>:"/\\\\|?*]     |   # файловые зарезервированные
         [\x00-\x1F]       |   # управляющие
         [\x7F\xA0\xAD]    |   # DEL, NBSP, SHY
         [#\[\]@!$&\'()+,;=]|  # URI reserved
@@ -1099,6 +1102,8 @@ function dbdone($filename, $recovery) {
     } else {
 
         unlink($filename.".new." . getmypid());
+
+        unlockByName($_SESSION['username'] ?? "");
 
         $recovery = $recovery ?: "ДАННЫЕ НЕ СОХРАНЕНЫ!";
 

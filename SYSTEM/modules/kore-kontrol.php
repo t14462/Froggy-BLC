@@ -409,7 +409,7 @@ if(    is_file("DATABASE/DB/DB-TOC-Cache.txt")
 
         dbprepCache("DATABASE/DB/DB-TOC-Cache.txt");
 
-        putFileOrDie("DATABASE/DB/DB-TOC-Cache.txt.new." . getmypid(), $mydumptxt, LOCK_EX);
+        putFileOrDie("DATABASE/DB/DB-TOC-Cache.txt.new." . getmypid(), $mydumptxt);
 
         if(dbdone("DATABASE/DB/DB-TOC-Cache.txt", "")) {
 
@@ -426,7 +426,7 @@ if(    is_file("DATABASE/DB/DB-TOC-Cache.txt")
 
         dbprepCache("DATABASE/DB/SEO-Cache.txt");
 
-        putFileOrDie("DATABASE/DB/SEO-Cache.txt.new." . getmypid(), $seodumptxt, LOCK_EX);
+        putFileOrDie("DATABASE/DB/SEO-Cache.txt.new." . getmypid(), $seodumptxt);
 
         if(dbdone("DATABASE/DB/SEO-Cache.txt", "")) {
 
@@ -443,7 +443,7 @@ if(    is_file("DATABASE/DB/DB-TOC-Cache.txt")
 
         dbprepCache("DATABASE/DB/MenuCache.txt");
 
-        putFileOrDie("DATABASE/DB/MenuCache.txt.new." . getmypid(), $mCACHE, LOCK_EX);
+        putFileOrDie("DATABASE/DB/MenuCache.txt.new." . getmypid(), $mCACHE);
 
         dbdone("DATABASE/DB/MenuCache.txt", "");
 
@@ -535,7 +535,7 @@ function sitemapflush() {
     fclose($filedest);
     */
 
-    putFileOrDie("sitemap.txt.new." . getmypid(), $sitemaptxtvar, LOCK_EX);
+    putFileOrDie("sitemap.txt.new." . getmypid(), $sitemaptxtvar);
 
     if(!dbdone("sitemap.txt", "")) return false;
 
@@ -588,7 +588,7 @@ function sitemapflushXml() {
     fclose($filedest);
     */
     
-    putFileOrDie("sitemap.xml.new." . getmypid(), $sitemapxmlvar, LOCK_EX);
+    putFileOrDie("sitemap.xml.new." . getmypid(), $sitemapxmlvar);
 
     if(!dbdone("sitemap.xml", "")) return false;
 
