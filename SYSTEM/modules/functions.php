@@ -873,56 +873,30 @@ function refreshhandle($time, $link, $update=true) {
 
 
 
-function filter_filename($filename) {
-
+function filter_filename(string $filename): string {
     $filename = emojiToHtmlEntities($filename);
-
     $filename = remove_entities($filename);
-    
     $filename = mb_superTrim($filename);
 
-    // Запрещённые символы → '-'
     $filename = preg_replace('~
-        [<>:"/\\\\|?*]     |   # файловые зарезервированные
-        [\x00-\x1F]       |   # управляющие
-        [\x7F\xA0\xAD]    |   # DEL, NBSP, SHY
-        [#\[\]@!$&\'()+,;=]|  # URI reserved
-        [{}^\~`]              # URL-небезопасные
+        [<>:"/\\\\|?*]      |  # reserved
+        [\x00-\x1F]         |  # control
+        [\x7F\xA0\xAD]      |  # DEL, NBSP, SHY
+        [#\[\]@!$&\'()+,;=] |  # URI reserved
+        [{}^\~`]               # URL-unsafe
     ~x', '-', $filename);
 
-    // Пробелы → подчёркивания
     $filename = str_replace(' ', '_', $filename);
-
-    // Сжать повторы символов
-    $filename = preg_replace([
-        '/-{2,}/',   // 2+ дефисов → один
-        '/\.{2,}/',  // 2+ точек   → одна
-        '/_{2,}/',   // 2+ подчёркиваний → одно
-    ], ['-', '.', '_'], $filename);
-
-    // Убрать ведущие точки/дефисы
-    /// $filename = ltrim($filename, '.-');
-
-    // Финальная зачистка хвостовых точек/пробелов/дефисов (совместимость с Windows)
+    $filename = preg_replace(['/-{2,}/', '/\.{2,}/', '/_{2,}/'], ['-', '.', '_'], $filename);
     $filename = trim($filename, ". \t\r\n\0\x0B-_");
 
-    // Обрезка до 255 байт (UTF-8)
     $ext  = pathinfo($filename, PATHINFO_EXTENSION);
     $base = pathinfo($filename, PATHINFO_FILENAME);
 
-    if ($ext !== '') {
-        $extBytes = strlen($ext); // байты в UTF-8
-        $limit = 255 - ($extBytes + 1); // +1 за точку
-    } else {
-        $limit = 255;
-    }
-
-    $limit = max(1, $limit);
+    $limit = ($ext !== '') ? max(1, 255 - (strlen($ext) + 1)) : 255;
     $base  = mb_strcut($base, 0, $limit, 'UTF-8');
-    $filename = $ext !== '' ? ($base . '.' . $ext) : $base;
 
-
-    return $filename;
+    return ($ext !== '') ? ($base . '.' . $ext) : $base;
 }
 
 
