@@ -101,7 +101,7 @@ function touchMy(string $file, ?float $customTime = null): bool {
     $timeFile = $file . '.time';
     $timeToWrite = $customTime ?? microtime(true);
     touch($file, (int)$timeToWrite);
-    return file_put_contents($timeFile, sprintf('%.6f', $timeToWrite)) !== false;
+    return file_put_contents($timeFile, sprintf('%.6f', $timeToWrite), LOCK_EX) !== false;
 }
 
 
@@ -114,10 +114,23 @@ function filemtimeMy(string $file): float {
     $timeFile = $file . '.time';
 
     if (is_file($timeFile)) {
-        return (float) trim(file_get_contents($timeFile));
+
+        $tmp = fopenOrDie($timeFile, 'rb');
+        @flock($tmp, LOCK_SH);
+
+        $contents = stream_get_contents($tmp);
+
+        /// $contents = file_get_contents($timeFile);
+
+        @flock($tmp, LOCK_UN);
+        fclose($tmp);
+
+        return (float)trim($contents);
+
+        /// return (float) trim(file_get_contents($timeFile));
     }
 
-    return (float) @filemtime($file);
+    return (float)@filemtime($file);
 }
 
 # DO NOT DELETE
@@ -2155,7 +2168,13 @@ function getCommCount($commaddr) {
 
     if(is_file("DATABASE/comm.count/".$commaddr)) {
 
-        return "&nbsp;<span class='pgCommCnt' title='Комментарии'>(".rtrim(getFileOrDie("DATABASE/comm.count/".$commaddr)).")</span>";
+        $tmp = fopenOrDie("DATABASE/comm.count/".$commaddr, 'rb');
+        @flock($tmp, LOCK_SH);
+        $contents = stream_get_contents($tmp);
+        @flock($tmp, LOCK_UN);
+        fclose($tmp);
+
+        return "<span class='pgCommCnt' title='Комментарии'>&nbsp;(".rtrim($contents).")</span>";
 
     } else {
 
@@ -2419,6 +2438,7 @@ function atomicCounterIncrement($path) {
     if ($fp) {
         if (flock($fp, LOCK_EX)) {
             $val  = 0;
+            rewind($fp);
             $data = stream_get_contents($fp);
             $data = trim((string)$data);
             if ($data !== '' && ctype_digit($data)) {
