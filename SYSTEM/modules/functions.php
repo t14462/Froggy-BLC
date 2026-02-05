@@ -1077,7 +1077,10 @@ function dbdone($filename, $recovery) {
 
         unlink($filename.".new." . getmypid());
 
-        unlockByName($_SESSION['username'] ?? "");
+        if(isset($safePost['title'], $safePost['h'], $safePost['textedit'])) {
+
+            unlockByName($_SESSION['username'] ?? "");
+        }
 
         $recovery = $recovery ?: "ДАННЫЕ НЕ СОХРАНЕНЫ!";
 
