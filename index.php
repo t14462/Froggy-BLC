@@ -140,7 +140,7 @@ $last_executed2 = @filemtime("DATABASE/DB/MenuCache.txt");
 
 $diff2 = time() - (int)$last_executed2; // $last_executed is the value from the server
 
-if(!is_file("DATABASE/DB/MenuCache.txt.lock") && $last_executed2 && $diff2 > 10799) { // 3 hours
+if($last_executed2 && $diff2 > 10799) { // 3 hours
 
     // rename("DATABASE/DB/MenuCache.txt", "DATABASE/DB/MenuCache.txt.del");
 

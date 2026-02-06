@@ -922,63 +922,9 @@ function dbprepApnd($filename) {
         ignore_user_abort(true); // Установить игнорирование разрыва соединения
     }
 
-    // $changeTime = filemtimeMy($filename);
-
-    // global $errmsg, $content;
-
     $lockFile = $filename . ".lock";
     $newFile = $filename . ".new." . getmypid();
-    // $dummyFile = "SYSTEM/modules/dummy.txt";
 
-    /*
-    // Попытка получить значение max_execution_time, если не удалось, использовать 8
-    $maxWaitTime = (ini_get('max_execution_time') !== false) ? ((int)ini_get('max_execution_time') - 5) : 8;
-
-    $tmark = time();
-
-    $recovery = str_ireplace("<textarea", "&lt;textarea", $recovery);
-    $recovery = str_ireplace("</textarea", "&lt;/textarea", $recovery);
-    $recovery = str_ireplace("textarea>", "textarea&gt;", $recovery);
-    
-    $recovery = str_ireplace("<br!>", "\n", $recovery);
-
-    $recovery = escape_amp_txtarea($recovery);
-    /// $recovery = str_ireplace("&", "&amp;", $recovery);
-    /// $recovery = str_ireplace("&amp;amp;", "&amp;", $recovery);
-    
-    while(is_file($lockFile)) {
-        ///usleep(200000);
-
-        usleep(100000);
-
-        if((time() - $tmark) > $maxWaitTime) {
-            // rename($lockFile, $lockFile . ".del"); // Перемещение файла блокировки
-
-            if(is_file($lockFile)) unlink($lockFile);
-
-            die('<!DOCTYPE html><html><head><meta charset="utf-8" /><title>DEADLOCK RECOVERY</title></head><body style="height: 100%; overflow: hidden;"><h1>DEADLOCK RECOVERY</h1><textarea style="width: 95%; min-height: 90vh; padding: 2%; resize: none;" readonly="readonly">'.$recovery.'</textarea></body></html>');
-        }
-
-        usleep(100000);
-    }
-
-
-    if($changeTime !== filemtimeMy($filename)) {
-
-        $errmsg = "<h1>RECOVERY.</h1><p class='big'><strong>База Данных была изменена внешним процессом.</strong></p>";
-
-        $content = "<textarea style='width: 95%; min-height: 65vh; padding: 2%; resize: none;' readonly='readonly'>".$recovery."</textarea>";
-
-        return false;
-    }
-    */
-
-    // Создаем файл блокировки
-    /*
-    if(!copy($dummyFile, $lockFile)) {
-        die('<!DOCTYPE html><html><head><meta charset="utf-8" /><title>Ошибка</title></head><body><h1>ОШИБКА.</h1><p><strong>Не удалось создать файл блокировки.</strong></p></body></html>');
-    }
-    */
     putFileOrDie($lockFile, getmypid(), LOCK_EX);
 
     // Копируем оригинальный файл в новый
@@ -999,70 +945,9 @@ function dbprepCache($filename) {
         ignore_user_abort(true); // Установить игнорирование разрыва соединения
     }
 
-    
-    // $changeTime = filemtimeMy($filename);
-    
-
-    // global $errmsg, $content;
-
     $lockFile = $filename . ".lock";
-    // $newFile = $filename . ".new." . getmypid();
-    // $dummyFile = "SYSTEM/modules/dummy.txt";
 
-    /*
-    // Попытка получить значение max_execution_time, если не удалось, использовать 8
-    $maxWaitTime = (ini_get('max_execution_time') !== false) ? ((int)ini_get('max_execution_time') - 5) : 8;
-
-    $tmark = time();
-
-    // $recovery = str_ireplace("<textarea", "&lt;textarea", $recovery);
-    // $recovery = str_ireplace("</textarea", "&lt;/textarea", $recovery);
-    // $recovery = str_ireplace("textarea>", "textarea&gt;", $recovery);
-
-    while(is_file($lockFile)) {
-        ///usleep(200000);
-
-        usleep(100000);
-
-        if((time() - $tmark) > $maxWaitTime) {
-            // rename($lockFile, $lockFile . ".del"); // Перемещение файла блокировки
-
-            if(is_file($lockFile)) unlink($lockFile);
-
-            ///die('<!DOCTYPE html><html><head><meta charset="utf-8" /><title>DEADLOCK RECOVERY</title></head><body><h1>DEADLOCK RECOVERY</h1></body></html>');
-            return false;
-        }
-
-        usleep(100000);
-    }
-
-
-    
-    if($changeTime !== filemtimeMy($filename)) {
-
-        // $errmsg = "<h1>ОШИБКА.</h1><p class='big'><strong>База Данных была изменена внешним процессом.</strong></p>";
-
-        // $content = "<textarea style='width: 95%; min-height: 65vh; padding: 2%; resize: none;' readonly='readonly'>".$recovery."</textarea>";
-
-        return false;
-    }
-    */
-
-
-    // Создаем файл блокировки
-    /*
-    if(!copy($dummyFile, $lockFile)) {
-        die('<!DOCTYPE html><html><head><meta charset="utf-8" /><title>Ошибка</title></head><body><h1>ОШИБКА.</h1><p><strong>Не удалось создать файл блокировки.</strong></p></body></html>');
-    }
-    */
     putFileOrDie($lockFile, getmypid(), LOCK_EX);
-
-    // Создаем новый файл (dummy)
-    /*
-    if(!copy($dummyFile, $newFile)) {
-        die('<!DOCTYPE html><html><head><meta charset="utf-8" /><title>Ошибка</title></head><body><h1>ОШИБКА.</h1><p><strong>Не удалось создать новый файл.</strong></p></body></html>');
-    }
-    */
 
     return true;
 }
@@ -1118,23 +1003,6 @@ function mylog($line) {
 
     $datetime = new DateTime();
     $mydate = $datetime->format('Y-m-d H:i:s');
-
-    /*
-    if(!is_file("DATABASE/DB/sys.log")) {
-
-        copy("SYSTEM/modules/dummy.txt", "DATABASE/DB/sys.log");
-    }
-
-    
-    dbprepApnd("DATABASE/DB/sys.log");
-
-    $file = fopenOrDie("DATABASE/DB/sys.log.new." . getmypid(), "ab");
-    fwriteOrDie($file, $mydate.": ".$line."<br />\n");
-    fclose($file);
-    
-
-    if(!dbdone("DATABASE/DB/sys.log", "")) return false;
-    */
 
     putFileOrDie("DATABASE/DB/sys.log", $mydate.": ".$line."<br />\n", FILE_APPEND | LOCK_EX);
 }
