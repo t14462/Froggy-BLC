@@ -2042,7 +2042,7 @@ function getCommCount($commaddr) {
         @flock($tmp, LOCK_UN);
         fclose($tmp);
 
-        return "<span class='pgCommCnt' title='Комментарии'>&nbsp;(".rtrim($contents).")</span>";
+        return "<span class='pgCommCnt' title='Комментарии'>&nbsp;(".(int)$contents.")</span>";
 
     } else {
 
