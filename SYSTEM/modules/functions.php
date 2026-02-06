@@ -2302,7 +2302,7 @@ function dbCleanupAllNewFiles(string $filename): void {
 
 function atomicCounterIncrement($path) {
 
-    $fp = @fopen($path, 'c+'); // создаст файл при отсутствии
+    $fp = @fopenOrDie($path, 'c+b'); // создаст файл при отсутствии
     if ($fp) {
         if (flock($fp, LOCK_EX)) {
             $val  = 0;

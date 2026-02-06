@@ -97,7 +97,7 @@ if (!is_dir($COUNT_DIR)) {
 }
 $cntFile = $COUNT_DIR . '/' . $file . '.dlcnt';
 
-$fp = @fopen($cntFile, 'c+');
+$fp = @fopen($cntFile, 'c+b');
 if ($fp) {
     if (flock($fp, LOCK_EX)) {
         $val = 0;
