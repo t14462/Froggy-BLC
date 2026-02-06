@@ -95,6 +95,7 @@ $fp = @fopen($cntFile, 'c+');
 if ($fp) {
     if (flock($fp, LOCK_EX)) {
         $val = 0;
+        rewind($fp);
         $data = trim((string)stream_get_contents($fp));
         if ($data !== '' && ctype_digit($data)) $val = (int)$data;
         $val++;
