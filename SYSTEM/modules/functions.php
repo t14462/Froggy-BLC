@@ -641,9 +641,50 @@ $replacementDLCNT = static function ($m) {
 
         $targetIframe = urlPrep2($safeName);
 
+        $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
+
         $href = 'SYSTEM/modules/download.php?file=' . rawurlencode($file);
-        return "<table class='dl-tpl'><tbody>
-        <tr><td colspan='2'><a href=\"{$href}\" target='auxFrame-$targetIframe'>Скачать <strong>{$safeName}</strong></a></td></tr>
+        $dlTable = "<table class='dl-tpl'><tbody>
+        <tr><td colspan='2'>";
+        
+        if($ext === "pdf"  ||
+           $ext === "txt"  ||
+           $ext === "log"  ||
+           $ext === "ini"  ||
+           $ext === "xml"  ||
+           $ext === "csv"  ||
+           $ext === "tsv"  ||
+           $ext === "json" ||
+           $ext === "md"   ||
+           $ext === "yaml" ||
+           $ext === "yml"  ||
+           $ext === "srt"  ||
+           $ext === "vtt"  ||
+           $ext === "ass"  ||
+           $ext === "ssa"  ||
+           $ext === "sub"  ||
+           $ext === "conf" ||
+           $ext === "cfg"  ||
+           $ext === "toml" ||
+           $ext === "rst"  ||
+           $ext === "adoc" ||
+           $ext === "org"  ||
+           $ext === "diff" ||
+           $ext === "patch"||
+           $ext === "nfo"  ||
+           $ext === "tex"  ||
+           $ext === "bib"  ||
+           $ext === "properties" 
+        ) {
+
+            $dlTable .= "<a href=\"{$href}\" target='_blank'>Скачать <strong>{$safeName}</strong></a>";
+
+        } else {
+
+            $dlTable .= "<a href=\"{$href}\" target='auxFrame-$targetIframe'>Скачать <strong>{$safeName}</strong></a>";
+        }
+        
+        $dlTable .= "</td></tr>
 
         <tr><td class='a3'>Размер на диске: </td><td class='a4'>{$dlSize} КиБ</td></tr>
 
@@ -651,6 +692,7 @@ $replacementDLCNT = static function ($m) {
 
         </tbody></table>";
 
+        return $dlTable;
     } else {
 
         return "<div style='background:#F00; color:#FFF; font-size: 3rem;'>ERR: File 404</div>";

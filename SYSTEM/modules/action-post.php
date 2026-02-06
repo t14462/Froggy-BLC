@@ -1982,28 +1982,35 @@ function fileDlUpload() {
             $allowedExtensions = [
                 // Текстовые и данные
                 'txt', 'csv', 'tsv', 'json', 'xml', 'md', 'log', 'ini', 'yaml', 'yml',
-                
+
+                // Дополнительные безопасные текстовые форматы
+                'conf', 'cfg', 'toml', 'properties',
+                'rst', 'adoc', 'org',
+                'diff', 'patch', 'nfo',
+                'tex', 'bib',
+
                 // Документы и офисные файлы
                 'pdf', 'doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx', 'odt', 'ods', 'odp', 'rtf',
-            
+
                 // Электронные книги
                 'epub', 'mobi', 'azw', 'azw3',
-            
+
                 // Архивы и образы
                 'zip', 'rar', '7z', 'tar', 'gz', 'bz2', 'xz', 'lz', 'lzma', 'iso',
-            
+
                 // Игровые и мод-ресурсы
                 'esp', 'esm',
-            
+
                 // Субтитры и прочее медиасопровождение (без видео и изображений)
                 'srt', 'vtt', 'ass', 'ssa', 'sub',
-            
+
                 // Шрифты (если нужны для фронта, но не исполняемы)
                 'ttf', 'otf', 'woff', 'woff2',
-            
+
                 // Базы данных/дампы
-                'sql', 'sqlite', 'db', 'db3'
+                'sql', 'sqlite', 'db', 'db3',
             ];
+
             $extension = pathinfo($srcFileName, PATHINFO_EXTENSION);
 
 
