@@ -1,6 +1,12 @@
 <?php
 declare(strict_types=1);
 
+
+if(function_exists('ignore_user_abort')) {
+    ignore_user_abort(true); // Установить игнорирование разрыва соединения
+}
+
+
 function emojiToHtmlEntities(string $string): string {
     return preg_replace_callback('/\X/u', static function ($m) {
         $g = $m[0];
