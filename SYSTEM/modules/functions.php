@@ -643,39 +643,44 @@ $replacementDLCNT = static function ($m) {
 
         $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
 
+
+        $inlineExt = [
+        'adoc'       => 1,
+        'ass'        => 1,
+        'bib'        => 1,
+        'cfg'        => 1,
+        'conf'       => 1,
+        'csv'        => 1,
+        'diff'       => 1,
+        'ini'        => 1,
+        'json'       => 1,
+        'log'        => 1,
+        'md'         => 1,
+        'nfo'        => 1,
+        'org'        => 1,
+        'patch'      => 1,
+        'pdf'        => 1,
+        'properties' => 1,
+        'rst'        => 1,
+        'srt'        => 1,
+        'ssa'        => 1,
+        'sub'        => 1,
+        'tex'        => 1,
+        'toml'       => 1,
+        'tsv'        => 1,
+        'txt'        => 1,
+        'vtt'        => 1,
+        'xml'        => 1,
+        'yaml'       => 1,
+        'yml'        => 1,
+        ];
+
+
         $href = 'SYSTEM/modules/download.php?file=' . rawurlencode($file);
         $dlTable = "<table class='dl-tpl'><tbody>
         <tr><td colspan='2'>";
         
-        if( $ext === "adoc"       ||
-            $ext === "ass"        ||
-            $ext === "bib"        ||
-            $ext === "cfg"        ||
-            $ext === "conf"       ||
-            $ext === "csv"        ||
-            $ext === "diff"       ||
-            $ext === "ini"        ||
-            $ext === "json"       ||
-            $ext === "log"        ||
-            $ext === "md"         ||
-            $ext === "nfo"        ||
-            $ext === "org"        ||
-            $ext === "patch"      ||
-            $ext === "pdf"        ||
-            $ext === "properties" ||
-            $ext === "rst"        ||
-            $ext === "srt"        ||
-            $ext === "ssa"        ||
-            $ext === "sub"        ||
-            $ext === "tex"        ||
-            $ext === "toml"       ||
-            $ext === "tsv"        ||
-            $ext === "txt"        ||
-            $ext === "vtt"        ||
-            $ext === "xml"        ||
-            $ext === "yaml"       ||
-            $ext === "yml"
-        ) {
+        if(isset($inlineExt[$ext])) {
 
             $dlTable .= "<a href=\"{$href}\" target='_blank'>Скачать <strong>{$safeName}</strong></a>";
 
