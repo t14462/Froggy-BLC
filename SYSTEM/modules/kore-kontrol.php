@@ -70,11 +70,11 @@ if (file_exists("DATABASE/DB/data.html.lock")) {
 
 
 if(    is_file("DATABASE/DB/DB-TOC-Cache.txt")
-    && !is_file("DATABASE/DB/DB-TOC-Cache.txt.lock")
+    /// && !is_file("DATABASE/DB/DB-TOC-Cache.txt.lock")
     && is_file("DATABASE/DB/MenuCache.txt")
-    && !is_file("DATABASE/DB/MenuCache.txt.lock")
+    /// && !is_file("DATABASE/DB/MenuCache.txt.lock")
     && is_file("DATABASE/DB/SEO-Cache.txt")
-    && !is_file("DATABASE/DB/SEO-Cache.txt.lock")
+    /// && !is_file("DATABASE/DB/SEO-Cache.txt.lock")
     && !$checkpermission /* && getFileOrDie('DATABASE/fingerprint.txt') == $url."\n".PHP_OS."\n".$servIP */) {
 
     $i = 0;
