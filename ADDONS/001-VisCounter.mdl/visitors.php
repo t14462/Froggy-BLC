@@ -5,6 +5,11 @@ define('SECURE_ACCESS', true);
 require_once "../GetRootStandalone.php";
 
 
+if(function_exists('ignore_user_abort')) {
+    ignore_user_abort(true); // Установить игнорирование разрыва соединения
+}
+
+
 ################################################
 ################################################
 ################################################
