@@ -430,7 +430,7 @@ function mb_superTrim(string $text): string {
 
     
     // 2. Удаляем прочие невидимые символы, но оставляем ZWJ
-    $text = preg_replace_callback('/[\p{C}]/u', function ($m) {
+    $text = preg_replace_callback('/[\p{C}]/u', static function ($m) {
         $ch = $m[0];
 
         // ZWJ (U+200D) — нужен для эмоджи типа 👩‍💻
@@ -461,7 +461,7 @@ function mb_superTrim(string $text): string {
 function mb_softTrim(string $text): string {
     
     // Удаляем прочие невидимые символы, но оставляем \n + ZWJ
-    $text = preg_replace_callback('/[\p{C}]/u', function ($m) {
+    $text = preg_replace_callback('/[\p{C}]/u', static function ($m) {
         $ch = $m[0];
 
         // \n оставляем
@@ -547,7 +547,7 @@ function mb_softTrim(string $text): string {
 
 // Регулярное выражение для замены шаблона {{youtube|ID|width}}
 $patternYT = '/\{\{youtube\|([a-zA-Z0-9_-]+)(?:\|(\d+))?\}\}/';
-$replacementYT = function ($matches) {
+$replacementYT = static function ($matches) {
     $videoId = $matches[1] ?? "";
 
     // Задаем ширину iframe, если она указана, иначе по умолчанию 100%
@@ -569,7 +569,7 @@ $replacementYT = function ($matches) {
 
 // Регулярное выражение для замены шаблона {{vimeo|ID|width}}
 $patternVimeo = '/\{\{vimeo\|([0-9]+)(?:\|(\d+))?\}\}/'; // ID в Vimeo всегда числовое
-$replacementVimeo = function ($matches) {
+$replacementVimeo = static function ($matches) {
     $videoId = $matches[1] ?? "";
 
     // Задаем ширину iframe, если она указана, иначе по умолчанию 100%
@@ -588,7 +588,7 @@ $replacementVimeo = function ($matches) {
 
 // Регулярное выражение для замены шаблона {{dailymotion|ID|width}}
 $patternDM = '/\{\{dailymotion\|([a-zA-Z0-9]+)(?:\|(\d+))?\}\}/';
-$replacementDM = function ($matches) {
+$replacementDM = static function ($matches) {
     $videoId = $matches[1] ?? "";
 
     // Задаем ширину iframe, если она указана, иначе по умолчанию 100%
@@ -608,7 +608,7 @@ $replacementDM = function ($matches) {
 
 // {{download|FILE}}
 $patternDLCNT = '/\{\{download\|([^\}\r\n]+?)\}\}/u';
-$replacementDLCNT = function ($m) {
+$replacementDLCNT = static function ($m) {
 
     $raw = trim($m[1] ?? '');
     // последний сегмент пути, без подкаталогов + ваша фильтрация
@@ -669,7 +669,7 @@ $replacementDLCNT = function ($m) {
 
 
 function emojiToHtmlEntities(string $string): string {
-    return preg_replace_callback('/\X/u', function ($m) {
+    return preg_replace_callback('/\X/u', static function ($m) {
         $g = $m[0];
         if (preg_match('/(?:\p{So}|\p{Sk}|\x{20E3}|\x{FE0F})/u', $g)) {
             // кодируем весь кластер целиком
@@ -2079,7 +2079,7 @@ function unwrapParagraphsAfterDiv($html) {
 function unwrapParagraphsAfter($txt) {
     return preg_replace_callback(
         '#</(div|figure|aside|details|table)>(.*?)</p>#s',
-        function ($matches) {
+        static function ($matches) {
             // $matches[1] — 'div' или 'figure'
             // $matches[2] — содержимое между </div> или </figure> и </p>
 
@@ -2221,17 +2221,17 @@ function normalize_entities_my(string $text): string {
     };
 
     // 1) Десятичные: убираем лидирующие нули + правим диапазоны
-    $text = preg_replace_callback('/&#0*(\d+);/', function ($m) use ($toDecEnt) {
+    $text = preg_replace_callback('/&#0*(\d+);/', static function ($m) use ($toDecEnt) {
         return $toDecEnt((int)$m[1]);
     }, $text);
 
     // 2) Шестнадцатеричные: к десятичным + правим диапазоны
-    $text = preg_replace_callback('/&#x0*([0-9a-f]+);/i', function ($m) use ($toDecEnt) {
+    $text = preg_replace_callback('/&#x0*([0-9a-f]+);/i', static function ($m) use ($toDecEnt) {
         return $toDecEnt(hexdec($m[1]));
     }, $text);
 
     // 3) Именованные → нижний регистр (канон для HTML)
-    $text = preg_replace_callback('/&[a-z][a-z0-9]*;/i', function ($m) {
+    $text = preg_replace_callback('/&[a-z][a-z0-9]*;/i', static function ($m) {
         return strtolower($m[0]);
     }, $text);
 
