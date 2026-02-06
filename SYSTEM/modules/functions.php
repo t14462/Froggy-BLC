@@ -647,34 +647,34 @@ $replacementDLCNT = static function ($m) {
         $dlTable = "<table class='dl-tpl'><tbody>
         <tr><td colspan='2'>";
         
-        if($ext === "pdf"  ||
-           $ext === "txt"  ||
-           $ext === "log"  ||
-           $ext === "ini"  ||
-           $ext === "xml"  ||
-           $ext === "csv"  ||
-           $ext === "tsv"  ||
-           $ext === "json" ||
-           $ext === "md"   ||
-           $ext === "yaml" ||
-           $ext === "yml"  ||
-           $ext === "srt"  ||
-           $ext === "vtt"  ||
-           $ext === "ass"  ||
-           $ext === "ssa"  ||
-           $ext === "sub"  ||
-           $ext === "conf" ||
-           $ext === "cfg"  ||
-           $ext === "toml" ||
-           $ext === "rst"  ||
-           $ext === "adoc" ||
-           $ext === "org"  ||
-           $ext === "diff" ||
-           $ext === "patch"||
-           $ext === "nfo"  ||
-           $ext === "tex"  ||
-           $ext === "bib"  ||
-           $ext === "properties" 
+        if( $ext === "adoc"       ||
+            $ext === "ass"        ||
+            $ext === "bib"        ||
+            $ext === "cfg"        ||
+            $ext === "conf"       ||
+            $ext === "csv"        ||
+            $ext === "diff"       ||
+            $ext === "ini"        ||
+            $ext === "json"       ||
+            $ext === "log"        ||
+            $ext === "md"         ||
+            $ext === "nfo"        ||
+            $ext === "org"        ||
+            $ext === "patch"      ||
+            $ext === "pdf"        ||
+            $ext === "properties" ||
+            $ext === "rst"        ||
+            $ext === "srt"        ||
+            $ext === "ssa"        ||
+            $ext === "sub"        ||
+            $ext === "tex"        ||
+            $ext === "toml"       ||
+            $ext === "tsv"        ||
+            $ext === "txt"        ||
+            $ext === "vtt"        ||
+            $ext === "xml"        ||
+            $ext === "yaml"       ||
+            $ext === "yml"
         ) {
 
             $dlTable .= "<a href=\"{$href}\" target='_blank'>Скачать <strong>{$safeName}</strong></a>";
