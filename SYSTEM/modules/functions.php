@@ -125,7 +125,7 @@ function filemtimeMy(string $file): float {
         @flock($tmp, LOCK_UN);
         fclose($tmp);
 
-        return (float)trim($contents);
+        return (float)$contents;
 
         /// return (float) trim(file_get_contents($timeFile));
     }
