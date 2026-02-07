@@ -81,11 +81,11 @@ if(    is_file("DATABASE/DB/DB-TOC-Cache.txt")
 
     $mydump2 = getFileOrDie('DATABASE/DB/DB-TOC-Cache.txt');
 
-    $mydump2 = unserialize($mydump2);
+    $mydump2 = unserialize($mydump2, ['allowed_classes' => false]);
 
     $seoNumEncode = getFileOrDie('DATABASE/DB/SEO-Cache.txt');
 
-    $seoNumEncode = unserialize($seoNumEncode);
+    $seoNumEncode = unserialize($seoNumEncode, ['allowed_classes' => false]);
 
 
 
