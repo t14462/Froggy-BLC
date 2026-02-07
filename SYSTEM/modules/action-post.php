@@ -1815,11 +1815,11 @@ function loginPost() {
 
 
         $tmp = fopenOrDie("DATABASE/lock/".$hashh, 'rb');
-        @flock($tmp, LOCK_SH);
+        flock($tmp, LOCK_SH);
 
         $lasttime = (int)stream_get_contents($tmp);
 
-        @flock($tmp, LOCK_UN);
+        flock($tmp, LOCK_UN);
         fclose($tmp);
 
 
