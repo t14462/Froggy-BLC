@@ -1582,7 +1582,6 @@ function movePageUp() {
 
             $filedest = openFileOrDie("DATABASE/DB/data.html.new." . getmypid(), 'ab');
 
-
             $prevline = $filesource->fgetsOrDie();
             $nextline = $filesource->fgetsOrDie();
 

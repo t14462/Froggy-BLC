@@ -2445,7 +2445,7 @@ function protect_code_double_hyphen($html, &$ctx)
         $out .= $content;
         $out .= '</code>';
 
-        $pos = $close + strlen('</code>');
+        $pos = $close + 7; /// strlen('</code>');
     }
 
     return $out;
