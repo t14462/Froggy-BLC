@@ -1811,7 +1811,17 @@ function loginPost() {
             copy("SYSTEM/modules/null.txt", "DATABASE/lock/".$hashh);
         }
 
-        $lasttime = (int)getFileOrDie("DATABASE/lock/".$hashh);
+        /// $lasttime = (int)getFileOrDie("DATABASE/lock/".$hashh);
+
+
+        $tmp = fopenOrDie("DATABASE/lock/".$hashh, 'rb');
+        @flock($tmp, LOCK_SH);
+
+        $lasttime = (int)stream_get_contents($tmp);
+
+        @flock($tmp, LOCK_UN);
+        fclose($tmp);
+
 
         // require_once "SYSTEM/salt.php";
 

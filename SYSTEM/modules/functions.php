@@ -835,7 +835,18 @@ function repeatCaptcha($userInput) {
     // Проверка, существует ли файл сессии
     if(is_file($sessionFile)) {
         // Чтение данных из файла
-        $sessionData = json_decode(getFileOrDie($sessionFile), true);
+
+
+        $tmp = fopenOrDie($sessionFile, 'rb');
+        @flock($tmp, LOCK_SH);
+
+        $sessionData = json_decode(stream_get_contents($tmp), true);
+
+        @flock($tmp, LOCK_UN);
+        fclose($tmp);
+
+
+        /// $sessionData = json_decode(getFileOrDie($sessionFile), true);
 
         // Проверка на совпадение с предыдущими вводами
         if(in_array($userInput, $sessionData['captchas'] ?? [])) {
@@ -872,7 +883,18 @@ function canProceed($datip) {
     // Проверяем, существует ли файл
     if(is_file($lockFile)) {
         // Читаем данные из файла
-        $lockData = json_decode(getFileOrDie($lockFile), true);
+
+
+        $tmp = fopenOrDie($lockFile, 'rb');
+        @flock($tmp, LOCK_SH);
+
+        $lockData = json_decode(stream_get_contents($tmp), true);
+
+        @flock($tmp, LOCK_UN);
+        fclose($tmp);
+
+
+        /// $lockData = json_decode(getFileOrDie($lockFile), true);
         $lastCall = (int)($lockData['last_call'] ?? 0);
         $currentTime = time();
 
@@ -1004,7 +1026,16 @@ function dbdone($filename, $recovery) {
 
     global $errmsg, $content;
 
-    $lockvar = (int)@file_get_contents($filename.".lock");
+
+    $tmp = fopenOrDie($filename.".lock", 'rb');
+    @flock($tmp, LOCK_SH);
+
+    $lockvar = (int)stream_get_contents($tmp);
+
+    @flock($tmp, LOCK_UN);
+    fclose($tmp);
+
+    /// $lockvar = (int)@file_get_contents($filename.".lock");
 
     if($lockvar === getmypid()) {
 
