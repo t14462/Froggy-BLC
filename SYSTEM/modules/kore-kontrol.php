@@ -254,7 +254,9 @@ if(    is_file("DATABASE/DB/DB-TOC-Cache.txt")
 
                     $addpageafter = "<a href='$addr&addpage=$count-$num' title='Создать текущ. уровень'>+</a> ";
 
-                    if($num < 6) {$addpageafter .= "<a href='$addr&addpage=$count-".($num+1)."&newlevel=1' title='Создать след. уровень'>N</a> ";}
+                    /// if($num < 6) {$addpageafter .= "<a href='$addr&addpage=$count-".($num+1)."&newlevel=1' title='Создать след. уровень'>N</a> ";}
+
+                    if($num < 6) {$addpageafter .= "<a href='$addr&addpage=$count-".($num+1)."' title='Создать след. уровень'>N</a> ";}
 
                     $pagemover = "<a href='?pgmovedown=$count' title='Переместить вниз'>D</a> <a href='?pgmoveup=$count' title='Переместить вверх'>U</a> ";
 
@@ -300,7 +302,9 @@ if(    is_file("DATABASE/DB/DB-TOC-Cache.txt")
 
                     $addpageafter = "<a href='$addr&addpage=$count-$num' title='Создать текущ. уровень'>+</a> ";
 
-                    if($num < 6) {$addpageafter .= "<a href='$addr&addpage=$count-".($num+1)."&newlevel=1' title='Создать след. уровень'>N</a> ";}
+                    /// if($num < 6) {$addpageafter .= "<a href='$addr&addpage=$count-".($num+1)."&newlevel=1' title='Создать след. уровень'>N</a> ";}
+
+                    if($num < 6) {$addpageafter .= "<a href='$addr&addpage=$count-".($num+1)."' title='Создать след. уровень'>N</a> ";}
 
                     $pagemover = "<a href='?pgmovedown=$count' title='Переместить вниз'>D</a> <a href='?pgmoveup=$count' title='Переместить вверх'>U</a> ";
 
