@@ -49,7 +49,13 @@ function CountVisitors() {
     $now = time();
     $visitorID = getVisitorID();
 
-    $data = @unserialize(getFileOrDie($dbfile));
+    $fVisCnt = fopenOrDie($dbfile, 'rb');
+    flock($fVisCnt, LOCK_SH);
+    $data = @unserialize(stream_get_contents($fVisCnt));
+    flock($fVisCnt, LOCK_UN);
+    fclose($fVisCnt);
+
+
     if (!is_array($data)) $data = [];
 
     // Чистим протухших
