@@ -927,7 +927,7 @@ function refreshhandle($time, $link, $update=true) {
 
         refreshCaches();
 
-        unlockByName($_SESSION['username'] ?? "");
+        unlockByName($_SESSION['username'] ?? "dummy");
     }
 
     if($time > 0) {
@@ -1055,7 +1055,7 @@ function dbdone($filename, $recovery) {
 
         if(isset($safePost['title'], $safePost['h'], $safePost['textedit'])) {
 
-            unlockByName($_SESSION['username'] ?? "");
+            unlockByName($_SESSION['username'] ?? "dummy");
         }
 
         $recovery = $recovery ?: "ДАННЫЕ НЕ СОХРАНЕНЫ!";

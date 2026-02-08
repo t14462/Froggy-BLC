@@ -69,7 +69,7 @@ function unlockByName(string $username): bool {
 
 
 
-if(isLockedBy($_SESSION['username'] ?? "")) {
+if(isLockedBy($_SESSION['username'] ?? "dummy")) {
 
     touch(DBLOCK_FILE);
 }
@@ -114,7 +114,7 @@ if( isset($_SESSION['username']) && (
 
 } elseif(isset($_GET['leaveedit'])) {
 
-    unlockByName($_SESSION['username'] ?? "");
+    unlockByName($_SESSION['username'] ?? "dummy");
 }
 
 

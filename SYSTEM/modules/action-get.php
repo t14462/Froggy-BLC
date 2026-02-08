@@ -1441,13 +1441,13 @@ function addPage() {
         }
     }
         
-    unlockByName($_SESSION['username'] ?? "");
+    unlockByName($_SESSION['username'] ?? "dummy");
 }
 
 
 function logout() {
 
-    unlockByName($_SESSION['username'] ?? "");
+    unlockByName($_SESSION['username'] ?? "dummy");
 
     if(!empty($_SESSION["username"])) {
 
@@ -1543,7 +1543,7 @@ function movePageDown() {
         }
     }
         
-    unlockByName($_SESSION['username'] ?? "");
+    unlockByName($_SESSION['username'] ?? "dummy");
 }
 
 
@@ -1612,7 +1612,7 @@ function movePageUp() {
         }
     }
         
-    unlockByName($_SESSION['username'] ?? "");
+    unlockByName($_SESSION['username'] ?? "dummy");
 }
 
 
@@ -1920,7 +1920,7 @@ function deletePage() {
         }
     }
         
-    unlockByName($_SESSION['username'] ?? "");
+    unlockByName($_SESSION['username'] ?? "dummy");
 }
 
 
