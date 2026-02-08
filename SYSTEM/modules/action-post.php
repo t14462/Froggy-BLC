@@ -1814,13 +1814,13 @@ function loginPost() {
         /// $lasttime = (int)getFileOrDie("DATABASE/lock/".$hashh);
 
 
-        $tmp = fopenOrDie("DATABASE/lock/".$hashh, 'rb');
-        flock($tmp, LOCK_SH);
+        $locktmp = fopenOrDie("DATABASE/lock/".$hashh, 'rb');
+        flock($locktmp, LOCK_SH);
 
-        $lasttime = (int)stream_get_contents($tmp);
+        $lasttime = (int)stream_get_contents($locktmp);
 
-        flock($tmp, LOCK_UN);
-        fclose($tmp);
+        flock($locktmp, LOCK_UN);
+        fclose($locktmp);
 
 
         // require_once "SYSTEM/salt.php";

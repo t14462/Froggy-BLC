@@ -115,15 +115,15 @@ function filemtimeMy(string $file): float {
 
     if (is_file($timeFile)) {
 
-        $tmp = fopenOrDie($timeFile, 'rb');
-        flock($tmp, LOCK_SH);
+        $locktmp = fopenOrDie($timeFile, 'rb');
+        flock($locktmp, LOCK_SH);
 
-        $contents = stream_get_contents($tmp);
+        $contents = stream_get_contents($locktmp);
 
         /// $contents = file_get_contents($timeFile);
 
-        flock($tmp, LOCK_UN);
-        fclose($tmp);
+        flock($locktmp, LOCK_UN);
+        fclose($locktmp);
 
         return (float)$contents;
 
@@ -837,13 +837,13 @@ function repeatCaptcha($userInput) {
         // Чтение данных из файла
 
 
-        $tmp = fopenOrDie($sessionFile, 'rb');
-        flock($tmp, LOCK_SH);
+        $locktmp = fopenOrDie($sessionFile, 'rb');
+        flock($locktmp, LOCK_SH);
 
-        $sessionData = json_decode(stream_get_contents($tmp), true);
+        $sessionData = json_decode(stream_get_contents($locktmp), true);
 
-        flock($tmp, LOCK_UN);
-        fclose($tmp);
+        flock($locktmp, LOCK_UN);
+        fclose($locktmp);
 
 
         /// $sessionData = json_decode(getFileOrDie($sessionFile), true);
@@ -885,13 +885,13 @@ function canProceed($datip) {
         // Читаем данные из файла
 
 
-        $tmp = fopenOrDie($lockFile, 'rb');
-        flock($tmp, LOCK_SH);
+        $locktmp = fopenOrDie($lockFile, 'rb');
+        flock($locktmp, LOCK_SH);
 
-        $lockData = json_decode(stream_get_contents($tmp), true);
+        $lockData = json_decode(stream_get_contents($locktmp), true);
 
-        flock($tmp, LOCK_UN);
-        fclose($tmp);
+        flock($locktmp, LOCK_UN);
+        fclose($locktmp);
 
 
         /// $lockData = json_decode(getFileOrDie($lockFile), true);
@@ -1027,13 +1027,13 @@ function dbdone($filename, $recovery) {
     global $errmsg, $content;
 
 
-    $tmp = fopenOrDie($filename.".lock", 'rb');
-    flock($tmp, LOCK_SH);
+    $locktmp = fopenOrDie($filename.".lock", 'rb');
+    flock($locktmp, LOCK_SH);
 
-    $lockvar = (int)stream_get_contents($tmp);
+    $lockvar = (int)stream_get_contents($locktmp);
 
-    flock($tmp, LOCK_UN);
-    fclose($tmp);
+    flock($locktmp, LOCK_UN);
+    fclose($locktmp);
 
     /// $lockvar = (int)@file_get_contents($filename.".lock");
 
@@ -2114,11 +2114,11 @@ function getCommCount($commaddr) {
 
     if(is_file("DATABASE/comm.count/".$commaddr)) {
 
-        $tmp = fopenOrDie("DATABASE/comm.count/".$commaddr, 'rb');
-        flock($tmp, LOCK_SH);
-        $contents = stream_get_contents($tmp);
-        flock($tmp, LOCK_UN);
-        fclose($tmp);
+        $locktmp = fopenOrDie("DATABASE/comm.count/".$commaddr, 'rb');
+        flock($locktmp, LOCK_SH);
+        $contents = stream_get_contents($locktmp);
+        flock($locktmp, LOCK_UN);
+        fclose($locktmp);
 
         return "<span class='pgCommCnt' title='Комментарии'>&nbsp;(".(int)$contents.")</span>";
 

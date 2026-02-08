@@ -25,13 +25,13 @@ function isLockedBy(string $username): bool {
     if (!isDbLocked()) return false;
 
 
-    $tmp = fopen(DBLOCK_FILE, 'rb');
-    flock($tmp, LOCK_SH);
+    $locktmp = fopen(DBLOCK_FILE, 'rb');
+    flock($locktmp, LOCK_SH);
 
-    $lockedBy = trim(stream_get_contents($tmp));
+    $lockedBy = trim(stream_get_contents($locktmp));
 
-    flock($tmp, LOCK_UN);
-    fclose($tmp);
+    flock($locktmp, LOCK_UN);
+    fclose($locktmp);
 
 
     /// $lockedBy = trim(@file_get_contents(DBLOCK_FILE));
