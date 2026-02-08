@@ -1053,7 +1053,7 @@ function dbdone($filename, $recovery) {
 
         unlink($filename.".new." . getmypid());
 
-        if(isset($safePost['title'], $safePost['h'], $safePost['textedit'])) {
+        if(!isset($safePost['commpost']) && !isset($safeGet["cmove"])) {
 
             unlockByName($_SESSION['username'] ?? "dummy");
         }
