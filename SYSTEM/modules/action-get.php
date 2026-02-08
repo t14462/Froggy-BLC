@@ -145,8 +145,11 @@ function viewLog() {
         $content .= "<br /><div>";
 
         $file = fopenOrDie("DATABASE/DB/sys.log", "rb");
-
+        flock($file, LOCK_SH);
         fseekOrDie($file, $offset);
+        $logTxt = freadOrDie($file, $limit * 1024).fgetsOrDie($file);
+        flock($file, LOCK_UN);
+        fclose($file);
 
         ////
 
@@ -157,9 +160,7 @@ function viewLog() {
         $config->set('HTML.Doctype', 'XHTML 1.1');
 
         $purifier = new HTMLPurifier($config);
-        $content .= $purifier->purify(freadOrDie($file, $limit * 1024).fgetsOrDie($file));
-
-        fclose($file);
+        $content .= $purifier->purify($logTxt);
 
         
 
