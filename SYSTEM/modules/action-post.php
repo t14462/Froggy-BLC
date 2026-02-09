@@ -979,6 +979,7 @@ function commentReply() {
             // $commRecov = str_ireplace("&", "&amp;", $commRecov);
             // $commRecov = str_ireplace("&amp;amp;", "&amp;", $commRecov);
             $commRecov = escape_amp_txtarea($commRecov);
+            $commRecov .= " ";
             pageload();
             return;
 
@@ -994,6 +995,7 @@ function commentReply() {
             // $commRecov = str_ireplace("&", "&amp;", $commRecov);
             // $commRecov = str_ireplace("&amp;amp;", "&amp;", $commRecov);
             $commRecov = escape_amp_txtarea($commRecov);
+            $commRecov .= " ";
             pageload();
             return;
 
@@ -1008,6 +1010,7 @@ function commentReply() {
             // $commRecov = str_ireplace("&", "&amp;", $commRecov);
             // $commRecov = str_ireplace("&amp;amp;", "&amp;", $commRecov);
             $commRecov = escape_amp_txtarea($commRecov);
+            $commRecov .= " ";
             pageload();
             return;
 
@@ -1022,6 +1025,7 @@ function commentReply() {
             // $commRecov = str_ireplace("&", "&amp;", $commRecov);
             // $commRecov = str_ireplace("&amp;amp;", "&amp;", $commRecov);
             $commRecov = escape_amp_txtarea($commRecov);
+            $commRecov .= " ";
             pageload();
             return;
 
@@ -1036,6 +1040,7 @@ function commentReply() {
             // $commRecov = str_ireplace("&", "&amp;", $commRecov);
             // $commRecov = str_ireplace("&amp;amp;", "&amp;", $commRecov);
             $commRecov = escape_amp_txtarea($commRecov);
+            $commRecov .= " ";
             pageload();
             return;
 
@@ -1050,6 +1055,7 @@ function commentReply() {
             // $commRecov = str_ireplace("&", "&amp;", $commRecov);
             // $commRecov = str_ireplace("&amp;amp;", "&amp;", $commRecov);
             $commRecov = escape_amp_txtarea($commRecov);
+            $commRecov .= " ";
             pageload();
             return;
 
@@ -1461,6 +1467,7 @@ function postComment() {
             // $commRecov = str_ireplace("&", "&amp;", $commRecov);
             // $commRecov = str_ireplace("&amp;amp;", "&amp;", $commRecov);
             $commRecov = escape_amp_txtarea($commRecov);
+            $commRecov .= " ";
             pageload();
             return;
 
@@ -1476,6 +1483,7 @@ function postComment() {
             // $commRecov = str_ireplace("&", "&amp;", $commRecov);
             // $commRecov = str_ireplace("&amp;amp;", "&amp;", $commRecov);
             $commRecov = escape_amp_txtarea($commRecov);
+            $commRecov .= " ";
             pageload();
             return;
 
@@ -1491,6 +1499,7 @@ function postComment() {
             // $commRecov = str_ireplace("&", "&amp;", $commRecov);
             // $commRecov = str_ireplace("&amp;amp;", "&amp;", $commRecov);
             $commRecov = escape_amp_txtarea($commRecov);
+            $commRecov .= " ";
             pageload();
             return;
 
@@ -1505,6 +1514,7 @@ function postComment() {
             // $commRecov = str_ireplace("&", "&amp;", $commRecov);
             // $commRecov = str_ireplace("&amp;amp;", "&amp;", $commRecov);
             $commRecov = escape_amp_txtarea($commRecov);
+            $commRecov .= " ";
             pageload();
             return;
 
@@ -1519,6 +1529,7 @@ function postComment() {
             // $commRecov = str_ireplace("&", "&amp;", $commRecov);
             // $commRecov = str_ireplace("&amp;amp;", "&amp;", $commRecov);
             $commRecov = escape_amp_txtarea($commRecov);
+            $commRecov .= " ";
             pageload();
             return;
 
