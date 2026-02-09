@@ -2146,7 +2146,7 @@ function saveTplSess() {
     $templates = array_map('basename', glob($templateDir . '*.tpl', GLOB_ONLYDIR));
 
     // Если шаблон отправлен через POST и он существует в списке шаблонов
-    if(isset($safePost['selected_template']) && in_array($safePost['selected_template'], $templates)) {
+    if(isset($safePost['selected_template']) && in_array($safePost['selected_template'], $templates, true)) {
         // Сохраняем выбранный шаблон в сессии
         // $_SESSION['selected_template'] = $safePost['selected_template'];
         set_cookie("selected_template", $safePost['selected_template'], time() + (10 * 365 * 24 * 60 * 60));
