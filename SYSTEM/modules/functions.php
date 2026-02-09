@@ -956,6 +956,9 @@ function refreshhandle($time, $link, $update=true) {
 
 
 function filter_filename(string $filename): string {
+
+    $filename = basename(str_replace('\\', '/', $filename));
+
     $filename = emojiToHtmlEntities($filename);
     $filename = remove_entities($filename);
     $filename = mb_superTrim($filename);

@@ -1878,7 +1878,7 @@ function imageupload() {
 
     } else {
 
-        $errmsg = "<h1>Ошибка.</h1><ol class='big'>";
+        $errmsg = "<h1>Info.</h1><ol class='big'>";
 
 
 
@@ -2074,7 +2074,7 @@ function fileDlUpload() {
                 mylog("<strong style='color:DarkGreen'>Успешно загружен файл. (".$_SESSION["username"].").</strong>");
             }
 
-            $errmsg = "<h1>Ошибка.</h1><p class='big'>".$errmsg."</p>";
+            $errmsg = "<h1>Info.</h1><p class='big'>".$errmsg."</p>";
 
             $content = "";
 
