@@ -975,7 +975,9 @@ function filter_filename(string $filename): string {
     $filename = preg_replace(['/-{2,}/', '/\.{2,}/', '/_{2,}/'], ['-', '.', '_'], $filename);
     $filename = trim($filename, ". \t\r\n\0\x0B-_");
 
-    $ext  = pathinfo($filename, PATHINFO_EXTENSION);
+    $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+
+    /// $ext  = pathinfo($filename, PATHINFO_EXTENSION);
     $base = pathinfo($filename, PATHINFO_FILENAME);
 
     $limit = ($ext !== '') ? max(1, 255 - (strlen($ext) + 1)) : 255;
