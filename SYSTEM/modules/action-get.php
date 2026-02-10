@@ -1658,6 +1658,8 @@ function gallery() {
     </div>
     </form>';
 
+    $content .= "<p class='big'><strong>Разрешённые Форматы:</strong> .gif, .png, .webp, .jpg, .jpeg</p><p>&nbsp;</p>";
+
     // Пагинация
     $pager = "<nav class='pager'>";
 
@@ -1800,6 +1802,37 @@ function dlFiles() {
     $mainPageTitle = "Список файлов";
 
     $content .= $pager;
+
+    $content .= "<p>&nbsp;</p><p class='big'>Разрешённые Форматы:</p><p>&nbsp;</p><pre>
+        <strong>Текстовые и данные</strong>
+        txt, csv, tsv, json, xml, md, log, ini, yaml, yml,
+
+        <strong>Дополнительные безопасные текстовые форматы</strong>
+        conf, cfg, toml, properties,
+        rst, adoc, org,
+        diff, patch, nfo,
+        tex, bib,
+
+        <strong>Документы и офисные файлы</strong>
+        pdf, doc, docx, ppt, pptx, xls, xlsx, odt, ods, odp, rtf,
+
+        <strong>Электронные книги</strong>
+        epub, mobi, azw, azw3,
+
+        <strong>Архивы и образы</strong>
+        zip, rar, 7z, tar, gz, bz2, xz, lz, lzma, iso,
+
+        <strong>Игровые и мод-ресурсы</strong>
+        esp, esm,
+
+        <strong>Субтитры и прочее медиасопровождение (без видео и изображений)</strong>
+        srt, vtt, ass, ssa, sub,
+
+        <strong>Шрифты</strong>
+        ttf, otf, woff, woff2,
+
+        <strong>Базы данных/дампы</strong>
+        sql, sqlite, db, db3</pre>";
 }
 
 
