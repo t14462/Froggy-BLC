@@ -100,7 +100,7 @@ function viewLog() {
 
         $errmsg = pforbidden();
 
-        $errmsg .= "<p>Обычные пользователи не могут читать лог.</p>";
+        $errmsg .= "<p class='big'>Обычные пользователи не могут читать лог.</p>";
 
     } else {
 
@@ -1298,7 +1298,7 @@ function addPage() {
 
         $errmsg = pnotfound();
 
-        $errmsg .= "<p><strong>Опорная Страница</strong> не существует.</p>";
+        $errmsg .= "<p class='big'><strong>Опорная Страница</strong> не существует.</p>";
 
     } else {
 
