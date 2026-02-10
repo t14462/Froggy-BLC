@@ -73,8 +73,9 @@ $PUBLIC_BASE_URL = '../../DATABASE/fupload'; // ведущий / обязате�
 
 // ─── Имя файла ─────────────────────────────────────────────────────
 $file = (string)($_GET['file'] ?? '');
-$file = str_replace('\\', '/', $file);
-$file = basename($file);
+$file = rawurldecode($file);
+// $file = str_replace('\\', '/', $file);
+// $file = basename($file);
 $file = filter_filename($file);
 
 if ($file === '') {
