@@ -41,7 +41,7 @@ function delimg() {
 
         $errmsg = pforbidden();
 
-        $errmsg .= "<p>Только <strong>редакторы</strong> и <strong>администраторы</strong> это могут делать.</p>";
+        $errmsg .= "<p class='big'>Только <strong>редакторы</strong> и <strong>администраторы</strong> это могут делать.</p>";
 
     } else {
 
@@ -70,7 +70,7 @@ function delfile() {
 
         $errmsg = pforbidden();
 
-        $errmsg .= "<p>Только <strong>редакторы</strong> и <strong>администраторы</strong> это могут делать.</p>";
+        $errmsg .= "<p class='big'>Только <strong>редакторы</strong> и <strong>администраторы</strong> это могут делать.</p>";
 
     } else {
 
@@ -183,7 +183,7 @@ function purgelog() {
 
         $errmsg = pforbidden();
 
-        $errmsg .= "<p>Только <strong>администраторы</strong> это могут делать.</p>";
+        $errmsg .= "<p class='big'>Только <strong>администраторы</strong> это могут делать.</p>";
 
     } else {
 
@@ -711,7 +711,7 @@ function commentRemove() {
 
         $errmsg = pforbidden();
 
-        $errmsg .= "<p>Только <strong>модераторы</strong> и <strong>администраторы</strong> это могут делать.</p>";
+        $errmsg .= "<p class='big'>Только <strong>модераторы</strong> и <strong>администраторы</strong> это могут делать.</p>";
 
     } else {
 
@@ -831,7 +831,7 @@ function pageEdit() {
 
         $errmsg = pforbidden();
 
-        $errmsg .= "<p>Только <strong>редакторы</strong> и <strong>администраторы</strong> это могут делать.</p>";
+        $errmsg .= "<p class='big'>Только <strong>редакторы</strong> и <strong>администраторы</strong> это могут делать.</p>";
 
     } elseif(isDbLocked() && !isLockedBy($_SESSION['username'])) {
 
@@ -1288,7 +1288,7 @@ function addPage() {
 
         $errmsg = pforbidden();
 
-        $errmsg .= "<p>Только <strong>редакторы</strong> и <strong>администраторы</strong> это могут делать.</p>";
+        $errmsg .= "<p class='big'>Только <strong>редакторы</strong> и <strong>администраторы</strong> это могут делать.</p>";
 
     } elseif(isDbLocked() && !isLockedBy($_SESSION['username'])) {
 
@@ -1488,7 +1488,7 @@ function movePageDown() {
 
         $errmsg = pforbidden();
 
-        $errmsg .= "<p>Только <strong>редакторы</strong> и <strong>администраторы</strong> это могут делать.</p>";
+        $errmsg .= "<p class='big'>Только <strong>редакторы</strong> и <strong>администраторы</strong> это могут делать.</p>";
 
     } elseif(isDbLocked() && !isLockedBy($_SESSION['username'])) {
 
@@ -1557,7 +1557,7 @@ function movePageUp() {
 
         $errmsg = pforbidden();
 
-        $errmsg .= "<p>Только <strong>редакторы</strong> и <strong>администраторы</strong> это могут делать.</p>";
+        $errmsg .= "<p class='big'>Только <strong>редакторы</strong> и <strong>администраторы</strong> это могут делать.</p>";
 
     } elseif(isDbLocked() && !isLockedBy($_SESSION['username'])) {
 
@@ -1817,7 +1817,7 @@ function deletePage() {
 
         $errmsg = pforbidden();
 
-        $errmsg .= "<p>Только <strong>редакторы</strong> и <strong>администраторы</strong> это могут делать.</p>";
+        $errmsg .= "<p class='big'>Только <strong>редакторы</strong> и <strong>администраторы</strong> это могут делать.</p>";
 
     } elseif(isDbLocked() && !isLockedBy($_SESSION['username'])) {
 
