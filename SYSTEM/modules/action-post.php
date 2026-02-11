@@ -31,7 +31,7 @@ function savePage() {
 
         if( $checkpermission < 3 ) {
 
-            $textedit = substr($textedit, 0, (129 * 1024));
+            $textedit = mb_strcut($textedit, 0, 129 * 1024, 'UTF-8');
         }
 
         /* $pgtitle  = str_ireplace("&nbsp;", " ", $pgtitle); */
