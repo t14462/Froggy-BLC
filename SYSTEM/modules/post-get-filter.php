@@ -24,7 +24,7 @@ $_ENV = [];
 
 # $vars_dl = [];
 
-if(in_array($methods, ['POST', 'GET'])) {
+if(in_array($methods, ['POST', 'GET'], true)) {
 
     switch( $methods ) {
 

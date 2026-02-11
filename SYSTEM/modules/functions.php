@@ -765,7 +765,7 @@ function array_insert_m(&$array, $position, $insert) {
     if(is_int($position)) {
         array_splice($array, $position, 0, $insert);
     } else {
-        $pos   = array_search($position, array_keys($array));
+        $pos   = array_search($position, array_keys($array), true);
         $array = array_merge(
             array_slice($array, 0, $pos),
             $insert,
@@ -849,7 +849,7 @@ function repeatCaptcha($userInput) {
         /// $sessionData = json_decode(getFileOrDie($sessionFile), true);
 
         // Проверка на совпадение с предыдущими вводами
-        if(in_array($userInput, $sessionData['captchas'] ?? [])) {
+        if(in_array($userInput, $sessionData['captchas'] ?? [], true)) {
             return false; // Совпадение найдено, возвращаем false
         }
     } else {

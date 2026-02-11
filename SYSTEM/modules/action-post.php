@@ -877,7 +877,7 @@ function commentReply() {
     $commaddr = substr($commaddr, 0, 40);
     
 
-    if(in_array($commaddr, $idcache) && is_file("DATABASE/comments/".$commaddr)) {
+    if(in_array($commaddr, $idcache, true) && is_file("DATABASE/comments/".$commaddr)) {
 
         
         $pgcommnum = abs($pgcommnum);
@@ -1402,7 +1402,7 @@ function postComment() {
     $commaddr = substr($commaddr, 0, 40);
     /// $commaddr = filter_filename($commaddr);
 
-    if(in_array($commaddr, $idcache)) {
+    if(in_array($commaddr, $idcache, true)) {
 
 
         $commpost = mb_substr($commpost, 0, 2550);
@@ -2044,7 +2044,7 @@ function fileDlUpload() {
                 $errmsg = 'Имя файла пустое!';
                 mylog("<em style='color:DarkOrange'>Имя файла пустое! (".$_SESSION["username"].").</em>");
 
-            } elseif(!in_array($extension, $allowedExtensions)) {
+            } elseif(!in_array($extension, $allowedExtensions, true)) {
                 $errmsg = 'Загрузка файлов с таким расширением запрещена!';
                 mylog("<strong style='color:DarkRed'>Загрузка файлов с таким расширением запрещена! (".$_SESSION["username"].").</strong>");
 

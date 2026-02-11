@@ -17,7 +17,7 @@ function permalink() {
 
     $articleHash = mb_substr($articleHash, 0, 40);
 
-    $pageMenuNum = array_search($articleHash, $idcache);
+    $pageMenuNum = array_search($articleHash, $idcache, true);
 
     
     if(!is_int($pageMenuNum)) {
@@ -730,7 +730,7 @@ function commentRemove() {
 
 
 
-        if(in_array($commaddr, $idcache)) {
+        if(in_array($commaddr, $idcache, true)) {
 
 
 
@@ -1313,7 +1313,7 @@ function addPage() {
 
         $idKey = bin2hex(random_bytes(20)); // sha1(microtime().$ip.$userAgent);
 
-        while(array_search($idKey, $idcache) !== false) {
+        while(array_search($idKey, $idcache, true) !== false) {
 
             usleep(2000);
             $idKey = bin2hex(random_bytes(20)); // sha1(microtime().$ip.$userAgent);

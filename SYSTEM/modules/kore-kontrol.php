@@ -154,7 +154,7 @@ if(    is_file("DATABASE/DB/DB-TOC-Cache.txt")
 
 
 
-    if(in_array('?'.explode("&", $_SERVER['QUERY_STRING'])[0], $pgaddrcache)) {
+    if(in_array('?'.explode("&", $_SERVER['QUERY_STRING'])[0], $pgaddrcache, true)) {
         $ispageexist = true;
     } else {
         $ispageexist = false;
@@ -464,7 +464,7 @@ if(    is_file("DATABASE/DB/DB-TOC-Cache.txt")
 
 
 
-    if(in_array('?'.explode("&", $_SERVER['QUERY_STRING'])[0], $pgaddrcache)) {
+    if(in_array('?'.explode("&", $_SERVER['QUERY_STRING'])[0], $pgaddrcache, true)) {
         $ispageexist = true;
     } else {
         $ispageexist = false;
