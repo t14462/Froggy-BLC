@@ -983,7 +983,7 @@ function commentReply() {
             pageload();
             return;
 
-        } elseif(!isset($_SESSION['captcha']) || !$_SESSION['captcha'] || (!$checkpermission && strcasecmp($_SESSION['captcha'], hash('sha256', $captcha.$mySalt.$ip.$userAgent.$today)) == 0 && !repeatCaptcha($_SESSION['captcha']))) {
+        } elseif(!isset($_SESSION['captcha']) || !$_SESSION['captcha'] || (!$checkpermission && hash_equals($_SESSION['captcha'], hash('sha256', $captcha.$mySalt.$ip.$userAgent.$today)) && !repeatCaptcha($_SESSION['captcha']))) {
 
 
             $errmsg = "<h1>ОШИБКА.</h1><p class='big'><strong>Повторный ввод CAPTCHA, или её отключение недопустимы.</strong></p>";
@@ -999,7 +999,7 @@ function commentReply() {
             pageload();
             return;
 
-        } elseif(!$checkpermission && (empty($captcha) || strcasecmp($_SESSION['captcha'], hash('sha256', $captcha.$mySalt.$ip.$userAgent.$today)) != 0)) {
+        } elseif(!$checkpermission && (empty($captcha) || !hash_equals($_SESSION['captcha'], hash('sha256', $captcha.$mySalt.$ip.$userAgent.$today)))) {
 
             $errmsg = "<h1>ОШИБКА.</h1><p class='big'><strong>Вы не ввели код подтверждения.</strong></p>";
             
@@ -1471,7 +1471,7 @@ function postComment() {
             pageload();
             return;
 
-        } elseif(!isset($_SESSION['captcha']) || !$_SESSION['captcha'] || (!$checkpermission && strcasecmp($_SESSION['captcha'], hash('sha256', $captcha.$mySalt.$ip.$userAgent.$today)) == 0 && !repeatCaptcha($_SESSION['captcha']))) {
+        } elseif(!isset($_SESSION['captcha']) || !$_SESSION['captcha'] || (!$checkpermission && hash_equals($_SESSION['captcha'], hash('sha256', $captcha.$mySalt.$ip.$userAgent.$today)) && !repeatCaptcha($_SESSION['captcha']))) {
 
 
             $errmsg = "<h1>ОШИБКА.</h1><p class='big'><strong>Повторный ввод CAPTCHA, или её отключение недопустимы.</strong></p>";
@@ -1488,7 +1488,7 @@ function postComment() {
             return;
 
 
-        } elseif(!$checkpermission && (empty($captcha) || strcasecmp($_SESSION['captcha'], hash('sha256', $captcha.$mySalt.$ip.$userAgent.$today)) != 0)) {
+        } elseif(!$checkpermission && (empty($captcha) || !hash_equals($_SESSION['captcha'], hash('sha256', $captcha.$mySalt.$ip.$userAgent.$today)))) {
 
             $errmsg = "<h1>ОШИБКА.</h1><p class='big'><strong>Вы не ввели код подтверждения.</strong></p>";
             

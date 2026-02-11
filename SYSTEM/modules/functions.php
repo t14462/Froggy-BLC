@@ -63,7 +63,7 @@ if(isset($_SESSION["username"]) && isset($_SESSION["userhash"])) {
     $username = $_SESSION["username"];
     $userhash = $_SESSION["userhash"];
 
-    if(array_key_exists($username, $cred) && $userhash === hash('sha512', explode("<!!!>", $cred[$username])[1].$ip.$userAgent)) {
+    if(array_key_exists($username, $cred) && hash_equals($userhash, hash('sha512', explode("<!!!>", $cred[$username])[1].$ip.$userAgent))) {
         $checkpermission = (int)explode("<!!!>", $cred[$username])[0];
     } else {
         $checkpermission = 0;
