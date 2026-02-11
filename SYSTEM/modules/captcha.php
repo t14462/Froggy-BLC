@@ -148,6 +148,7 @@ if(!filter_var($ip, FILTER_VALIDATE_IP)) {
 $today = date('Y-m-d');
 
 $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? 'Unknown';
+$userAgent = substr($userAgent, 0, 512);
 
 $_SESSION['captcha'] = hash('sha256', $captcha_code.$mySalt.$ip.$userAgent.$today);
 

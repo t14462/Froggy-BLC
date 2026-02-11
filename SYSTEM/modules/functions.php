@@ -30,7 +30,7 @@ if(!is_file('SYSTEM/modules/dummy.txt') || !is_writable('SYSTEM/modules/dummy.tx
 
 
 $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? 'Unknown';
-
+$userAgent = substr($userAgent, 0, 512);
 
 
 $ip = $_SERVER['REMOTE_ADDR'] ?? "0.0.0.0";
