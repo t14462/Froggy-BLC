@@ -121,7 +121,8 @@ imagettftext(
 // defining the image type to be shown in browser widow
 header('Content-Type: image/jpeg');
 imagejpeg($captcha_image, NULL, 16); //showing the image
-imagedestroy($captcha_image); //destroying the image instance
+/// imagedestroy($captcha_image); //destroying the image instance DEPRECATED
+unset($captcha_image); // NEW
 
 /*
 if(isset($_SERVER['REMOTE_ADDR'])) {
