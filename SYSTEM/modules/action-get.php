@@ -1932,6 +1932,11 @@ function deletePage() {
                     unlink("DATABASE/comments/".$pageid.".time");
                 }
 
+                if(is_file("DATABASE/comments/".$pageid.".pages-cache")) {
+
+                    unlink("DATABASE/comments/".$pageid.".pages-cache");
+                }
+
                 //////////////////////
 
                 if(is_file("DATABASE/comm.count/".$pageid)) {

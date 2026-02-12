@@ -1743,7 +1743,7 @@ function postComment() {
             if(!dbdone("DATABASE/comments/".$commaddr, $commpost2)) return false;
 
 
-            $comTotalPages = calcTotPages($commaddr, 8);
+            $comTotalPages = calcTotPages($commaddr, 8, true);
 
 
 
