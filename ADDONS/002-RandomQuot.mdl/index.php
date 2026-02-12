@@ -22,7 +22,7 @@ $filename = "DATABASE/RandomQuot.txt";
 
 function getRandomLineFromLargeFile(string $filename) {
 
-    $handle = openFileOrDie($filename, 'r');
+    $handle = openFileOrDie($filename, 'rb');
 
     $handle->setFlags(
         SplFileObject::READ_AHEAD // Для лучшей производительности, позволяет "заглядывать" в файл
