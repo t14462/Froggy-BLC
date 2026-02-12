@@ -648,7 +648,7 @@ function savePage() {
 
                 $firstChunkEnd = $filesource->ftell();
 
-                $file = fopenOrDie("DATABASE/DB/data.html.new." . getmypid(), "rb+");
+                $file = fopenOrDie("DATABASE/DB/data.html.new." . getmypid(), "r+b");
                 ftruncateOrDie($file,$firstChunkEnd);
                 fclose($file);
 
@@ -1263,7 +1263,7 @@ function commentReply() {
             $firstChunkEnd = $filesource->ftell();
 
 
-            $file = fopenOrDie("DATABASE/comments/".$commaddr.".new." . getmypid(), "rb+");
+            $file = fopenOrDie("DATABASE/comments/".$commaddr.".new." . getmypid(), "r+b");
             ftruncateOrDie($file,$firstChunkEnd);
             fclose($file);
 

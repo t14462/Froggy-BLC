@@ -781,7 +781,7 @@ function commentRemove() {
             $firstChunkEnd = $filesource->ftell();
 
 
-            $file = fopenOrDie("DATABASE/comments/".$commaddr.".new." . getmypid(), "rb+");
+            $file = fopenOrDie("DATABASE/comments/".$commaddr.".new." . getmypid(), "r+b");
             ftruncateOrDie($file,$firstChunkEnd);
             fclose($file);
 
@@ -1393,7 +1393,7 @@ function addPage() {
 
                 $firstChunkEnd = $filesource->ftell();
 
-                $file = fopenOrDie("DATABASE/DB/data.html.new." . getmypid(), "rb+");
+                $file = fopenOrDie("DATABASE/DB/data.html.new." . getmypid(), "r+b");
                 ftruncateOrDie($file,$firstChunkEnd);
                 fclose($file);
 
@@ -1509,7 +1509,7 @@ function movePageDown() {
 
             $firstChunkEnd = $filesource->ftell();
 
-            $file = fopenOrDie("DATABASE/DB/data.html.new." . getmypid(), "rb+");
+            $file = fopenOrDie("DATABASE/DB/data.html.new." . getmypid(), "r+b");
             ftruncateOrDie($file,$firstChunkEnd);
             fclose($file);
 
@@ -1578,7 +1578,7 @@ function movePageUp() {
 
             $firstChunkEnd = $filesource->ftell();
 
-            $file = fopenOrDie("DATABASE/DB/data.html.new." . getmypid(), "rb+");
+            $file = fopenOrDie("DATABASE/DB/data.html.new." . getmypid(), "r+b");
             ftruncateOrDie($file,$firstChunkEnd);
             fclose($file);
 
@@ -1904,7 +1904,7 @@ function deletePage() {
 
                 $firstChunkEnd = $filesource->ftell();
 
-                $file = fopenOrDie("DATABASE/DB/data.html.new." . getmypid(), "rb+");
+                $file = fopenOrDie("DATABASE/DB/data.html.new." . getmypid(), "r+b");
                 ftruncateOrDie($file,$firstChunkEnd);
                 fclose($file);
 
