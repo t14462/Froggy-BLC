@@ -122,7 +122,7 @@ if(!$checkpermission && detectaction()) {
     $printpgvar = "-print";
     pageload();
 
-} elseif(isset($safePost["registerp"])) {
+} elseif(isset($safePost["registerp"], $safePost["rusername"], $safePost["rpassword1"], $safePost["rpassword2"])) {
 
     registerp();
 
