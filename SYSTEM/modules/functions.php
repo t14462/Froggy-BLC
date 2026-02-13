@@ -1781,7 +1781,7 @@ function calcTotPages(string $commaddr, int $limit, bool $update = false): int
         /// $file->flock(LOCK_UN);
         $file = null;
 
-        $totalPages = ($commcount < 0)
+        $totalPages = ($commcount <= 0)
             ? 0
             : ((int)ceil($commcount / $limit) - 1);
     }
