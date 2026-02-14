@@ -944,7 +944,7 @@ function refreshhandle($time, $link, $update=true) {
         
     } else {
 
-        exit("<!DOCTYPE html><html><head><meta charset='utf-8' /><noscript><meta http-equiv='refresh' content='0;url=$link' /></noscript><script>document.addEventListener('DOMContentLoaded', function() { window.location.replace('$link'); });</script></head><body>&nbsp;</body></html>");
+        exit("<!DOCTYPE html><html><head><meta charset='utf-8' /><noscript><meta http-equiv='refresh' content='0;url=$link' /></noscript><script>location.replace('$link');</script></head><body>&nbsp;</body></html>");
     }
 }
 
