@@ -55,7 +55,7 @@ if(!$checkpermission && detectaction()) {
 
     $errmsg = pforbidden();
 
-} elseif( /* $checkpermission && */ isset( /* $safePost["pageaddr"], */ $safePost["textedit"], $safePost["h"], $safePost["title"])) {
+} elseif( /* $checkpermission && */ isset( /* $safePost["pageaddr"], */ $safePost["textedit"], $safePost["h"], $safePost["title"], $safePost["dbtimestamp"])) {
 
     savePage();
 
@@ -143,11 +143,11 @@ if(!$checkpermission && detectaction()) {
 
     saveTplSess();
 
-} elseif(isset($safePost["commpost"], $safePost["commaddr"], $safePost["pgcommnum"], $safePost["repcommid"], $safePost["visitor"], $safePost["captcha"], $safePost["commpage"])) {
+} elseif(isset($safePost["commpost"], $safePost["commaddr"], $safePost["pgcommnum"], $safePost["repcommid"], $safePost["visitor"], $safePost["captcha"], $safePost["commpage"], $safePost["dbtimestamp"])) {
 
     commentReply();
 
-} elseif(isset($safePost["commpost"], $safePost["commaddr"], $safePost["visitor"], $safePost["captcha"])) {
+} elseif(isset($safePost["commpost"], $safePost["commaddr"], $safePost["visitor"], $safePost["captcha"], $safePost["dbtimestamp"])) {
 
     postComment();
 

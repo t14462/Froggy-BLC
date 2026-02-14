@@ -101,7 +101,7 @@ function touchMy(string $file, ?float $customTime = null): bool {
     $timeFile = $file . '.time';
     $timeToWrite = $customTime ?? microtime(true);
     touch($file, (int)$timeToWrite);
-    return file_put_contents($timeFile, sprintf('%.6f', $timeToWrite), LOCK_EX) !== false;
+    return file_put_contents($timeFile, sprintf('%.4f', $timeToWrite), LOCK_EX) !== false;
 }
 
 
@@ -125,7 +125,7 @@ function filemtimeMy(string $file): float {
         flock($locktmp, LOCK_UN);
         fclose($locktmp);
 
-        return (float)$contents;
+        return (float)sprintf('%.4f', $contents);
 
         /// return (float) trim(file_get_contents($timeFile));
     }

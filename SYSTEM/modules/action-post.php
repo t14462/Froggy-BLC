@@ -117,7 +117,7 @@ function savePage() {
 
             $herror = 4;
 
-        } elseif($chTimeDB !== filemtimeMy("DATABASE/DB/data.html")) {
+        } elseif($safePost['dbtimestamp'] !== filemtimeMy("DATABASE/DB/data.html")) {
 
             $herror = 5;
 
@@ -584,13 +584,16 @@ function savePage() {
 
         $mainPageTitle = "Редактирование: ".$pgtitle;
 
-
+        $dbMtime = filemtimeMy("DATABASE/DB/data.html");
 
         // $textedit2 = protect_amp_entities_for_textarea($textedit);
 
         $textedit2 = escape_amp_txtarea($textedit);
 
         $dumpEdit = "<form method='post'>
+
+            <input type='hidden' name='dbtimestamp' value='$dbMtime' />
+
             <fieldset><legend>Редактирование страницы:</legend>
             <p>Для включения <em>Содержания</em> используйте <em>Директиву</em> <strong>__TOC__</strong> вначале кода, на первой строке.</p>
             <p>Для Вставки <em>ВИДЕО YouTube</em> используйте шаблон <strong>{{youtube|VIDID|Ширина}}</strong> ; (Ширина является необязательным аттрибутом, и указывается в Процентах, без указания <strong>%</strong>).<br />Также поддерживаются <strong>{{dailymotion|VIDID|Ширина}}</strong> и <strong>{{vimeo|VIDID|Ширина}}</strong>.</p><p>Для вставки <em>Спойлера</em>, <em>Цитаты</em> или <em>Инфобокса</em> используйте шаблон из меню редактора <strong>\"Стили\"</strong>.</p>
@@ -769,6 +772,8 @@ function savePage() {
                 $body .= $bodyEd;
 
                 $errmsg = "<h1>ОШИБКА 5.</h1><p class='big'><strong>База Данных была изменена внешним процессом.</strong></p>";
+
+                /// $errmsg .= $safePost['dbtimestamp'];
 
                 $content = $dumpEdit;
 
@@ -1058,6 +1063,23 @@ function commentReply() {
             $commRecov .= " ";
             pageload();
             return;
+
+        } elseif($safePost['dbtimestamp'] !== filemtimeMy("DATABASE/comments/".$commaddr)) {
+
+            $errmsg = "<h1>ОШИБКА.</h1><p class='big'><strong>Во время написания комментария БД изменилась.</strong></p>";
+            
+            $commRecov = $commpost;
+            $commRecov = str_ireplace("<textarea", "&lt;textarea", $commRecov);
+            $commRecov = str_ireplace("</textarea", "&lt;/textarea", $commRecov);
+            $commRecov = str_ireplace("textarea>", "textarea&gt;", $commRecov);
+            // $commRecov = str_ireplace("&", "&amp;", $commRecov);
+            // $commRecov = str_ireplace("&amp;amp;", "&amp;", $commRecov);
+            $commRecov = escape_amp_txtarea($commRecov);
+            $commRecov .= " ";
+            pageload();
+            return;
+
+
 
         } else {
 
@@ -1532,6 +1554,21 @@ function postComment() {
         } elseif(mb_strlen(mb_superTrim($commpost)) < 5) {
 
             $errmsg = "<h1>ОШИБКА.</h1><p class='big'><strong>Ваш комментарий слишком мал.</strong></p>";
+            
+            $commRecov = $commpost;
+            $commRecov = str_ireplace("<textarea", "&lt;textarea", $commRecov);
+            $commRecov = str_ireplace("</textarea", "&lt;/textarea", $commRecov);
+            $commRecov = str_ireplace("textarea>", "textarea&gt;", $commRecov);
+            // $commRecov = str_ireplace("&", "&amp;", $commRecov);
+            // $commRecov = str_ireplace("&amp;amp;", "&amp;", $commRecov);
+            $commRecov = escape_amp_txtarea($commRecov);
+            $commRecov .= " ";
+            pageload();
+            return;
+
+        } elseif($safePost['dbtimestamp'] !== filemtimeMy("DATABASE/comments/".$commaddr)) {
+
+            $errmsg = "<h1>ОШИБКА.</h1><p class='big'><strong>Во время написания комментария БД изменилась.</strong></p>";
             
             $commRecov = $commpost;
             $commRecov = str_ireplace("<textarea", "&lt;textarea", $commRecov);

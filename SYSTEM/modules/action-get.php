@@ -293,6 +293,8 @@ function pageload() {
         $commaddr = freadOrDie($file, 40);
         $line = fgetsOrDie($file);
 
+        $dbMtime = filemtimeMy("DATABASE/comments/".$commaddr);
+
         fclose($file);
         
         $line = str_replace("<br!>", "\n", $line);
@@ -569,7 +571,11 @@ function pageload() {
         if(!isset($safeGet["creply"]) && !isset($safePost["pgcommnum"])) {
 
             $tplcomments .= "<br style='clear: both;' id='R' />".
-            $commmsg."<br style='clear: both;' /><form method='post'><fieldset><legend>Ваш комментарий:</legend><p><em>Интервал отправки = <strong>3 Минуты.</strong></em></p><label for='visitor'>Ваше имя:</label><input type='text' id='visitor' name='visitor' ".$visitor3." /><textarea rows='9' maxlength='2500' name='commpost' id='commpost' onkeyup='countChars(this);' onfocus='countChars(this);'>".$commRecov."</textarea><input type='hidden' name='commaddr' value='".$commaddr."' /><div class='el-in-line'><input type='submit' value='💾 Отправить' /><span id='symcount'>2500 Осталось.</span><br style='clear: both;' /><input type='text' name='captcha' placeholder='код' /><img loading='lazy' src='SYSTEM/modules/captcha.php?time=".time()."' alt='CAPTCHA' id='captcha_image' /><a href='javascript: refreshCaptcha();' title='Обновить картинку' class='refresh-captcha'>🔄</a></div></fieldset></form>";
+            $commmsg."<br style='clear: both;' /><form method='post'>
+            
+            <input type='hidden' name='dbtimestamp' value='$dbMtime' />
+
+            <fieldset><legend>Ваш комментарий:</legend><p><em>Интервал отправки = <strong>3 Минуты.</strong></em></p><label for='visitor'>Ваше имя:</label><input type='text' id='visitor' name='visitor' ".$visitor3." /><textarea rows='9' maxlength='2500' name='commpost' id='commpost' onkeyup='countChars(this);' onfocus='countChars(this);'>".$commRecov."</textarea><input type='hidden' name='commaddr' value='".$commaddr."' /><div class='el-in-line'><input type='submit' value='💾 Отправить' /><span id='symcount'>2500 Осталось.</span><br style='clear: both;' /><input type='text' name='captcha' placeholder='код' /><img loading='lazy' src='SYSTEM/modules/captcha.php?time=".time()."' alt='CAPTCHA' id='captcha_image' /><a href='javascript: refreshCaptcha();' title='Обновить картинку' class='refresh-captcha'>🔄</a></div></fieldset></form>";
         }
 
 
@@ -581,7 +587,6 @@ function pageload() {
 
 
             /// $tplcomments .= "";
-
 
             $commlimit = 8;
 
@@ -691,13 +696,21 @@ function pageload() {
                 if(isset($commreplyactarr[0], $commreplyactarr[1], $commreplyactarr[2])) { 
 
                     $tplcomments .= "<br style='clear: both;' id='R' />".
-                    $commmsg."<br style='clear: both;' /><form method='post'><fieldset><legend>Ответ на комментарий:</legend><p><em>Интервал отправки = <strong>3 Минуты.</strong></em> <a href='?".explode("&", $_SERVER['QUERY_STRING'])[0]."&commpage=".$commpage."' onclick=\"return confirm('Вы действительно хотите покинуть редактор? Несохранённые данные БУДУТ УТЕРЯНЫ!');\">Отменить ответ ⬅️</a></p><label for='visitor'>Ваше имя:</label><input type='text' id='visitor' name='visitor' ".$visitor3." /><input type='hidden' name='commaddr' value='".$commreplyactarr[0]."' /><input type='hidden' name='pgcommnum' value='".$commreplyactarr[1]."' /><input type='hidden' name='repcommid' value='".$commreplyactarr[2]."' /><input type='hidden' name='commpage' value='".$commpage."' /><textarea rows='9' maxlength='2500' name='commpost' id='commpost' onkeyup='countChars(this);' onfocus='countChars(this);'>".$commRecov."</textarea><div class='el-in-line'><input type='submit' value='💾 Отправить' /> <span id='symcount'>2500 Осталось.</span><br style='clear: both;' /><input type='text' name='captcha' placeholder='код' /> <img loading='lazy' src='SYSTEM/modules/captcha.php?time=".time()."' alt='CAPTCHA' id='captcha_image' /><a href='javascript: refreshCaptcha();' title='Обновить картинку' class='refresh-captcha'>🔄</a></div></fieldset></form>";
+                    $commmsg."<br style='clear: both;' /><form method='post'>
+                    
+                    <input type='hidden' name='dbtimestamp' value='$dbMtime' />
+                    
+                    <fieldset><legend>Ответ на комментарий:</legend><p><em>Интервал отправки = <strong>3 Минуты.</strong></em> <a href='?".explode("&", $_SERVER['QUERY_STRING'])[0]."&commpage=".$commpage."' onclick=\"return confirm('Вы действительно хотите покинуть редактор? Несохранённые данные БУДУТ УТЕРЯНЫ!');\">Отменить ответ ⬅️</a></p><label for='visitor'>Ваше имя:</label><input type='text' id='visitor' name='visitor' ".$visitor3." /><input type='hidden' name='commaddr' value='".$commreplyactarr[0]."' /><input type='hidden' name='pgcommnum' value='".$commreplyactarr[1]."' /><input type='hidden' name='repcommid' value='".$commreplyactarr[2]."' /><input type='hidden' name='commpage' value='".$commpage."' /><textarea rows='9' maxlength='2500' name='commpost' id='commpost' onkeyup='countChars(this);' onfocus='countChars(this);'>".$commRecov."</textarea><div class='el-in-line'><input type='submit' value='💾 Отправить' /> <span id='symcount'>2500 Осталось.</span><br style='clear: both;' /><input type='text' name='captcha' placeholder='код' /> <img loading='lazy' src='SYSTEM/modules/captcha.php?time=".time()."' alt='CAPTCHA' id='captcha_image' /><a href='javascript: refreshCaptcha();' title='Обновить картинку' class='refresh-captcha'>🔄</a></div></fieldset></form>";
                 }
 
             } elseif(isset($safePost["pgcommnum"])) {
 
                 $tplcomments .= "<br style='clear: both;' id='R' />".
-                $commmsg."<br style='clear: both;' /><form method='post'><fieldset><legend>Ответ на комментарий:</legend><p><em>Интервал отправки = <strong>3 Минуты.</strong></em> <a href='?".explode("&", $_SERVER['QUERY_STRING'])[0]."&commpage=".$safePost["commpage"]."' onclick=\"return confirm('Вы действительно хотите покинуть редактор? Несохранённые данные БУДУТ УТЕРЯНЫ!');\">Отменить ответ ⬅️</a></p><label for='visitor'>Ваше имя:</label><input type='text' id='visitor' name='visitor' ".$visitor3." /><input type='hidden' name='commaddr' value='".$safePost["commaddr"]."' /><input type='hidden' name='pgcommnum' value='".$safePost["pgcommnum"]."' /><input type='hidden' name='repcommid' value='".$safePost["repcommid"]."' /><input type='hidden' name='commpage' value='".$safePost["commpage"]."' /><textarea rows='9' maxlength='2500' name='commpost' id='commpost' onkeyup='countChars(this);' onfocus='countChars(this);'>".$commRecov."</textarea><div class='el-in-line'><input type='submit' value='💾 Отправить' /> <span id='symcount'>2500 Осталось.</span><br style='clear: both;' /><input type='text' name='captcha' placeholder='код' /> <img loading='lazy' src='SYSTEM/modules/captcha.php?time=".time()."' alt='CAPTCHA' id='captcha_image' /><a href='javascript: refreshCaptcha();' title='Обновить картинку' class='refresh-captcha'>🔄</a></div></fieldset></form>";
+                $commmsg."<br style='clear: both;' /><form method='post'>
+                
+                <input type='hidden' name='dbtimestamp' value='$dbMtime' />
+                
+                <fieldset><legend>Ответ на комментарий:</legend><p><em>Интервал отправки = <strong>3 Минуты.</strong></em> <a href='?".explode("&", $_SERVER['QUERY_STRING'])[0]."&commpage=".$safePost["commpage"]."' onclick=\"return confirm('Вы действительно хотите покинуть редактор? Несохранённые данные БУДУТ УТЕРЯНЫ!');\">Отменить ответ ⬅️</a></p><label for='visitor'>Ваше имя:</label><input type='text' id='visitor' name='visitor' ".$visitor3." /><input type='hidden' name='commaddr' value='".$safePost["commaddr"]."' /><input type='hidden' name='pgcommnum' value='".$safePost["pgcommnum"]."' /><input type='hidden' name='repcommid' value='".$safePost["repcommid"]."' /><input type='hidden' name='commpage' value='".$safePost["commpage"]."' /><textarea rows='9' maxlength='2500' name='commpost' id='commpost' onkeyup='countChars(this);' onfocus='countChars(this);'>".$commRecov."</textarea><div class='el-in-line'><input type='submit' value='💾 Отправить' /> <span id='symcount'>2500 Осталось.</span><br style='clear: both;' /><input type='text' name='captcha' placeholder='код' /> <img loading='lazy' src='SYSTEM/modules/captcha.php?time=".time()."' alt='CAPTCHA' id='captcha_image' /><a href='javascript: refreshCaptcha();' title='Обновить картинку' class='refresh-captcha'>🔄</a></div></fieldset></form>";
 
             }
         }
@@ -1176,7 +1189,14 @@ function pageEdit() {
         $bytepos = $query['?'.explode("&", $_SERVER['QUERY_STRING'])[0]] ?? 0;
 
 
-        $content .= "<form method='post'><fieldset><legend>Редактирование страницы:</legend>
+        $dbMtime = filemtimeMy("DATABASE/DB/data.html");
+
+
+        $content .= "<form method='post'>
+        
+        <input type='hidden' name='dbtimestamp' value='$dbMtime' />
+        
+        <fieldset><legend>Редактирование страницы:</legend>
         <p>Для включения <em>Содержания</em> используйте <em>Директиву</em> <strong>__TOC__</strong> вначале кода, на первой строке.</p>
         <p>Для Вставки <em>ВИДЕО YouTube</em> используйте шаблон <strong>{{youtube|VIDID|Ширина}}</strong> ; (Ширина является необязательным аттрибутом, и указывается в Процентах, без указания <strong>%</strong>).<br />Также поддерживаются <strong>{{dailymotion|VIDID|Ширина}}</strong> и <strong>{{vimeo|VIDID|Ширина}}</strong>.</p><p>Для вставки <em>Спойлера</em>, <em>Цитаты</em> или <em>Инфобокса</em> используйте шаблон из меню редактора <strong>\"Стили\"</strong>.</p>
         <p>Для добавления <strong>рамки</strong> изображению &mdash; укажите его <strong>Alt</strong></p>

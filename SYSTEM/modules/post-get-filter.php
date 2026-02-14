@@ -65,6 +65,9 @@ if(in_array($methods, ['POST', 'GET'], true)) {
 
                 "permalink" => FILTER_VALIDATE_INT,
 
+                "dbtimestamp" => FILTER_VALIDATE_FLOAT,
+
+
             ] ) ?? [];
 
             break;
