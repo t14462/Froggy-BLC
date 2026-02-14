@@ -642,7 +642,7 @@ function savePage() {
 
                 dbprepApnd("DATABASE/DB/data.html");
 
-                $filesource = openFileOrDie("DATABASE/DB/data.html", 'rb');
+                $filesource = openFileOrDie("DATABASE/DB/data.html.src." . getmypid(), 'rb');
 
                 $filesource->seekOrDie($pagenum);
 
@@ -1267,7 +1267,7 @@ function commentReply() {
             
 
 
-            $filesource = openFileOrDie("DATABASE/comments/".$commaddr, 'rb');
+            $filesource = openFileOrDie("DATABASE/comments/".$commaddr . ".src." . getmypid(), 'rb');
 
             $filesource->seekOrDie($pgcommnum);
 

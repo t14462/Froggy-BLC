@@ -998,11 +998,17 @@ function dbprepApnd($filename) {
 
     $lockFile = $filename . ".lock";
     $newFile = $filename . ".new." . getmypid();
+    $newFileSrc = $filename . ".src." . getmypid();
 
     putFileOrDie($lockFile, getmypid(), LOCK_EX);
 
-    // Копируем оригинальный файл в новый
+    // Копируем оригинальный файл в новый dest
     if(!copy($filename, $newFile)) {
+        die('<!DOCTYPE html><html><head><meta charset="utf-8" /><title>Ошибка</title></head><body><h1>ОШИБКА.</h1><p><strong>Не удалось создать новый файл.</strong></p></body></html>');
+    }
+
+    // Копируем оригинальный файл в новый src
+    if(!copy($filename, $newFileSrc)) {
         die('<!DOCTYPE html><html><head><meta charset="utf-8" /><title>Ошибка</title></head><body><h1>ОШИБКА.</h1><p><strong>Не удалось создать новый файл.</strong></p></body></html>');
     }
 
@@ -1050,6 +1056,8 @@ function dbdone($filename, $recovery) {
 
         touchMy($filename);
 
+        if(is_file($filename.".src." . getmypid())) unlink($filename.".src." . getmypid());
+
         /// unlink($filename.".lock");
 
         return true;
@@ -1057,6 +1065,8 @@ function dbdone($filename, $recovery) {
     } else {
 
         unlink($filename.".new." . getmypid());
+
+        if(is_file($filename.".src." . getmypid())) unlink($filename.".src." . getmypid());
 
         if(!isset($safePost['commpost']) && !isset($safeGet["cmove"])) {
 

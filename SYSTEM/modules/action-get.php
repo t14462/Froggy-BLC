@@ -750,7 +750,7 @@ function commentRemove() {
 
             dbprepApnd("DATABASE/comments/".$commaddr);
 
-            $filesource = openFileOrDie("DATABASE/comments/".$commaddr, 'rb');
+            $filesource = openFileOrDie("DATABASE/comments/".$commaddr . ".src." . getmypid(), 'rb');
 
             // Переходим к нужной строке
             $filesource->seekOrDie($pgcommnum);
@@ -1390,7 +1390,7 @@ function addPage() {
 
                 dbprepApnd("DATABASE/DB/data.html");
 
-                $filesource = openFileOrDie("DATABASE/DB/data.html", 'rb');
+                $filesource = openFileOrDie("DATABASE/DB/data.html.src." . getmypid(), 'rb');
 
                 $filesource->seekOrDie($numlvl[0]);
 
@@ -1505,7 +1505,7 @@ function movePageDown() {
 
             dbprepApnd("DATABASE/DB/data.html");
 
-            $filesource = openFileOrDie("DATABASE/DB/data.html", 'rb');
+            $filesource = openFileOrDie("DATABASE/DB/data.html.src." . getmypid(), 'rb');
 
 
             $filesource->seekOrDie($pg2mv);
@@ -1574,7 +1574,7 @@ function movePageUp() {
 
             dbprepApnd("DATABASE/DB/data.html");
 
-            $filesource = openFileOrDie("DATABASE/DB/data.html", 'rb');
+            $filesource = openFileOrDie("DATABASE/DB/data.html.src." . getmypid(), 'rb');
 
 
             $filesource->seekOrDie($pg2mv);
@@ -1901,7 +1901,7 @@ function deletePage() {
                 dbprepApnd("DATABASE/DB/data.html");
 
 
-                $filesource = openFileOrDie("DATABASE/DB/data.html", 'rb');
+                $filesource = openFileOrDie("DATABASE/DB/data.html.src." . getmypid(), 'rb');
 
                 $filesource->seekOrDie($pagedel - 1);
 
