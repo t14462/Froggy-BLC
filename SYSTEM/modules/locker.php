@@ -92,7 +92,7 @@ if($last_executed3 && $diff3 > 5400) { // 1.5 hours
 
 
 if( isset($_SESSION['username']) && (
-    isset($_POST['title'], $_POST['h'], $_POST['textedit'], $_POST["dbtimestamp"]) ||
+    isset($_POST['title'], $_POST['h'], $_POST['textedit'], $_POST['dbtimestamp']) ||
 
     isset($_GET['edit'])     ||
 
