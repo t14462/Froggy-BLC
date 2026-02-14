@@ -602,7 +602,7 @@ function pageload() {
 
             $filesource = openFileOrDie("DATABASE/comments/".$commaddr, "rb");
 
-            $pager = "<nav class='pager'><a href='?" . $_SERVER['QUERY_STRING'] . "&commpgcntrecalc=1' rel='nofollow' title='Пересчитать Количество Страниц!!!'>🪄</a>";
+            $pager = "<nav class='pager'><a href='?" . $_SERVER['QUERY_STRING'] . "&commpgcntrecalc=1' rel='nofollow' title='Пересчитать Количество Страниц!!!' onclick=\"return confirm('Это тяжёлая операция. Продолжить?');\">🪄</a>";
             for($i = 0; $i <= $total_commpages; $i++) {
 
                 if($commpage === $i) {
