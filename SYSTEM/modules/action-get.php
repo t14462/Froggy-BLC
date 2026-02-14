@@ -580,6 +580,9 @@ function pageload() {
         if(is_file("DATABASE/comments/".$commaddr)) {
 
 
+            /// $tplcomments .= "";
+
+
             $commlimit = 8;
 
 
@@ -599,7 +602,7 @@ function pageload() {
 
             $filesource = openFileOrDie("DATABASE/comments/".$commaddr, "rb");
 
-            $pager = "<nav class='pager'>";
+            $pager = "<nav class='pager'><a href='?" . $_SERVER['QUERY_STRING'] . "&commpgcntrecalc=1' rel='nofollow' title='Пересчитать Количество Страниц!!!'>🪄</a>";
             for($i = 0; $i <= $total_commpages; $i++) {
 
                 if($commpage === $i) {

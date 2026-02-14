@@ -22,6 +22,7 @@ function detectaction(){
         // Редактирование и админ-действия
         isset($safeGet['edit']) ||
         isset($safeGet['cmove']) ||
+        isset($safeGet['commpgcntrecalc']) ||
         isset($safeGet['addpage']) ||
         /* isset($safePost['title'], $safePost['h'], $safePost['textedit']) || */
         
@@ -106,9 +107,13 @@ if(!$checkpermission && detectaction()) {
 
     purgelog();
 
+} elseif( /* $checkpermission && */ isset($safeGet["commpgcntrecalc"])) {
+
+    commPgCntRecalc();
+
 
 ##################################################
-##################################################
+################################################## 
 ##################################################
 ##################################################
 
