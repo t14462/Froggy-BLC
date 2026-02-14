@@ -1225,6 +1225,17 @@ function commentReply() {
 
             dbprepApnd("DATABASE/comments/".$commaddr);
 
+
+
+            $file = openFileOrDie("DATABASE/comments/".$commaddr
+            . ".new." . getmypid();, "rb");            
+            $file->seekOrDie($pgcommnum); // Переходим к нужной строке
+            $commdataline = $file->current(); // Читаем строку
+            $file = null; // Закрываем файл
+
+
+
+
             $commpost = str_replace("<br />\n", "<br />", $commpost);
             $commpost = str_replace("\n<br />", "<br />", $commpost);
             /// $commpost = str_replace("<br />"  , "<br!>", $commpost);
@@ -1709,7 +1720,8 @@ function postComment() {
             $lastLineNumber = 0;
             $bufferSize = 128 * 1024; // 128 КБ
 
-            $file = openFileOrDie("DATABASE/comments/".$commaddr, "rb");
+            $file = openFileOrDie("DATABASE/comments/".$commaddr
+            . ".new." . getmypid(), "rb");
 
 
             while($data = $file->freadOrDie($bufferSize)) {
