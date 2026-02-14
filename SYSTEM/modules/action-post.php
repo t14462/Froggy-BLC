@@ -81,7 +81,11 @@ function savePage() {
         // $checknum = seoNumGet() - 1;
 
 
-        if( $checkpermission < 3 ) {
+        if($safePost['dbtimestamp'] !== filemtimeMy("DATABASE/DB/data.html")) {
+
+            $herror = 5;
+
+        } elseif( $checkpermission < 3 ) {
 
             $herror = 10;
 
@@ -116,10 +120,6 @@ function savePage() {
         } elseif(!sanCheckHor((seoNumGet() - 1), $htag)) {
 
             $herror = 4;
-
-        } elseif($safePost['dbtimestamp'] !== filemtimeMy("DATABASE/DB/data.html")) {
-
-            $herror = 5;
 
         }
 
@@ -973,7 +973,22 @@ function commentReply() {
         $today = date('Y-m-d');
 
 
-        if(!$checkpermission && !canProceed($ip)) {
+        if($safePost['dbtimestamp'] !== filemtimeMy("DATABASE/comments/".$commaddr)) {
+
+            $errmsg = "<h1>ОШИБКА.</h1><p class='big'><strong>Во время написания комментария БД изменилась.</strong></p>";
+            
+            $commRecov = $commpost;
+            $commRecov = str_ireplace("<textarea", "&lt;textarea", $commRecov);
+            $commRecov = str_ireplace("</textarea", "&lt;/textarea", $commRecov);
+            $commRecov = str_ireplace("textarea>", "textarea&gt;", $commRecov);
+            // $commRecov = str_ireplace("&", "&amp;", $commRecov);
+            // $commRecov = str_ireplace("&amp;amp;", "&amp;", $commRecov);
+            $commRecov = escape_amp_txtarea($commRecov);
+            $commRecov .= " ";
+            pageload();
+            return;
+
+        } elseif(!$checkpermission && !canProceed($ip)) {
 
             $errmsg = "<h1>ОШИБКА.</h1><p class='big'><strong>Временной интервал между комментариями Три Минуты.</strong></p>";
             
@@ -1063,23 +1078,6 @@ function commentReply() {
             $commRecov .= " ";
             pageload();
             return;
-
-        } elseif($safePost['dbtimestamp'] !== filemtimeMy("DATABASE/comments/".$commaddr)) {
-
-            $errmsg = "<h1>ОШИБКА.</h1><p class='big'><strong>Во время написания комментария БД изменилась.</strong></p>";
-            
-            $commRecov = $commpost;
-            $commRecov = str_ireplace("<textarea", "&lt;textarea", $commRecov);
-            $commRecov = str_ireplace("</textarea", "&lt;/textarea", $commRecov);
-            $commRecov = str_ireplace("textarea>", "textarea&gt;", $commRecov);
-            // $commRecov = str_ireplace("&", "&amp;", $commRecov);
-            // $commRecov = str_ireplace("&amp;amp;", "&amp;", $commRecov);
-            $commRecov = escape_amp_txtarea($commRecov);
-            $commRecov .= " ";
-            pageload();
-            return;
-
-
 
         } else {
 
@@ -1489,7 +1487,22 @@ function postComment() {
         $today = date('Y-m-d');
 
 
-        if(!$checkpermission && !canProceed($ip)) {
+        if($safePost['dbtimestamp'] !== filemtimeMy("DATABASE/comments/".$commaddr)) {
+
+            $errmsg = "<h1>ОШИБКА.</h1><p class='big'><strong>Во время написания комментария БД изменилась.</strong></p>";
+            
+            $commRecov = $commpost;
+            $commRecov = str_ireplace("<textarea", "&lt;textarea", $commRecov);
+            $commRecov = str_ireplace("</textarea", "&lt;/textarea", $commRecov);
+            $commRecov = str_ireplace("textarea>", "textarea&gt;", $commRecov);
+            // $commRecov = str_ireplace("&", "&amp;", $commRecov);
+            // $commRecov = str_ireplace("&amp;amp;", "&amp;", $commRecov);
+            $commRecov = escape_amp_txtarea($commRecov);
+            $commRecov .= " ";
+            pageload();
+            return;
+
+        } elseif(!$checkpermission && !canProceed($ip)) {
 
             $errmsg = "<h1>ОШИБКА.</h1><p class='big'><strong>Временной интервал между комментариями Три Минуты.</strong></p>";
             
@@ -1554,21 +1567,6 @@ function postComment() {
         } elseif(mb_strlen(mb_superTrim($commpost)) < 5) {
 
             $errmsg = "<h1>ОШИБКА.</h1><p class='big'><strong>Ваш комментарий слишком мал.</strong></p>";
-            
-            $commRecov = $commpost;
-            $commRecov = str_ireplace("<textarea", "&lt;textarea", $commRecov);
-            $commRecov = str_ireplace("</textarea", "&lt;/textarea", $commRecov);
-            $commRecov = str_ireplace("textarea>", "textarea&gt;", $commRecov);
-            // $commRecov = str_ireplace("&", "&amp;", $commRecov);
-            // $commRecov = str_ireplace("&amp;amp;", "&amp;", $commRecov);
-            $commRecov = escape_amp_txtarea($commRecov);
-            $commRecov .= " ";
-            pageload();
-            return;
-
-        } elseif($safePost['dbtimestamp'] !== filemtimeMy("DATABASE/comments/".$commaddr)) {
-
-            $errmsg = "<h1>ОШИБКА.</h1><p class='big'><strong>Во время написания комментария БД изменилась.</strong></p>";
             
             $commRecov = $commpost;
             $commRecov = str_ireplace("<textarea", "&lt;textarea", $commRecov);
