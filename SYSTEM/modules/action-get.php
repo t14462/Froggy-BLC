@@ -2007,3 +2007,50 @@ function nredir() {
 
     refreshhandle(0, $pgaddrcache[$pageMenuNum2 - 1], false);
 }
+
+
+
+
+
+
+
+
+
+function commPgCntRecalc() {
+
+    global $checkpermission, $idcache, $errmsg;
+
+    /// $idcache[$numgen - 1];
+
+    $numgen = seoNumGet();
+
+    if($checkpermission < 3) {
+
+        $errmsg = pforbidden();
+
+    } elseif(!is_file("DATABASE/comments/" . $idcache[$numgen - 1] . ".pages-cache")) {
+
+        $errmsg = pnotfound();
+
+    } else {
+
+        unlink("DATABASE/comments/" . $idcache[$numgen - 1] . ".pages-cache");
+
+        $link = "?".explode("&", $_SERVER['QUERY_STRING'])[0] . "#comm-section";
+
+        refreshhandle(0, $link, false);
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
