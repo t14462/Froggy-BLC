@@ -1917,6 +1917,18 @@ function deletePage() {
 
                 $filedest = openFileOrDie("DATABASE/DB/data.html.new." . getmypid(), 'ab');
 
+                while($line = $filesource->freadOrDie(256*1024)) {
+
+                    $filedest->fwriteOrDie($line);
+                }
+
+                $filedest = null;
+                    
+                $filesource = null;
+                
+
+                if(!dbdone("DATABASE/DB/data.html", "БАЗА ДАННЫХ БЫЛА ИЗМЕНЕНА ИЛИ ЗАБЛОКИРОВАНА ВНЕШНИМ ПРОЦЕССОМ")) return false;
+
                 if(is_file("DATABASE/comments/".$pageid)) {
 
                     unlink("DATABASE/comments/".$pageid);
@@ -1953,18 +1965,6 @@ function deletePage() {
 
                     unlink("DATABASE/comm.count/".$pageid.".time");
                 }
-
-                while($line = $filesource->freadOrDie(256*1024)) {
-
-                    $filedest->fwriteOrDie($line);
-                }
-
-                $filedest = null;
-                    
-                $filesource = null;
-                
-
-                if(!dbdone("DATABASE/DB/data.html", "БАЗА ДАННЫХ БЫЛА ИЗМЕНЕНА ИЛИ ЗАБЛОКИРОВАНА ВНЕШНИМ ПРОЦЕССОМ")) return false;
         
                 /// unlockByName($_SESSION['username'] ?? ""); ///
 

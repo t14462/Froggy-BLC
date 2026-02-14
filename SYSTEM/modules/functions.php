@@ -1787,8 +1787,8 @@ function calcTotPages(string $commaddr, int $limit, bool $update = false): int
     }
 
     // ── 3) Обновляем кэш ─────────────────────────────────────────────────────
-    /// $dir = dirname($cacheFile);
-    /// if (is_dir($dir) && is_writable($dir)) {
+    $dir = dirname($cacheFile);
+    if (is_dir($dir) && is_writable($dir)) {
 
         /*
         $tmp = $cacheFile . ".tmp";
@@ -1800,7 +1800,7 @@ function calcTotPages(string $commaddr, int $limit, bool $update = false): int
         */
 
         @file_put_contents($cacheFile, (string)$totalPages, LOCK_EX);
-    /// }
+    }
 
     return $totalPages;
 }
