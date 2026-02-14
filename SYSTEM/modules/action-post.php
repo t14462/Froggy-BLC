@@ -1228,7 +1228,7 @@ function commentReply() {
 
 
             $file = openFileOrDie("DATABASE/comments/".$commaddr
-            . ".new." . getmypid();, "rb");            
+            . ".new." . getmypid(), "rb");            
             $file->seekOrDie($pgcommnum); // Переходим к нужной строке
             $commdataline = $file->current(); // Читаем строку
             $file = null; // Закрываем файл
