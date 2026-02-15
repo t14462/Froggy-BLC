@@ -630,10 +630,20 @@ $replacementDLCNT = static function ($m) {
 
         $dlcnt = 0;
         if (is_file($pathCnt) && is_readable($pathCnt)) {
-            $val = trim((string)@file_get_contents($pathCnt));
+
+            $ftmp = fopenOrDie($pathCnt, 'rb');
+            flock($ftmp, LOCK_SH);
+
+            $dlcnt = (int)@stream_get_contents($ftmp);
+
+            flock($ftmp, LOCK_UN);
+            fclose($ftmp);
+
+            /*
             if ($val !== '' && ctype_digit($val)) {
                 $dlcnt = (int)$val;
             }
+            */
         }
 
         $safeName = htmlspecialchars($file, ENT_QUOTES | ENT_HTML5 | ENT_SUBSTITUTE, 'UTF-8');
