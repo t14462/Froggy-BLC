@@ -110,7 +110,7 @@ ready(function () {
     document.body.appendChild(lightboxOverlay);
 
     // Открываем изображение в lightbox при клике на него
-    document.querySelectorAll('img').forEach(img => {
+    document.querySelectorAll('img:not(footer img)').forEach(img => {
         img.addEventListener('click', function () {
             lightboxImage.src = this.src;
             lightboxOverlay.style.display = 'flex';

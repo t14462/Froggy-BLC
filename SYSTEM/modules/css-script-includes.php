@@ -98,4 +98,5 @@ $footer = "\n<em>Автор: Тимофеев Святослав aka Paulter Gat
 Система разработана при участии ChatGPT от OpenAI.<br />
 Сайт создан при поддержке <strong>НИИ БАЦА</strong>.<br />
 Web-Дизайнер: Артемев Лебедий.</em>
-".genTplForm();
+".genTplForm()
+.' <a href="https://hostiq.ua/" target="_blank"><img src="https://hostiq.ua/images2019/design/logos/logo.svg" alt="HOSTiQ&nbsp;— найкращий хостинг в&nbsp;Україні" /></a>';
