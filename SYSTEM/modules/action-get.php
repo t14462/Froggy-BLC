@@ -2044,7 +2044,7 @@ function commPgCntRecalc() {
 
     $numgen = seoNumGet();
 
-    if($checkpermission < 3) {
+    if($checkpermission < 2) {
 
         $errmsg = pforbidden();
 
