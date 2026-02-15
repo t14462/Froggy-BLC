@@ -975,7 +975,7 @@ function commentReply() {
 
         if($safePost['dbtimestamp'] !== filemtimeMy("DATABASE/comments/".$commaddr)) {
 
-            $errmsg = "<h1>ОШИБКА.</h1><p class='big'><strong>Во время написания комментария БД изменилась.</strong></p>";
+            $errmsg = "<h1>ПРЕДУПРЕЖДЕНИЕ.</h1><p class='big'><strong>Во время написания комментария БД изменилась.</strong></p>";
             
             $commRecov = $commpost;
             $commRecov = str_ireplace("<textarea", "&lt;textarea", $commRecov);
@@ -1489,7 +1489,7 @@ function postComment() {
 
         if($safePost['dbtimestamp'] !== filemtimeMy("DATABASE/comments/".$commaddr)) {
 
-            $errmsg = "<h1>ОШИБКА.</h1><p class='big'><strong>Во время написания комментария БД изменилась.</strong></p>";
+            $errmsg = "<h1>ПРЕДУПРЕЖДЕНИЕ.</h1><p class='big'><strong>Во время написания комментария БД изменилась.</strong></p>";
             
             $commRecov = $commpost;
             $commRecov = str_ireplace("<textarea", "&lt;textarea", $commRecov);
