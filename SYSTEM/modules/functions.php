@@ -1046,6 +1046,9 @@ function dbdone($filename, $recovery) {
     flock($locktmp, LOCK_UN);
     fclose($locktmp);
 
+    if(is_file($filename.".src." . getmypid()))
+        unlink($filename.".src." . getmypid());
+
     /// $lockvar = (int)@file_get_contents($filename.".lock");
 
     if($lockvar === getmypid()) {
@@ -1056,8 +1059,6 @@ function dbdone($filename, $recovery) {
 
         touchMy($filename);
 
-        if(is_file($filename.".src." . getmypid())) unlink($filename.".src." . getmypid());
-
         /// unlink($filename.".lock");
 
         return true;
@@ -1065,8 +1066,6 @@ function dbdone($filename, $recovery) {
     } else {
 
         unlink($filename.".new." . getmypid());
-
-        if(is_file($filename.".src." . getmypid())) unlink($filename.".src." . getmypid());
 
         if(!isset($safePost['commpost']) && !isset($safeGet["cmove"])) {
 
