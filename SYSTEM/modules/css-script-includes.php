@@ -94,7 +94,7 @@ $menubar = '
 '.$menubar;
 
 
-$footer = "\n<em>Автор: Тимофеев Святослав aka Paulter Gates.<br />
+$footer = "\n<em>Автор: Тимофеев Святослав aka Paulter Gates, PhD.<br />
 Система разработана при участии ChatGPT от OpenAI.<br />
 Сайт создан при поддержке <strong>НИИ БАЦА</strong>.<br />
 Web-Дизайнер: Артемев Лебедий.</em>
