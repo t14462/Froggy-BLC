@@ -1765,16 +1765,20 @@ function calcTotPages(string $commaddr, int $limit, bool $update = false): int
         $fh = @fopen($cacheFile, 'rb');
         if ($fh) {
             @flock($fh, LOCK_SH);
-            $raw = stream_get_contents($fh);
+            $raw = (int)stream_get_contents($fh);
             @flock($fh, LOCK_UN);
             fclose($fh);
 
+            return $raw;
+
+            /*
             $raw = trim((string)$raw);
 
             // строго: только 0..N
             if ($raw !== '' && ctype_digit($raw)) {
                 return (int)$raw;
             }
+            */
             // кэш битый — пересчитаем ниже
         }
     }
