@@ -1163,18 +1163,18 @@ function commentReply() {
 
                 $html = str_get_html($commpost, false, true, "UTF-8", false) or die("XSS?.. Пустой или битый HTML.");
 
+                /// $html = ulFix($html);
+                $html = addClassToAllUl($html, 'ul-fix');
+
+                $html = convert_infoboxes_to_aside($html);
+
                 $html = replaceSemanticSpans($html);
 
                 // Генератор Обёртки из Alt
                 $html = wrap_images_with_figure($html);
 
-                /// $html = ulFix($html);
-                $html = addClassToAllUl($html, 'ul-fix');
-
                 // Шаблон ЦИТАТА
                 $html = convertQuotBlocks($html);
-
-                $html = convert_infoboxes_to_aside($html);
 
                 $html = parseSpoilers($html);
                 
@@ -1662,18 +1662,18 @@ function postComment() {
 
                 $html = str_get_html($commpost, false, true, "UTF-8", false) or die("XSS?.. Пустой или битый HTML.");
 
+                /// $html = ulFix($html);
+                $html = addClassToAllUl($html, 'ul-fix');
+
+                $html = convert_infoboxes_to_aside($html);
+
                 $html = replaceSemanticSpans($html);
 
                 // Генератор Обёртки из Alt
                 $html = wrap_images_with_figure($html);
 
-                /// $html = ulFix($html);
-                $html = addClassToAllUl($html, 'ul-fix');
-
                 // Шаблон ЦИТАТА
                 $html = convertQuotBlocks($html);
-
-                $html = convert_infoboxes_to_aside($html);
 
                 $html = parseSpoilers($html);
 

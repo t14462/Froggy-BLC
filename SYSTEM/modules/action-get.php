@@ -471,6 +471,8 @@ function pageload() {
         }
 
 
+        $html = convert_infoboxes_to_aside($html);
+
         $html = replaceSemanticSpans($html);
 
         // Генератор Обёртки из Alt
@@ -478,8 +480,6 @@ function pageload() {
 
         // Шаблон ЦИТАТА
         $html = convertQuotBlocks($html);
-
-        $html = convert_infoboxes_to_aside($html);
 
         $html = parseSpoilers($html);
 
