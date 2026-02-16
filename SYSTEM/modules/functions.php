@@ -970,8 +970,8 @@ function filter_filename(string $filename): string {
     $filename = basename(str_replace('\\', '/', $filename));
 
     $filename = emojiToHtmlEntities($filename);
-    $filename = remove_entities($filename);
     $filename = mb_superTrim($filename);
+    $filename = remove_entities($filename);
 
     $filename = preg_replace('~
         [<>:"/\\\\|?*]      |  # reserved
@@ -2016,9 +2016,15 @@ function convert_infoboxes_to_aside(simple_html_dom $html): simple_html_dom {
         
         $currentClass = $node->getAttribute('class');
 
-        $currentClass = emojiToHtmlEntities($currentClass);
+        /*    ПОЧИЩЕНО ПУРИФАЕРОМ
 
-        $currentClass = remove_entities($currentClass);
+        $currentClass = preg_replace('/[^a-z0-9 _-]+/i', ' ', $currentClass); // всё лишнее → пробел
+        $currentClass = trim(preg_replace('/\s+/', ' ', $currentClass));      // сжать пробелы
+        */
+
+        /// $currentClass = emojiToHtmlEntities($currentClass);
+
+        /// $currentClass = remove_entities($currentClass);
 
         $node->setAttribute('class', mb_superTrim($currentClass . ' clearfix'));
     }
@@ -2083,9 +2089,16 @@ function addClassToAllUl(simple_html_dom $html, string $classes, ?callable $filt
             $existing = (string)$ul->getAttribute('class');
         }
 
-        $existing = emojiToHtmlEntities($existing);
 
-        $existing = remove_entities($existing);
+        /*    ПОЧИЩЕНО ПУРИФАЕРОМ
+
+        $existing = preg_replace('/[^a-z0-9 _-]+/i', ' ', $existing); // всё лишнее → пробел
+        $existing = trim(preg_replace('/\s+/', ' ', $existing));      // сжать пробелы
+        */
+
+        /// $existing = emojiToHtmlEntities($existing);
+
+        /// $existing = remove_entities($existing);
 
         // В сет превратим, чтобы не было дублей
         $current = preg_split('/\s+/', mb_superTrim($existing)) ?: [];
