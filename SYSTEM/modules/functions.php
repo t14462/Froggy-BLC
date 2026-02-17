@@ -2016,17 +2016,17 @@ function convert_infoboxes_to_aside(simple_html_dom $html): simple_html_dom {
         
         $currentClass = $node->getAttribute('class');
 
-        /*    ПОЧИЩЕНО ПУРИФАЕРОМ
+        /*    ПОЧИЩЕНО ПУРИФАЕРОМ, оставлено как страховка */
 
         $currentClass = preg_replace('/[^a-z0-9 _-]+/i', ' ', $currentClass); // всё лишнее → пробел
         $currentClass = trim(preg_replace('/\s+/', ' ', $currentClass));      // сжать пробелы
-        */
+        
 
         /// $currentClass = emojiToHtmlEntities($currentClass);
 
         /// $currentClass = remove_entities($currentClass);
 
-        $node->setAttribute('class', mb_superTrim($currentClass . ' clearfix'));
+        $node->setAttribute('class', $currentClass . ' clearfix');
     }
 
     return $html;
@@ -2090,18 +2090,18 @@ function addClassToAllUl(simple_html_dom $html, string $classes, ?callable $filt
         }
 
 
-        /*    ПОЧИЩЕНО ПУРИФАЕРОМ
+        /*    ПОЧИЩЕНО ПУРИФАЕРОМ, оставлено как страховка */
 
         $existing = preg_replace('/[^a-z0-9 _-]+/i', ' ', $existing); // всё лишнее → пробел
-        $existing = trim(preg_replace('/\s+/', ' ', $existing));      // сжать пробелы
-        */
+        /// $existing = trim(preg_replace('/\s+/', ' ', $existing));      // сжать пробелы
+        
 
         /// $existing = emojiToHtmlEntities($existing);
 
         /// $existing = remove_entities($existing);
 
         // В сет превратим, чтобы не было дублей
-        $current = preg_split('/\s+/', mb_superTrim($existing)) ?: [];
+        $current = preg_split('/\s+/', trim($existing)) ?: [];
         $set = [];
         foreach ($current as $c) { if ($c !== '') $set[$c] = true; }
 
