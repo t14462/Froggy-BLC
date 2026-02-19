@@ -433,8 +433,8 @@ function mb_superTrim(string $text): string {
     $text = preg_replace_callback('/[\p{C}]/u', static function ($m) {
         $ch = $m[0];
 
-        // ZWJ (U+200D) — нужен для эмоджи типа 👩‍💻
-        if ($ch === "\xE2\x80\x8D") { // 0x200D в UTF-8
+        // ZWJ (U+200D) и другие — нужны для эмоджи типа 👩‍💻
+        if ($ch === "\u{200D}" || $ch === "\u{FE0F}" || $ch === "\u{FE0E}") {
             return $ch;
         }
 
@@ -469,8 +469,8 @@ function mb_softTrim(string $text): string {
             return "\n";
         }
 
-        // ZWJ (U+200D) — нужен для эмоджи типа 👩‍💻
-        if ($ch === "\xE2\x80\x8D") { // 0x200D в UTF-8
+        // ZWJ (U+200D) и другие — нужны для эмоджи типа 👩‍💻
+        if ($ch === "\u{200D}" || $ch === "\u{FE0F}" || $ch === "\u{FE0E}") {
             return $ch;
         }
 
