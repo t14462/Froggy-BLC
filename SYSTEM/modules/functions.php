@@ -970,8 +970,8 @@ function filter_filename(string $filename): string {
     $filename = basename(str_replace('\\', '/', $filename));
 
     $filename = emojiToHtmlEntities($filename);
-    $filename = mb_superTrim($filename);
     $filename = remove_entities($filename);
+    $filename = mb_superTrim($filename);
 
     $filename = preg_replace('~
         [<>:"/\\\\|?*]      |  # reserved
@@ -1929,8 +1929,8 @@ function convertQuotBlocks(simple_html_dom $html): simple_html_dom {
 
         // Очистка содержимого от лишних тегов
         # $quote = mb_softTrim($quotBlock->innertext);
-        $quoteClean = mb_softTrim(strip_tags($quotBlock->innertext, $allowedTagsBlockquote));
-        $authorClean = mb_superTrim(strip_tags($author, $allowedTagsFigcaption));
+        $quoteClean = mb_softTrim(normalize_entities_my(strip_tags($quotBlock->innertext, $allowedTagsBlockquote)));
+        $authorClean = mb_superTrim(normalize_entities_my(strip_tags($author, $allowedTagsFigcaption)));
 
         // Сборка итогового HTML
         $figureHtml = "<figure class='my-blockquote clearfix'><blockquote>$quoteClean</blockquote>";
@@ -1986,7 +1986,7 @@ function wrap_images_with_figure(simple_html_dom $html): simple_html_dom {
     foreach ($images as $img) {
         $img->setAttribute('loading', 'lazy');
 
-        $alt = mb_superTrim($img->getAttribute('alt') ?? '');
+        $alt = mb_superTrim(normalize_entities_my($img->getAttribute('alt') ?? ''));
         if ($alt !== '') {
             $imgHtml = $img->outertext;
             // $altEscaped = mb_superTrim(htmlspecialchars(strip_tags($alt), ENT_QUOTES | ENT_HTML5 | ENT_SUBSTITUTE, 'UTF-8', false));

@@ -1049,7 +1049,7 @@ function commentReply() {
             pageload();
             return;
 
-        } elseif(mb_strlen(mb_superTrim($commpost)) < 5) {
+        } elseif(mb_strlen(mb_superTrim(normalize_entities_my($commpost))) < 5) {
 
             $errmsg = "<h1>ОШИБКА.</h1><p class='big'><strong>Ваш комментарий слишком мал.</strong></p>";
             
@@ -1564,7 +1564,7 @@ function postComment() {
             pageload();
             return;
 
-        } elseif(mb_strlen(mb_superTrim($commpost)) < 5) {
+        } elseif(mb_strlen(mb_superTrim(normalize_entities_my($commpost))) < 5) {
 
             $errmsg = "<h1>ОШИБКА.</h1><p class='big'><strong>Ваш комментарий слишком мал.</strong></p>";
             
