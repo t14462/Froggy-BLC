@@ -679,7 +679,7 @@ function pageload() {
 
 
 
-            $commentschunk = mb_softTrim($commentschunk);
+            /// $commentschunk = mb_softTrim($commentschunk);
 
 
             $tplcomments .= $commentschunk ? "<div id='comm-section'><ul>".$commentschunk."</ul></div>" : "";
