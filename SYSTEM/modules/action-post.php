@@ -1255,10 +1255,11 @@ function commentReply() {
 
 
 
-
+            /*
             $commpost = str_replace("<br />\n", "<br />", $commpost);
             $commpost = str_replace("\n<br />", "<br />", $commpost);
-            /// $commpost = str_replace("<br />"  , "<br!>", $commpost);
+            */
+            $commpost = str_replace("<br />"  , "<br!>", $commpost);
             $commpost = str_replace("\n", "<br!>", $commpost);
 
             $commdataline = rtrim($commdataline);
@@ -1768,10 +1769,11 @@ function postComment() {
 
             $file = null;
 
-
+            /*
             $commpost = str_replace("<br />\n", "<br />", $commpost);
             $commpost = str_replace("\n<br />", "<br />", $commpost);
-            /// $commpost = str_replace("<br />"  , "<br!>", $commpost);
+            */
+            $commpost = str_replace("<br />"  , "<br!>", $commpost);
             $commpost = str_replace("\n", "<br!>", $commpost);
 
 
