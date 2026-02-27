@@ -1792,7 +1792,7 @@ function postComment() {
             if(!dbdone("DATABASE/comments/".$commaddr, $commpost2)) return false;
 
 
-            $comTotalPages = calcTotPages($commaddr, 8, true);
+            $comTotalPages = calcTotPages2($lastLineNumber + 1, $commaddr, 8, true);
 
 
 

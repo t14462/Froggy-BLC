@@ -1832,6 +1832,97 @@ function calcTotPages(string $commaddr, int $limit, bool $update = false): int
 
 
 
+
+
+
+function calcTotPages2(int $commcount, string $commaddr, int $limit, bool $update = false): int
+{
+    if ($limit <= 0) {
+        die('PANIC: bad $limit');
+    }
+
+    $commentsFile = "DATABASE/comments/" . $commaddr;
+    $cacheFile    = $commentsFile . ".pages-cache";
+
+    // ── 1) Если update=false — пытаемся прочитать кэш ─────────────────────────
+    if ($update === false && is_file($cacheFile)) {
+        $fh = @fopen($cacheFile, 'rb');
+        if ($fh) {
+            @flock($fh, LOCK_SH);
+            $raw = (int)stream_get_contents($fh);
+            @flock($fh, LOCK_UN);
+            fclose($fh);
+
+            return $raw;
+
+            /*
+            $raw = trim((string)$raw);
+
+            // строго: только 0..N
+            if ($raw !== '' && ctype_digit($raw)) {
+                return (int)$raw;
+            }
+            */
+            // кэш битый — пересчитаем ниже
+        }
+    }
+
+    // ── 2) Считаем количество строк комментариев (по \n) ───────────────────────────
+    if (!is_file($commentsFile)) {
+        /// $totalPages = 0;
+        /// return $totalPages;
+        return 0;
+
+    } else {
+
+        /*
+
+        $commcount  = 0;
+        $bufferSize = 128 * 1024;
+        
+        $file = openFileOrDie($commentsFile, 'rb');
+        /// $file->flock(LOCK_SH);
+
+        while ($buffer = $file->freadOrDie($bufferSize)) {
+            $commcount += substr_count($buffer, "\n");
+        }
+
+        /// $file->flock(LOCK_UN);
+        $file = null;
+
+        */
+
+        $totalPages = ($commcount <= 0)
+            ? 0
+            : ((int)ceil($commcount / $limit) - 1);
+    }
+
+    // ── 3) Обновляем кэш ─────────────────────────────────────────────────────
+    $dir = dirname($cacheFile);
+    if (is_dir($dir) && is_writable($dir)) {
+
+        /*
+        $tmp = $cacheFile . ".tmp";
+        if (@file_put_contents($tmp, (string)$totalPages, LOCK_EX) !== false) {
+            @rename($tmp, $cacheFile);
+        } else {
+            @unlink($tmp);
+        }
+        */
+
+        @file_put_contents($cacheFile, (string)$totalPages, LOCK_EX);
+    }
+
+    return $totalPages;
+}
+
+
+
+
+
+
+
+
 function loadTplSess() {
 
     // Папка с шаблонами
