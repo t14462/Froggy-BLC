@@ -1972,13 +1972,19 @@ function deletePage() {
                     unlink("DATABASE/comments/".$pageid.".pages-cache");
                 }
 
-                //////////////////////
+                if(is_file("DATABASE/comments/".$pageid.".lock")) {
 
-                if(is_file("DATABASE/comm.count/".$pageid)) {
-
-                    unlink("DATABASE/comm.count/".$pageid);
+                    unlink("DATABASE/comments/".$pageid.".lock");
                 }
 
+                //////////////////////
+
+                if(is_file("DATABASE/comments/".$pageid.".count")) {
+
+                    unlink("DATABASE/comments/".$pageid.".count");
+                }
+
+                /*
                 if(is_file("DATABASE/comm.count/".$pageid.".bak")) {
 
                     unlink("DATABASE/comm.count/".$pageid.".bak");
@@ -1988,6 +1994,7 @@ function deletePage() {
 
                     unlink("DATABASE/comm.count/".$pageid.".time");
                 }
+                */
         
                 /// unlockByName($_SESSION['username'] ?? ""); ///
 

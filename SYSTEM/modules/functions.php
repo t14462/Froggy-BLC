@@ -2294,9 +2294,9 @@ function refreshCaches() {
 
 function getCommCount($commaddr) {
 
-    if(is_file("DATABASE/comm.count/".$commaddr)) {
+    if(is_file("DATABASE/comments/".$commaddr.".count")) {
 
-        $locktmp = fopenOrDie("DATABASE/comm.count/".$commaddr, 'rb');
+        $locktmp = fopenOrDie("DATABASE/comments/".$commaddr.".count", 'rb');
         flock($locktmp, LOCK_SH);
         $contents = stream_get_contents($locktmp);
         flock($locktmp, LOCK_UN);

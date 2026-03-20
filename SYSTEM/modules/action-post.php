@@ -1395,7 +1395,7 @@ function commentReply() {
 
             ###############################################
 
-            atomicCounterIncrement("DATABASE/comm.count/".$commaddr);
+            atomicCounterIncrement("DATABASE/comments/".$commaddr.".count");
 
             ###############################################
 
@@ -1827,7 +1827,7 @@ function postComment() {
 
             ##########################
 
-            atomicCounterIncrement("DATABASE/comm.count/".$commaddr);
+            atomicCounterIncrement("DATABASE/comments/".$commaddr.".count");
 
             ##########################
             // mylog("<em style='color:DarkGreen'>Добавлен комментарий <a href='".$url."?".explode("&", $_SERVER['QUERY_STRING'])[0]."&commpage=".$comTotalPages."'>".$commaddr."</a> ".$ip."</em>");
