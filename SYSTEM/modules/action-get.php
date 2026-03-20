@@ -1646,9 +1646,9 @@ function movePageUp() {
 
 function gallery() {
 
-    global $content, $safeGet, $mainPageTitle;
+    global $content, $safeGet, $mainPageTitle, $sMobile, $head;
 
-    $limit = 8;
+    $limit = 12;
 
     $files = glob('DATABASE/gallery/*.{jpg,jpeg,png,gif,webp}', GLOB_BRACE);
 
@@ -1705,10 +1705,58 @@ function gallery() {
     // Отбираем изображения для текущей страницы
     $selectedimg = array_slice($files, $offset, $limit);
 
+    /*
     foreach ($selectedimg as $file) {
         $delimg = explode("/", $file)[2];
         $content .= "<p class='gallery-img'><img loading='lazy' src=\"".$file."\" alt='Картинка из галереи' /><br />".$file." <button onclick='copyToClipboard(\"".$file."\");'>🔗</button> <a rel='nofollow' href='?delimg=$delimg' class='imgdellink' onclick=\"return confirm('Вы уверены?');\">УДАЛИТЬ</a></p><hr />";
     }
+    */
+
+    ####################################################
+    ####################################################
+    ####################################################
+
+    $cols = ($sMobile !== '') ? 1 : 3;
+
+    $head .= "<style>
+    
+    table.gallery  { width: 100%; border: none; border-spacing: .75rem; border-collapse: separate;}
+    td.gallery-img { width: ".floor(100 / $cols)."%; background: #BBB; border: none; padding: 0; }
+    td.gallery-img button { max-width: calc(100% - 2em); white-space: nowrap; overflow-x: hidden; }
+
+    </style>";
+
+    if (!empty($selectedimg)) {
+        $content .= "<table class='gallery'><tr>";
+
+        $i = 0;
+        $total = count($selectedimg);
+
+        foreach ($selectedimg as $file) {
+            $i++;
+            $delimg = explode("/", $file)[2];
+
+            $content .= "<td class='gallery-img'><img loading='lazy' src=\"".$file."\" alt='Картинка из галереи' /><br /><button onclick='copyToClipboard(\"".$file."\");'>".$delimg."</button> <a rel='nofollow' href='?delimg=$delimg' class='imgdellink' onclick=\"return confirm('Вы уверены?');\">Уд.</a></td>";
+
+            // открывать новую строку только если это НЕ последний элемент
+            if ($i % $cols === 0 && $i < $total) {
+                $content .= "</tr><tr>";
+            }
+        }
+
+        // добить последнюю строку пустыми ячейками только если нужно
+        if ($i % $cols !== 0) {
+            $repeatCount = $cols - ($i % $cols);
+            $content .= str_repeat("<td> </td>", $repeatCount);
+        }
+
+        $content .= "</tr></table>";
+    }
+
+
+    ####################################################
+    ####################################################
+    ####################################################
 
     $mainPageTitle = "Галерея";
 

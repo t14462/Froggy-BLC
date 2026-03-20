@@ -1976,7 +1976,7 @@ function imageupload() {
             }
 
             // Check file size
-            if($_FILES["fileToUpload"]["size"] > 500*1024) {
+            if($_FILES["fileToUpload"]["size"] > 2048*1024) {
                 $errmsg .= "<li>Извините, ваш файл слишком большой.</li>";
                 mylog("<em style='color:DarkOrange'>Извините, ваш файл слишком большой. (".$_SESSION["username"].").</em>");
                 $uploadOk = 0;
