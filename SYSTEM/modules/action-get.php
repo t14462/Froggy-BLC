@@ -1736,7 +1736,7 @@ function gallery() {
             $i++;
             $delimg = explode("/", $file)[2];
 
-            $content .= "<td class='gallery-img'><img loading='lazy' src=\"".$file."\" alt='Картинка из галереи' /><br /><button onclick='copyToClipboard(\"".$file."\");'>".$delimg."</button> <a rel='nofollow' href='?delimg=$delimg' class='imgdellink' onclick=\"return confirm('Вы уверены?');\">Уд.</a></td>";
+            $content .= "<td class='gallery-img'><img loading='lazy' src=\"".$file."\" alt='Картинка из галереи' title='$delimg' /><br /><button onclick='copyToClipboard(\"".$file."\");'>🔗".$delimg."</button> <a rel='nofollow' href='?delimg=$delimg' class='imgdellink' onclick=\"return confirm('Вы уверены?');\">Уд.</a></td>";
 
             // открывать новую строку только если это НЕ последний элемент
             if ($i % $cols === 0 && $i < $total) {
