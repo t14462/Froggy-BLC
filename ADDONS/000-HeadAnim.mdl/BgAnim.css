@@ -33,3 +33,32 @@ header strong {
 
     box-shadow: 5px 5px 15px 5px #000000;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+td.gallery-img::before, td.gallery-fill::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: url("sea.webp");
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center;
+    opacity: 0.25;
+    filter: contrast(75%);
+    z-index: 0;
+}
+
+td.gallery-img > img, td.gallery-fill > span {
+    position: relative;
+    z-index: 1;
+}

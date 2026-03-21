@@ -1722,15 +1722,15 @@ function gallery() {
     
     table.gallery  { width: 100%; table-layout: fixed; border: none; border-spacing: 1rem; border-collapse: separate;}
 
-    td.gallery-img, td.gallery-fill { width: calc(100% / $cols); background: #BBB; border: none; margin: 0; padding: 0; }
+    td.gallery-img, td.gallery-fill { position: relative; width: calc(100% / $cols); background: #CCC; border: none; margin: 0; padding: 0; }
 
-    td.gallery-img {position: relative; padding-bottom: 1em;}
+    td.gallery-img {padding-bottom: 1em;}
 
     td.gallery-img button { display: inline-block; max-width: calc(100% - 2em); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; position: absolute; left: 0; bottom: 0;}
 
     td.gallery-img a {display: inline-block; position: absolute; right: 0; bottom: 0;}
 
-    td.gallery-fill {text-align: center; font-size: 10em; color: #AAA;}
+    td.gallery-fill {text-align: center; font-size: 10em; color: #999;}
 
     </style>";
 
@@ -1755,7 +1755,7 @@ function gallery() {
         // добить последнюю строку пустыми ячейками только если нужно
         if ($i % $cols !== 0) {
             $repeatCount = $cols - ($i % $cols);
-            $content .= str_repeat("<td class='gallery-fill'>✕</td>", $repeatCount);
+            $content .= str_repeat("<td class='gallery-fill'><span>✕</span></td>", $repeatCount);
         }
 
         $content .= "</tr></table>";
