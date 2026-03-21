@@ -1730,7 +1730,7 @@ function gallery() {
 
     td.gallery-img a {display: inline-block; position: absolute; right: 0; bottom: 0;}
 
-    td.gallery-fill {text-align: center; font-size: 6em; color: #888;}
+    td.gallery-fill {text-align: center; font-size: 10em; color: #888;}
 
     </style>";
 
@@ -1755,7 +1755,7 @@ function gallery() {
         // добить последнюю строку пустыми ячейками только если нужно
         if ($i % $cols !== 0) {
             $repeatCount = $cols - ($i % $cols);
-            $content .= str_repeat("<td class='gallery-fill'>X</td>", $repeatCount);
+            $content .= str_repeat("<td class='gallery-fill'>✕</td>", $repeatCount);
         }
 
         $content .= "</tr></table>";
