@@ -1730,7 +1730,7 @@ function gallery() {
 
     td.gallery-img a {display: inline-block; position: absolute; right: 0; bottom: 0;}
 
-    td.gallery-fill {text-align: center; font-size: 10em; color: #888;}
+    td.gallery-fill {text-align: center; font-size: 10em; color: #AAA;}
 
     </style>";
 
