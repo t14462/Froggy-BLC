@@ -1720,9 +1720,13 @@ function gallery() {
 
     $head .= "<style>
     
-    table.gallery  { width: 100%; border: none; border-spacing: .75rem; border-collapse: separate;}
-    td.gallery-img { width: ".floor(100 / $cols)."%; background: #BBB; border: none; padding: 0; }
-    td.gallery-img button { max-width: calc(100% - 2em); white-space: nowrap; overflow-x: hidden; }
+    table.gallery  { width: 100%; table-layout: fixed; border: none; border-spacing: .75rem; border-collapse: separate;}
+
+    td.gallery-img, td.gallery-fill { width: calc(100% / $cols); background: #BBB; border: none; margin: 0; padding: 0; }
+
+    td.gallery-img button { max-width: calc(100% - 2em); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
+
+    td.gallery-fill {text-align: center; font-size: 6em; color: #888;}
 
     </style>";
 
@@ -1734,7 +1738,7 @@ function gallery() {
 
         foreach ($selectedimg as $file) {
             $i++;
-            $delimg = explode("/", $file)[2];
+            $delimg = basename(str_replace('\\', '/', $file));
 
             $content .= "<td class='gallery-img'><img loading='lazy' src=\"".$file."\" alt='Картинка из галереи' title='$delimg' /><br /><button onclick='copyToClipboard(\"".$file."\");'>🔗".$delimg."</button> <a rel='nofollow' href='?delimg=$delimg' class='imgdellink' onclick=\"return confirm('Вы уверены?');\">Уд.</a></td>";
 
@@ -1747,7 +1751,7 @@ function gallery() {
         // добить последнюю строку пустыми ячейками только если нужно
         if ($i % $cols !== 0) {
             $repeatCount = $cols - ($i % $cols);
-            $content .= str_repeat("<td> </td>", $repeatCount);
+            $content .= str_repeat("<td class='gallery-fill'>X</td>", $repeatCount);
         }
 
         $content .= "</tr></table>";
