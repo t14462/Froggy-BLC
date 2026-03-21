@@ -1720,11 +1720,15 @@ function gallery() {
 
     $head .= "<style>
     
-    table.gallery  { width: 100%; table-layout: fixed; border: none; border-spacing: .75rem; border-collapse: separate;}
+    table.gallery  { width: 100%; table-layout: fixed; border: none; border-spacing: 1rem; border-collapse: separate;}
 
     td.gallery-img, td.gallery-fill { width: calc(100% / $cols); background: #BBB; border: none; margin: 0; padding: 0; }
 
-    td.gallery-img button { max-width: calc(100% - 2em); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
+    td.gallery-img {position: relative; padding-bottom: 1em;}
+
+    td.gallery-img button { display: inline-block; max-width: calc(100% - 2em); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; position: absolute; left: 0; bottom: 0;}
+
+    td.gallery-img a {display: inline-block; position: absolute; right: 0; bottom: 0;}
 
     td.gallery-fill {text-align: center; font-size: 6em; color: #888;}
 
