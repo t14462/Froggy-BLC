@@ -1375,7 +1375,7 @@ figure.fig-img {
     text-align: center;
     max-width: 47%;
     border: 1px solid #ccc;
-    padding: 0.5em;
+    padding-bottom: 0.5em;
     background: #fafafa;
     border-radius: 6px;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
