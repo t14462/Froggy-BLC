@@ -1385,7 +1385,8 @@ figure.fig-img img {
 figure.fig-img figcaption {
     display: block;
     clear: both;
-    margin-top: 0.5em;
+    margin-left: 0.5em;
+    margin-right: 0.5em;
     font-size: 0.9em;
     color: #555;
     font-style: italic;
