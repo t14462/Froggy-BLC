@@ -708,7 +708,7 @@ main img {
     object-fit: contain;
     max-width: calc(50% - 1rem) !important;
     height: auto !important;
-    margin: .5rem;
+    padding: .5rem;
     image-rendering: smooth;
     cursor: url('hover.cur.svg'), pointer;
 }
@@ -1435,10 +1435,13 @@ iframe[src$="visitors.php"] {
 
 .gallery-img img {
 
+    display: block;
     clear: both !important;
     cursor: url('hover.cur.svg'), pointer;
     max-width: calc(100% - 1rem) !important;
     float: none !important;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .gallery-img button {

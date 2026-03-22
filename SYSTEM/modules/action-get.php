@@ -1724,7 +1724,7 @@ function gallery() {
 
     td.gallery-img, td.gallery-fill { position: relative; width: calc(100% / $cols); background: #CCC; border: none; margin: 0; padding: 0; }
 
-    td.gallery-img {padding-bottom: 1em;}
+    td.gallery-img {padding-bottom: 1.25em;}
 
     td.gallery-img button { display: inline-block; max-width: calc(100% - 2em); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; position: absolute; left: 0; bottom: 0;}
 
@@ -1744,7 +1744,7 @@ function gallery() {
             $i++;
             $delimg = basename(str_replace('\\', '/', $file));
 
-            $content .= "<td class='gallery-img'><img loading='lazy' src=\"".$file."\" alt='Картинка из галереи' title='$delimg' /><br /><button onclick='copyToClipboard(\"".$file."\");'>🔗".$delimg."</button> <a rel='nofollow' href='?delimg=$delimg' class='imgdellink' onclick=\"return confirm('Вы уверены?');\">Уд.</a></td>";
+            $content .= "<td class='gallery-img'><img loading='lazy' src=\"".$file."\" alt='Картинка из галереи' title='$delimg' /><button onclick='copyToClipboard(\"".$file."\");'>🔗".$delimg."</button> <a rel='nofollow' href='?delimg=$delimg' class='imgdellink' onclick=\"return confirm('Вы уверены?');\">Уд.</a></td>";
 
             // открывать новую строку только если это НЕ последний элемент
             if ($i % $cols === 0 && $i < $total) {
