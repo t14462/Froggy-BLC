@@ -1375,7 +1375,7 @@ figure.fig-img {
 
 figure.fig-img img {
     float: none !important;
-    max-width: 100% !important;
+    max-width: calc(100% - 1rem) !important;
     height: auto;
     display: block;
     margin: 0 auto;
