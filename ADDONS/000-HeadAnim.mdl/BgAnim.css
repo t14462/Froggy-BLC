@@ -53,8 +53,8 @@ td.gallery-img::before, td.gallery-fill::before {
     background-repeat: no-repeat;
     background-size: cover;
     background-position: center;
-    opacity: 0.25;
-    filter: contrast(75%);
+    opacity: 0.24;
+    filter: contrast(72%);
     z-index: 0;
 }
 
