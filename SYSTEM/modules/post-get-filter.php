@@ -67,6 +67,8 @@ if(in_array($methods, ['POST', 'GET'], true)) {
 
                 "dbtimestamp" => FILTER_VALIDATE_FLOAT,
 
+                "pobyava"  => FILTER_DEFAULT,
+
 
             ] ) ?? [];
 

@@ -62,3 +62,25 @@ td.gallery-img > img, td.gallery-fill > span {
     position: relative;
     z-index: 1;
 }
+
+
+
+
+
+
+
+
+#obyava {
+
+  border: .5rem lightgray outset;
+  background-color: darkgray;
+  padding: 1rem;
+  height: 6rem;
+  overflow-y: scroll;
+}
+
+#obyavadiv {
+
+  white-space: nowrap;
+  text-align: right;;
+}

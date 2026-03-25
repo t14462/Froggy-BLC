@@ -2215,3 +2215,38 @@ function saveTplSess() {
 
     refreshhandle(0, "?".$_SERVER['QUERY_STRING'], false);
 }
+
+
+
+
+
+
+
+function pobyava() {
+
+    global $safePost, $checkpermission, $errmsg;
+
+    if($checkpermission < 3) {
+
+        $errmsg = pforbidden();
+
+    } else {
+
+        $obstring = $safePost['pobyava'];
+
+        ensure_html_purifier_loaded();
+
+        $config = HTMLPurifier_Config::createDefault();
+        $config->set('Core.Encoding', 'UTF-8');
+        $config->set('HTML.Doctype', 'XHTML 1.1');
+        $config->set('HTML.TidyLevel', 'heavy'); // all changes, minus...
+        $config->set('HTML.TidyRemove', 'br@clear');
+
+        $config->set('HTML.ForbiddenElements', 'h1,h2,h3,h4,h5,h6');
+
+        $purifier = new HTMLPurifier($config);
+        $obstring = $purifier->purify($obstring);
+
+        putFileOrDie("DATABASE/obyava.txt", $obstring);
+    }
+}

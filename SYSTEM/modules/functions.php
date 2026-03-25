@@ -3190,3 +3190,37 @@ function tpl_nobr(string $text): string
 
 
 
+
+
+function obyava() {
+
+    global $checkpermission;
+
+    $obfile = "DATABASE/obyava.txt";
+
+    $br = "<br /><br /><br />";
+    $obstring = "";
+
+    if (is_file($obfile) && filesize($obfile) > 4) {
+
+        $obstring = getFileOrDie($obfile);
+        $obstring = typograph_guillemets($obstring);
+        $obstring = ru_nbsp_typograf($obstring);
+        $obstring = "<aside id='obyava'>$obstring</aside>";
+
+    } else {
+
+        $br = "";
+        $obstring = "<hr />";
+    }
+
+    if ($checkpermission > 2) {
+
+        $obstring .= "<div id='obyavadiv'><a href='?gobyava=1'>редактировать объявление</a></div>";
+        $obstring .= ($br ? "" : "<br /><br /><br />");
+    }
+
+    $obstring .= $br;
+
+    return $obstring;
+}

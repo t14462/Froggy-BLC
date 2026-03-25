@@ -2136,4 +2136,27 @@ function commPgCntRecalc() {
 
 
 
+function gobyava() {
 
+    global $content, $checkpermission, $errmsg;
+
+    if($checkpermission < 3) {
+
+        $errmsg = pforbidden();
+
+    } else {
+
+        $text = (string)@file_get_contents("DATABASE/obyava.txt");
+
+        $text = str_ireplace("<textarea", "&lt;textarea", $text);
+        $text = str_ireplace("</textarea", "&lt;/textarea", $text);
+        $text = str_ireplace("textarea>", "textarea&gt;", $text);
+
+        $text = escape_amp_txtarea($text);
+
+        $content = "<form method='post'>
+        <textarea name='pobyava'>$text</textarea>
+        <input type='submit' value='Сохранить' />
+        </form>";
+    }
+}

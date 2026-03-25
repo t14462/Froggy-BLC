@@ -24,6 +24,8 @@ function detectaction(){
         isset($safeGet['cmove']) ||
         isset($safeGet['commpgcntrecalc']) ||
         isset($safeGet['addpage']) ||
+        isset($safeGet['gobyava']) ||
+        isset($safePost['pobyava']) ||
         /* isset($safePost['title'], $safePost['h'], $safePost['textedit']) || */
         
         // Управление страницами
@@ -110,6 +112,14 @@ if(!$checkpermission && detectaction()) {
 } elseif( /* $checkpermission && */ isset($safeGet["commpgcntrecalc"])) {
 
     commPgCntRecalc();
+
+} elseif( /* $checkpermission && */ isset($safeGet["gobyava"])) {
+
+    gobyava();
+
+} elseif( /* $checkpermission && */ isset($safePost["pobyava"])) {
+
+    pobyava();
 
 
 ##################################################

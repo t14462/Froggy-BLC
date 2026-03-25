@@ -82,7 +82,7 @@ $body .= "
 
 
 
-$stoolbox = "<div id='system-links'><a target='_blank' href='?".explode("&", $_SERVER['QUERY_STRING'])[0]."&amp;print=1' rel='nofollow' title='Версия для печати'>🖨️</a> <a target='_blank' href='?gallery=-1' title='Галерея'>🖼️</a> <a target='_blank' href='?dlfiles=-1' title='Файлы'>💾</a> ".logInOutLink('🔐', '🔚')." <a href='?".explode("&", $_SERVER['QUERY_STRING'])[0]."&amp;edit=1' rel='nofollow' title='Редактировать эту страницу' style='margin-left: .75em;'>✏️</a> <a target='_blank' href='?log=-1' rel='nofollow' title='Бортовой Журнал'>📄</a></div><hr />";
+$stoolbox = "<div id='system-links'><a target='_blank' href='?".explode("&", $_SERVER['QUERY_STRING'])[0]."&amp;print=1' rel='nofollow' title='Версия для печати'>🖨️</a> <a target='_blank' href='?gallery=-1' title='Галерея'>🖼️</a> <a target='_blank' href='?dlfiles=-1' title='Файлы'>💾</a> ".logInOutLink('🔐', '🔚')." <a href='?".explode("&", $_SERVER['QUERY_STRING'])[0]."&amp;edit=1' rel='nofollow' title='Редактировать эту страницу' style='margin-left: .75em;'>✏️</a> <a target='_blank' href='?log=-1' rel='nofollow' title='Бортовой Журнал'>📄</a></div>".obyava();
 
 
 $menubar = '
