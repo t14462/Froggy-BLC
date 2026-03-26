@@ -3259,7 +3259,7 @@ function obyava() {
         $obstring = typograph_guillemets($obstring);
         $obstring = ru_nbsp_typograf($obstring);
 
-        $obstring = "<br /><aside id='obyava'>$obstring</aside>";
+        $obstring = "<aside id='obyava'>$obstring</aside>";
 
     } else {
 
