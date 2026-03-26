@@ -3270,7 +3270,10 @@ function obyava() {
     if ($checkpermission > 2) {
 
         $obstring .= "<div id='obyavadiv'><a href='?gobyava=1'>редактировать объявление</a></div>";
-        $obstring .= ($br ? "" : "<br /><br />");
+
+        // $obstring .= ($br ? "" : "<br /><br />");
+
+        $br = "<br /><br />";
     }
 
     $obstring .= $br;
