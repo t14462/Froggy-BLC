@@ -2248,5 +2248,7 @@ function pobyava() {
         $obstring = $purifier->purify($obstring);
 
         putFileOrDie("DATABASE/obyava.txt", $obstring);
+
+        refreshhandle(0, "?", false);
     }
 }
