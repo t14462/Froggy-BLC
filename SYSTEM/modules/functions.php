@@ -3204,8 +3204,61 @@ function obyava() {
     if (is_file($obfile) && filesize($obfile) > 4) {
 
         $obstring = getFileOrDie($obfile);
+
+        $obstring = normalize_entities_my($obstring);
+
         $obstring = typograph_guillemets($obstring);
         $obstring = ru_nbsp_typograf($obstring);
+
+        $obstring = str_ireplace(
+            [
+                // Именованные сущности
+                '&lt;', '&gt;', '&quot;', '&#039;', '&apos;', '&amp;',
+                
+                // Десятичные числовые
+                '&#60;',  // <
+                '&#62;',  // >
+                '&#34;',  // "
+                '&#39;',  // '
+                '&#38;',  // &
+                
+                // Шестнадцатеричные числовые
+                '&#x3C;', '&#x3c;', // <
+                '&#x3E;', '&#x3e;', // >
+                '&#x22;',           // "
+                '&#x27;',           // '
+                '&#x26;'            // &
+            ],
+            [
+                '&@lt;', '&@gt;', '&@quot;', '&@apos;', '&@apos;', '&@amp;',
+                
+                '&@lt;',
+                '&@gt;',
+                '&@quot;',
+                '&@apos;',
+                '&@amp;',
+                
+                '&@lt;', '&@lt;',
+                '&@gt;', '&@gt;',
+                '&@quot;',
+                '&@apos;',
+                '&@amp;'
+            ],
+            $obstring
+        );
+
+        $html = str_get_html($obstring, false, true, "UTF-8", false) or die("XSS?.. Пустой или битый HTML.");
+
+        $html = replaceSemanticSpans($html);
+
+        $obstring = $html->save();
+
+        $obstring = str_ireplace(
+            ['&@lt;', '&@gt;', '&@quot;', '&@apos;', '&@amp;'],
+            ['&lt;',  '&gt;',  '&quot;',  '&#039;',   '&amp;'],
+            $obstring
+        );
+
         $obstring = "<aside id='obyava'>$obstring</aside>";
 
     } else {
