@@ -3207,9 +3207,6 @@ function obyava() {
 
         $obstring = normalize_entities_my($obstring);
 
-        $obstring = typograph_guillemets($obstring);
-        $obstring = ru_nbsp_typograf($obstring);
-
         $obstring = str_ireplace(
             [
                 // Именованные сущности
@@ -3258,6 +3255,9 @@ function obyava() {
             ['&lt;',  '&gt;',  '&quot;',  '&#039;',   '&amp;'],
             $obstring
         );
+
+        $obstring = typograph_guillemets($obstring);
+        $obstring = ru_nbsp_typograf($obstring);
 
         $obstring = "<aside id='obyava'>$obstring</aside>";
 
