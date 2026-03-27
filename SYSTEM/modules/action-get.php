@@ -2155,7 +2155,7 @@ function gobyava() {
         $text = escape_amp_txtarea($text);
 
         $content = "<form method='post'>
-        <textarea name='pobyava'>$text</textarea>
+        <textarea name='pobyava' rows='20'>$text</textarea>
         <input type='submit' value='Сохранить' />
         </form>";
     }
