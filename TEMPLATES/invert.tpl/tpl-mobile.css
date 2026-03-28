@@ -15,17 +15,25 @@ img, iframe, ul {
 
 html, img, video, iframe, .a1, .a2, .a3, .a4 {
     
-    filter: invert(1);
+    filter: invert(1) hue-rotate(180deg);
 }
 
 header, .infobox, .ibox-blue, .ibox-green, .ibox-red, #system-links, .lightbox-overlay {
 
-    filter: brightness(66%) invert(1);
+    filter: brightness(70%) invert(1) hue-rotate(180deg);
+
+    color: #FFF;
 }
 
 .infobox img, .ibox-blue img, .ibox-green img, .ibox-red img, .lightbox-image, .lightbox-overlay img {
 
     filter: brightness(100%) invert(0);
+}
+
+
+body > aside a, main > article a {
+
+    filter: brightness(150%) contrast(50%);
 }
 
 
@@ -51,6 +59,8 @@ html {
     background-image: url('paper-min.png');
     background-color: #F5F5F5;
     scroll-behavior: smooth;
+
+    color: #444;
 }
 
 .nobr {
