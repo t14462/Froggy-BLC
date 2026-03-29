@@ -18,12 +18,19 @@ html, img, video, iframe, .a1, .a2, .a3, .a4 {
     filter: invert(1) hue-rotate(180deg);
 }
 
-header, .infobox, .ibox-blue, .ibox-green, .ibox-red, #system-links, .lightbox-overlay {
+header, .infobox, .ibox-blue, .ibox-green, .ibox-red, #system-links {
 
     filter: brightness(70%) invert(1) hue-rotate(180deg);
 
     color: #FFF;
 }
+
+
+.lightbox-overlay {
+
+    filter: brightness(100%) invert(1) hue-rotate(180deg);
+}
+
 
 .infobox img, .ibox-blue img, .ibox-green img, .ibox-red img, .lightbox-image, .lightbox-overlay img {
 
