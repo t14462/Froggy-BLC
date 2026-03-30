@@ -2175,6 +2175,8 @@ function registerp() {
 
         $userhash = hash('sha512', $username."@".$password1."@".generateSalt($username, $password1).$mySalt);
 
+        $username = str_replace("&", "&amp;", $username);
+
         $content .= "
         <p>Добавьте в <strong>cred.php</strong> строчку:</p>
         <p><code style='display: inline-block; width: 100%; padding: .75rem; font-size: 1.4rem; text-wrap: nowrap; overflow-x: scroll;'>\$cred['$username'] = \"<strong style='color: red;'>X</strong>&lt;!!!&gt;$userhash\";</code></p>

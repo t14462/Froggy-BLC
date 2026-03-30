@@ -788,6 +788,10 @@ function array_insert_m(&$array, $position, $insert) {
 
 function filterUsername($username) {
 
+    // IGNOR THEM
+    $username = str_replace(["&#039;", "&apos;", " &amp; ", "&amp;"], "", $username); 
+
+
     $filteredUsername = emojiToHtmlEntities($username);
 
     $filteredUsername = remove_entities($filteredUsername);
@@ -2077,8 +2081,11 @@ function wrap_images_with_figure(simple_html_dom $html): simple_html_dom {
     foreach ($images as $img) {
         $img->setAttribute('loading', 'lazy');
 
+        $fname = $img->getAttribute('src');
+        $fname = basename(str_replace('\\', '/', $fname));
+
         $alt = mb_superTrim(normalize_entities_my($img->getAttribute('alt') ?? ''));
-        if ($alt !== '') {
+        if ($alt !== '' && $alt !== $fname) {
             $imgHtml = $img->outertext;
             // $altEscaped = mb_superTrim(htmlspecialchars(strip_tags($alt), ENT_QUOTES | ENT_HTML5 | ENT_SUBSTITUTE, 'UTF-8', false));
             // $altEscaped = str_ireplace('&amp;@', '&', $altEscaped);
