@@ -8,13 +8,9 @@ if(!defined('SECURE_ACCESS')) { die('Direct access not permitted'); }
 ################################################
 ################################################
 
-
 if($mainPageTitle) {
-    $mainPageTitle = $mainPageTitle." — ";
+    $mainPageTitle .= " — ";
 }
-
-
-
 
 $head .= '
 <meta charset="UTF-8" />
@@ -38,13 +34,7 @@ if($ispageexist) {
     $head .= "\n".'<meta name="robots" content="noindex, nofollow" />'."\n";
 }
 
-
-
-
 // $jstime1 = filemtime("SYSTEM/JSLIB/main-script.js");
-
-
-
 
 $head .= '
 <link href="'.skipCache("favicon.ico").'" rel="icon" type="image/x-icon" />
@@ -58,8 +48,6 @@ $head .= '
 <script>hljs.highlightAll();</script>
 '.prevnextpage();
 
-
-
 if(!empty($ProjIdRevisionMe)) {
     $body .= "
     <script>
@@ -72,18 +60,14 @@ if(!empty($ProjIdRevisionMe)) {
     };
     </script>
     <script src=\"https://widget.revisionme.com/app.js\" defer=\"defer\" id=\"rm_app_script\"></script>";
-
 }
-
-
 
 $body .= "
 <header aria-label='Froggy-BLC'><strong><a href='".$url."' title='Book-Like CMS'>Froggy-BLC</a></strong><em>Книжная Система Сайта</em></header>";
 
-
-
-$stoolbox = "<div id='system-links'><a target='_blank' href='?".explode("&", $_SERVER['QUERY_STRING'])[0]."&amp;print=1' rel='nofollow' title='Версия для печати'>🖨️</a> <a target='_blank' href='?gallery=-1' title='Галерея'>🖼️</a> <a target='_blank' href='?dlfiles=-1' title='Файлы'>💾</a> ".logInOutLink('🔐', '🔚')." <a href='?".explode("&", $_SERVER['QUERY_STRING'])[0]."&amp;edit=1' rel='nofollow' title='Редактировать эту страницу' style='margin-left: .75em;'>✏️</a> <a target='_blank' href='?log=-1' rel='nofollow' title='Бортовой Журнал'>📄</a></div>".obyava();
-
+$queryString = $_SERVER['QUERY_STRING'] ?? '';
+$queryBase = explode("&", $queryString)[0];
+$stoolbox = "<div id='system-links'><a target='_blank' href='?".$queryBase."&amp;print=1' rel='nofollow' title='Версия для печати'>🖨️</a> <a target='_blank' href='?gallery=-1' title='Галерея'>🖼️</a> <a target='_blank' href='?dlfiles=-1' title='Файлы'>💾</a> ".logInOutLink('🔐', '🔚')." <a href='?".$queryBase."&amp;edit=1' rel='nofollow' title='Редактировать эту страницу' style='margin-left: .75em;'>✏️</a> <a target='_blank' href='?log=-1' rel='nofollow' title='Бортовой Журнал'>📄</a></div>".obyava();
 
 $menubar = '
 
@@ -92,7 +76,6 @@ $menubar = '
   <ol id="menuSearchResults"></ol>
 </div>
 '.$menubar;
-
 
 $footer = "\n<em>Автор: Тимофеев Святослав aka Paulter Gates, PhD.<br />
 Система разработана при участии ChatGPT от OpenAI.<br />

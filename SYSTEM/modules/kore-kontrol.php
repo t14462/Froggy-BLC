@@ -6,8 +6,6 @@ if(!defined('SECURE_ACCESS')) { die('Direct access not permitted'); }
 ################################################
 ################################################
 
-
-
 $admpgctl = "";
 
 #$idcache    = Array();
@@ -16,18 +14,9 @@ $admpgctl = "";
 #$mydump = Array();
 #$mydump2 = "";
 
-
-
-
-
-
-
-
-
-
 $chTimeTOC       = filemtimeMy("DATABASE/DB/DB-TOC-Cache.txt");
 
-$chTimeSEO       = filemtimeMy("DATABASE/DB/SEO-Cache.txt"   );
+$chTimeSEO       = filemtimeMy("DATABASE/DB/SEO-Cache.txt");
 
 $chTimeSitemap1  = filemtimeMy("sitemap.txt");
 
@@ -36,12 +25,10 @@ $chTimeSitemap2  = filemtimeMy("sitemap.xml");
 if( $chTimeTOC      !== $chTimeDB ||
     $chTimeSEO      !== $chTimeDB ||
     $chTimeSitemap1 !== $chTimeDB ||
-    $chTimeSitemap2 !== $chTimeDB
-    ) {
+    $chTimeSitemap2 !== $chTimeDB) {
 
     refreshCaches();
 }
-
 
 $chTimeMenu = filemtimeMy("DATABASE/DB/MenuCache.txt");
 
@@ -49,12 +36,10 @@ if( $chTimeMenu < $chTimeDB && is_file("DATABASE/DB/MenuCache.txt")) {
 
     // rename("DATABASE/DB/MenuCache.txt", "DATABASE/DB/MenuCache.txt.del");
 
-    unlink("DATABASE/DB/MenuCache.txt");
+    if(is_file("DATABASE/DB/MenuCache.txt")) {
+        unlink("DATABASE/DB/MenuCache.txt");
+    }
 }
-
-
-
-
 
 /*
 if (file_exists("DATABASE/DB/data.html.lock")) {
@@ -64,10 +49,6 @@ if (file_exists("DATABASE/DB/data.html.lock")) {
     exit;
 }
 */
-
-
-
-
 
 if(    is_file("DATABASE/DB/DB-TOC-Cache.txt")
     /// && !is_file("DATABASE/DB/DB-TOC-Cache.txt.lock")
@@ -86,8 +67,6 @@ if(    is_file("DATABASE/DB/DB-TOC-Cache.txt")
     $seoNumEncode = getFileOrDie('DATABASE/DB/SEO-Cache.txt');
 
     $seoNumEncode = unserialize($seoNumEncode, ['allowed_classes' => false]);
-
-
 
     while($i < count($mydump2)) {
 
@@ -117,9 +96,7 @@ if(    is_file("DATABASE/DB/DB-TOC-Cache.txt")
             */
             ##################################
 
-
             #$num      = $mydump2[0 + $i];
-
 
             #$byteId   = $mydump2[2 + $i]; #done
 
@@ -145,29 +122,23 @@ if(    is_file("DATABASE/DB/DB-TOC-Cache.txt")
 
         $pgaddrcache[] = $mydump2[3 + $i];
 
-
-
-
         $i = $i + 6;
     }
 
+    $queryString = $_SERVER['QUERY_STRING'] ?? '';
+    $queryBase = explode("&", $queryString)[0];
 
-
-
-    if(in_array('?'.explode("&", $_SERVER['QUERY_STRING'])[0], $pgaddrcache, true)) {
+    if(in_array('?'.$queryBase, $pgaddrcache, true)) {
         $ispageexist = true;
     } else {
         $ispageexist = false;
     }
 
-
-
-
     $out = getFileOrDie('DATABASE/DB/MenuCache.txt');
 
     if($ispageexist) {
 
-        $tmp = explode("&", $_SERVER['QUERY_STRING'])[0];
+        $tmp = $queryBase;
 
         $out = str_replace("<a href='?$tmp'", "<a href='?$tmp' class='active' aria-current='page'", $out);
 
@@ -178,11 +149,6 @@ if(    is_file("DATABASE/DB/DB-TOC-Cache.txt")
 
     $menubar = $out;
 
-
-
-
-
-
 } else {
 
     $file = openFileOrDie("DATABASE/DB/data.html", "rb");
@@ -191,15 +157,13 @@ if(    is_file("DATABASE/DB/DB-TOC-Cache.txt")
 
     $mCACHE = $out = "<ul id='sitemenu'>";
 
-
     // while(!$file->eof()) {
 
-    foreach ($file as $line) {
+    foreach($file as $line) {
 
         // $line = $file->fgets();
         $line2 = mb_substr($line, 0, 300);
         if(preg_grep('/\A[a-f0-9]{40}<head[1-6]/ui', explode("\n", $line2))) {
-
 
             $articleSize = mb_strlen($line, '8bit');
             $byteId = $file->ftell() - $articleSize;
@@ -211,7 +175,6 @@ if(    is_file("DATABASE/DB/DB-TOC-Cache.txt")
             $numdump    = $num;
 
             preg_match('#\A([a-f0-9]{40})<head([1-6])>(.+?)</head\2>(\d+)<!1!>(\d+)<!2!>#u', $line2, $line2);
-
 
             $iddump    = $idcache[] = $line2[1];
 
@@ -246,10 +209,6 @@ if(    is_file("DATABASE/DB/DB-TOC-Cache.txt")
 
             if($num > $prev) {
 
-
-
-
-
                 if($checkpermission) {
 
                     $addpageafter = "<a href='$addr&addpage=$count-$num' title='Создать текущ. уровень'>+</a> ";
@@ -264,8 +223,6 @@ if(    is_file("DATABASE/DB/DB-TOC-Cache.txt")
 
                     $addlasth1 = " <a class='menu-icon big addpglast' style='clear: both' href='$addr&addpage=last' title='Добавить раздел'>+</a>";
                 }
-
-
 
                 $gCC = getCommCount($iddump);
 
@@ -293,11 +250,6 @@ if(    is_file("DATABASE/DB/DB-TOC-Cache.txt")
 
                 $query[$addr] = $byteId;
 
-
-
-
-
-
                 if($checkpermission) {
 
                     $addpageafter = "<a href='$addr&addpage=$count-$num' title='Создать текущ. уровень'>+</a> ";
@@ -312,11 +264,6 @@ if(    is_file("DATABASE/DB/DB-TOC-Cache.txt")
 
                     $addlasth1 = " <a class='menu-icon big addpglast' style='clear: both' href='$addr&addpage=last' title='Добавить раздел'>+</a>";
                 }
-
-
-
-
-
 
                 switch ($i) {
                     case 0:
@@ -345,7 +292,6 @@ if(    is_file("DATABASE/DB/DB-TOC-Cache.txt")
                         break;
                 }
 
-
                 $gCC = getCommCount($iddump);
 
                 $out .= "\n<li>".$admpgctl."<a href='".$addr."' itemprop='name'>".$line2."</a>".$gCC;
@@ -353,22 +299,15 @@ if(    is_file("DATABASE/DB/DB-TOC-Cache.txt")
                 $mCACHE .= "\n<li><a href='".$addr."' itemprop='name'>".$line2."</a>".$gCC;
             }
 
-
-
-
-
             $sitemaptxt[] = $url.$addr;
 
             $txtnamebuf[] = $txtarray;
 
             $pgaddrcache[] = $addr;
 
-
-
             ########################################
             ########################################
             ########################################
-
 
             $mydump[] = $numdump;    # 0 done
 
@@ -386,7 +325,6 @@ if(    is_file("DATABASE/DB/DB-TOC-Cache.txt")
 
             # $mydump[] = $count;      # 7 #done
 
-
             ########################################
             ########################################
             ########################################
@@ -399,13 +337,9 @@ if(    is_file("DATABASE/DB/DB-TOC-Cache.txt")
 
     $mCACHE .= str_repeat("</li></ul>", $num);
 
-
     ########################################
     ########################################
     ########################################
-
-
-
 
     if(!is_file("DATABASE/DB/DB-TOC-Cache.txt")) {
 
@@ -421,9 +355,6 @@ if(    is_file("DATABASE/DB/DB-TOC-Cache.txt")
         }
     }
 
-
-
-
     if(!is_file("DATABASE/DB/SEO-Cache.txt")) {
 
         $seodumptxt = serialize($seoNumEncode);
@@ -438,9 +369,6 @@ if(    is_file("DATABASE/DB/DB-TOC-Cache.txt")
         }
     }
 
-
-
-
     if(!is_file("DATABASE/DB/MenuCache.txt")) {
 
         $mCACHE = "<nav itemscope='itemscope' itemtype='https://schema.org/SiteNavigationElement'>".$mCACHE."</nav>";
@@ -454,28 +382,23 @@ if(    is_file("DATABASE/DB/DB-TOC-Cache.txt")
             /// touchMy("DATABASE/DB/MenuCache.txt", $chTimeDB);
     }
 
-
-
     ########################################
     ########################################
     ########################################
     ########################################
 
+    $queryString = $_SERVER['QUERY_STRING'] ?? '';
+    $queryBase = explode("&", $queryString)[0];
 
-
-
-    if(in_array('?'.explode("&", $_SERVER['QUERY_STRING'])[0], $pgaddrcache, true)) {
+    if(in_array('?'.$queryBase, $pgaddrcache, true)) {
         $ispageexist = true;
     } else {
         $ispageexist = false;
     }
 
-
-
-
     if($ispageexist) {
 
-        $tmp = explode("&", $_SERVER['QUERY_STRING'])[0];
+        $tmp = $queryBase;
 
         $out = str_replace("<a href='?$tmp'", "<a href='?$tmp' class='active' aria-current='page'", $out);
 
@@ -489,41 +412,6 @@ if(    is_file("DATABASE/DB/DB-TOC-Cache.txt")
     $menubar = $out;
 
 }
-
-
-
-/*
-function sitemapflush() {
-
-    global $idcache, $url;
-
-    $sitemaptxtvar = "";
-
-    foreach($idcache as $line) {
-
-        $sitemaptxtvar .= $url."?".$line."&permalink=1\n";
-    }
-
-
-
-    if(!dbprep("sitemap.txt", "")) return false;
-
-    $filedest = fopenOrDie("sitemap.txt.new." . getmypid(), "r+");
-        fwrite($filedest, $sitemaptxtvar);
-        fclose($filedest);
-    
-
-    dbdone("sitemap.txt");
-
-    mylog("<strong style='color:DarkMagenta'>Карта сайта пересоздана.</strong>");
-}
-*/
-
-
-
-
-
-
 
 function sitemapflush() {
 
@@ -547,12 +435,6 @@ function sitemapflush() {
 
     // mylog("<strong style='color:DarkMagenta'>Карта сайта пересоздана.</strong>");
 }
-
-
-
-
-
-
 
 function sitemapflushXml() {
 
@@ -581,7 +463,6 @@ function sitemapflushXml() {
 
     $sitemapxmlvar .= "</urlset>";
 
-
     // $sitemaptxtvar = join("\n", $sitemaptxt);
 
     dbprepCache("sitemap.xml");
@@ -601,13 +482,6 @@ function sitemapflushXml() {
     // mylog("<strong style='color:DarkMagenta'>Карта сайта XML пересоздана.</strong>");
 }
 
-
-
-
-
-
-
-
 // $pageMenuNum = (int)explode("/",$_SERVER['QUERY_STRING'])[0];
 
 // $pageMenuNum = seoLinkDecode($pageMenuNum);
@@ -617,8 +491,6 @@ $pageMenuNum = seoNumGet();
 if( /* !is_int($pageMenuNum) || */ $pageMenuNum < 1 || $pageMenuNum > count($sitemaptxt)) {
     $pageMenuNum = (int)1;
 }
-
-
 
 function prevnextpage() {
 
@@ -638,8 +510,6 @@ function prevnextpage() {
 
     return $linkrelout;
 }
-
-
 
 function prevnextslider() {
 
@@ -664,25 +534,14 @@ function prevnextslider() {
     return $linkrelout;
 }
 
-
-
-
-
-
-
-
 ##############################################################
 ##############################################################
 ##############################################################
 ##############################################################
 ##############################################################
 
-
-
-
-
-
-if(explode("&", $_SERVER['QUERY_STRING'])[0] == "" || $_SERVER['QUERY_STRING'] == "leaveedit=1") {
+$queryString = $_SERVER['QUERY_STRING'] ?? '';
+if(explode("&", $queryString)[0] == "" || $queryString == "leaveedit=1") {
     $mainlink = $sitemaptxt[0];
 
     header("Location: ".$mainlink,true,301);
@@ -690,29 +549,12 @@ if(explode("&", $_SERVER['QUERY_STRING'])[0] == "" || $_SERVER['QUERY_STRING'] =
 
 }
 
-
-
-
-
-
-
-
-
-
 if(!is_file("sitemap.txt")) {
 
     sitemapflush();
 }
 
-
 if(!is_file("sitemap.xml")) {
 
     sitemapflushXml();
 }
-
-
-
-
-
-
-

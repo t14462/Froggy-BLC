@@ -1,11 +1,9 @@
 <?php
 declare(strict_types=1);
 
-
 if(function_exists('ignore_user_abort')) {
     ignore_user_abort(true); // Установить игнорирование разрыва соединения
 }
-
 
 function emojiToHtmlEntities(string $string): string {
     return preg_replace_callback('/\X/u', static function ($m) {
@@ -64,7 +62,7 @@ function filter_filename(string $filename): string {
 }
 
 // ─── Пути ───────────────────────────────────────────────────────────
-$ROOT       = realpath(__DIR__ . '/../../');
+$ROOT       = realpath(__DIR__ . '/../../') ?: dirname(__DIR__, 2);
 $UPLOAD_DIR = $ROOT . '/DATABASE/fupload';
 $COUNT_DIR  = $ROOT . '/DATABASE/dl.count';
 
@@ -98,27 +96,29 @@ if (
 }
 
 // ─── Счётчик: считаем факт запроса ─────────────────────────────────
-if (!is_dir($COUNT_DIR)) {
+if(!is_dir($COUNT_DIR)) {
     @mkdir($COUNT_DIR, 0775, true);
 }
 $cntFile = $COUNT_DIR . '/' . $file . '.dlcnt';
 
-$fp = @fopen($cntFile, 'c+b');
-if ($fp) {
-    if (flock($fp, LOCK_EX)) {
-        $val = 0;
-        rewind($fp);
-        $data = trim((string)stream_get_contents($fp));
-        if ($data !== '' && ctype_digit($data)) $val = (int)$data;
-        $val++;
+if(is_dir($COUNT_DIR)) {
+    $fp = @fopen($cntFile, 'c+b');
+    if($fp) {
+        if(flock($fp, LOCK_EX)) {
+            $val = 0;
+            rewind($fp);
+            $data = trim((string)stream_get_contents($fp));
+            if($data !== '' && ctype_digit($data)) $val = (int)$data;
+            $val++;
 
-        rewind($fp);
-        ftruncate($fp, 0);
-        fwrite($fp, (string)$val);
-        fflush($fp);
-        flock($fp, LOCK_UN);
+            rewind($fp);
+            ftruncate($fp, 0);
+            fwrite($fp, (string)$val);
+            fflush($fp);
+            flock($fp, LOCK_UN);
+        }
+        fclose($fp);
     }
-    fclose($fp);
 }
 
 // ─── Редирект ──────────────────────────────────────────────────────

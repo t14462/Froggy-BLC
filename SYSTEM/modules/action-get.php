@@ -1,115 +1,81 @@
 <?php
 
-
 if(!defined('SECURE_ACCESS')) { die('Direct access not permitted'); }
 
 ################################################
 ################################################
 ################################################
 
-
-
 function permalink() {
-
     global $idcache, $sitemaptxt, $errmsg;
 
-    $articleHash = explode("&", $_SERVER['QUERY_STRING'])[0];
-
+    $queryString = $_SERVER['QUERY_STRING'] ?? '';
+    $articleHash = explode("&", $queryString)[0];
     $articleHash = mb_substr($articleHash, 0, 40);
-
     $pageMenuNum = array_search($articleHash, $idcache, true);
 
-    
     if(!is_int($pageMenuNum)) {
-        
         $errmsg = pnotfound();
-
     } else {
-
-        header('Location: '.$sitemaptxt[$pageMenuNum],true,301);
+        header('Location: '.$sitemaptxt[$pageMenuNum], true, 301);
         exit();
     }
 }
 
-
-
 function delimg() {
-
     global $safeGet, $errmsg, $checkpermission;
 
-    if( $checkpermission < 3 ) {
-
+    if($checkpermission < 3) {
         $errmsg = pforbidden();
-
         $errmsg .= "<p class='big'>Только <strong>редакторы</strong> и <strong>администраторы</strong> это могут делать.</p>";
-
     } else {
-
-        $filetodel = filter_filename($safeGet["delimg"]);
+        $filetodel = filter_filename($safeGet["delimg"] ?? '');
 
         if(is_file("DATABASE/gallery/".$filetodel)) {
             // rename("DATABASE/gallery/".$filetodel, "DATABASE/gallery/img.del");
-
             unlink("DATABASE/gallery/".$filetodel);
-
             mylog("<em style='color:DarkOrange'>Изображение ".$filetodel." успешно удалено. (".$_SESSION["username"].").</em>");
         }
 
         refreshhandle(0, "?gallery=-1", false);
     }
-
 }
 
-
-
 function delfile() {
-
     global $safeGet, $errmsg, $checkpermission;
 
-    if( $checkpermission < 3 ) {
-
+    if($checkpermission < 3) {
         $errmsg = pforbidden();
-
         $errmsg .= "<p class='big'>Только <strong>редакторы</strong> и <strong>администраторы</strong> это могут делать.</p>";
-
     } else {
-
-        $filetodel = filter_filename($safeGet["delfile"]);
+        $filetodel = filter_filename($safeGet["delfile"] ?? '');
 
         if(is_file("DATABASE/fupload/".$filetodel)) {
             // rename("DATABASE/fupload/".$filetodel, "DATABASE/fupload/file.del");
-
             unlink("DATABASE/fupload/".$filetodel);
-
             mylog("<em style='color:DarkOrange'>Файл ".$filetodel." успешно удалён. (".$_SESSION["username"].").</em>");
         }
 
         refreshhandle(0, "?dlfiles=-1", false);
-
     }
-
 }
 
-
-
 function viewLog() {
+    global $safeGet, $content, $mainPageTitle, $checkpermission, $errmsg;
 
-    global $safeGet, $content, $mainPageTitle, $checkpermission;
-
-    if( $checkpermission < 2 ) {
-
+    if($checkpermission < 2) {
         $errmsg = pforbidden();
-
         $errmsg .= "<p class='big'>Обычные пользователи не могут читать лог.</p>";
-
     } else {
-
         $limit = 8;
-
         $logpg = (int)$safeGet["log"];
-
-
         $content = "<span class='big'><strong>Бортовой журнал.</strong></span><br />";
+
+        if(!is_file("DATABASE/DB/sys.log")) {
+            $content .= "<p><em>Лог пуст или ещё не создан.</em></p>";
+            $mainPageTitle = "Системный Лог";
+            return;
+        }
 
         $fsize = filesize("DATABASE/DB/sys.log");
         $pcount = ceil($fsize / ($limit * 1024)) - 1;
@@ -125,21 +91,15 @@ function viewLog() {
         $pager = "<nav class='pager'>";
 
         for ($i = 0; $i <= $pcount; $i++) {
-
             if($logpg == $i) {
                 $pager .= " <strong>".$i."</strong> ";
-
             } else {
                 $pager .= " <a rel='nofollow' href='?log=$i'>".$i."</a> ";
             }
-
         }
         $pager .= "</nav>";
 
         $content .= $pager;
-
-
-
         $offset = $limit * 1024 * $logpg;
 
         $content .= "<br /><div>";
@@ -151,8 +111,6 @@ function viewLog() {
         flock($file, LOCK_UN);
         fclose($file);
 
-        ////
-
         ensure_html_purifier_loaded();
 
         $config = HTMLPurifier_Config::createDefault();
@@ -162,37 +120,26 @@ function viewLog() {
         $purifier = new HTMLPurifier($config);
         $content .= $purifier->purify($logTxt);
 
-        
-
         $content .= "</div>";
-
         $content .= $pager;
-
         $content .= "<p><a href='?purgelog=1' onclick=\"return confirm('Вы уверены?');\">ОЧИСТИТЬ ЛОГ</a></p>";
-
         $mainPageTitle = "Системный Лог";
     }
 }
 
-
 function purgelog() {
-
     global $errmsg, $checkpermission;
 
-    if( $checkpermission < 4 ) {
-
+    if($checkpermission < 4) {
         $errmsg = pforbidden();
-
         $errmsg .= "<p class='big'>Только <strong>администраторы</strong> это могут делать.</p>";
-
     } else {
-
-
         // dbprep("DATABASE/DB/sys.log");
-
         // if(!dbdone("DATABASE/DB/sys.log", "ЛОГ БЫЛ ИЗМЕНЁН ИЛИ ЗАБЛОКИРОВАН ВНЕШНИМ ПРОЦЕССОМ")) return false;
 
-        unlink("DATABASE/DB/sys.log");
+        if(is_file("DATABASE/DB/sys.log")) {
+            unlink("DATABASE/DB/sys.log");
+        }
 
         mylog("<strong style='color:DarkRed'>Лог был очищен. (".$_SESSION["username"].").</strong>");
 
@@ -202,14 +149,11 @@ function purgelog() {
     }
 }
 
-
 function pageload() {
 
     global $safeGet, $safePost, $content, $query, $txtnamebuf, $errmsg, $commmsg, $txtpath, $tplcomments, $mainPageTitle, $ispageexist, $checkpermission, $patternYT, $replacementYT, $patternVimeo, $replacementVimeo, $patternDM, $replacementDM, $commRecov, $metaDescription, $url, $idcache, $head, $patternDLCNT, $replacementDLCNT;
 
     // require_once "SYSTEM/cred.php";
-
-
 
     if(!$ispageexist) {
 
@@ -220,7 +164,6 @@ function pageload() {
         ############################################
         ############################################
         ############################################
-
 
         // $numgen = (int)explode("/", $_SERVER['QUERY_STRING'])[0];
         // $numgen = seoLinkDecode($numgen);
@@ -251,52 +194,34 @@ function pageload() {
         ############################################
         ############################################
 
-
         if($checkpermission) {
-
             $visitor3 = "readonly='readonly' value='".$_SESSION["username"]."'";
-
         } elseif(isset($_SESSION["visitor"]) /* && !array_key_exists($_SESSION["visitor"], $cred) && filterUsername($_SESSION["visitor"]) */ ) {
-
             $visitor3 = "value='".$_SESSION["visitor"]."'";
-
         } else {
-
             $visitor3 = "value='Аноним'";
         }
 
-
         if(isset($safeGet["commpage"])) {
-
             $commpage = (int)$safeGet["commpage"];
-
         } elseif(isset($safePost["commpage"])) {
-
             $commpage = (int)$safePost["commpage"];
-
         } else {
-
             $commpage = "";
         }
 
-
-
-
-        $bytepos = $query['?'.explode("&", $_SERVER['QUERY_STRING'])[0]] ?? 0;
-
-
+        $queryString = $_SERVER['QUERY_STRING'] ?? '';
+        $bytepos = $query['?'.explode("&", $queryString)[0]] ?? 0;
 
         $file = fopenOrDie("DATABASE/DB/data.html", "rb");
-            
         fseekOrDie($file, $bytepos);
-        
+
         $commaddr = freadOrDie($file, 40);
         $line = fgetsOrDie($file);
-
         $dbMtime = filemtimeMy("DATABASE/comments/".$commaddr);
 
         fclose($file);
-        
+
         $line = str_replace("<br!>", "\n", $line);
 
         $ptitle = substr($line, 0, strpos($line, "\n"));
@@ -312,14 +237,11 @@ function pageload() {
             $pgtoc = false;
         }
 
-
         // ЭТО ДОЛЖНО ИДТИ ВПЕРЕДИ
         // $ptitle[2] = htmlspecialchars($ptitle[2], ENT_QUOTES | ENT_HTML5 | ENT_SUBSTITUTE, 'UTF-8', false);
 
         $mainPageTitle = $ptitle[2];
 
-        
-        
         $ptitle[2] = str_ireplace(
             [
                 // Именованные сущности
@@ -356,9 +278,6 @@ function pageload() {
             ],
             $ptitle[2]
         );
-
-
-
 
         $article = str_ireplace(
             [
@@ -397,8 +316,6 @@ function pageload() {
             $article
         );
 
-
-
         // $permalinkA = (int)explode("/", $_SERVER['QUERY_STRING'])[0];
 
         // $permalinkA = seoLinkDecode($permalinkA);
@@ -408,8 +325,6 @@ function pageload() {
         $permalinkA = $idcache[$permalinkA - 1];
         $permalinkA = $url."?".$permalinkA."&amp;permalink=1";
         $permalinkA = "<a href='$permalinkA' rel='bookmark' itemprop='url' aria-label='Постоянная ссылка к этому заголовку' title='Постоянная ссылка к этому заголовку'>#</a>";
-
-
 
         if(!$pgtoc) {
             
@@ -422,13 +337,11 @@ function pageload() {
             // TOC
             $content .= "<article itemscope='itemscope' itemtype='https://schema.org/Article'><h1>".$ptitle[2]." $permalinkA</h1>\n<section><nav aria-label='Содержание' id='TOC'></nav>\n".$article."</section></article>";
 
-
             $html = str_get_html($content, false, true, "UTF-8", false) or die("XSS?.. Пустой или битый HTML.");
 
             $toc = '';
             $last_level = 0;
             $iID = 0;
-
 
             foreach($html->find('h1,h2,h3,h4,h5,h6') as $h) {
 
@@ -441,7 +354,6 @@ function pageload() {
                 $innerTEXT = mb_superTrim($innerTEXT);
 
                 $id = $iID.'-'.urlPrep2($innerTEXT);
-
 
                 // $h->id= $id; // add id attribute so we can jump to this element
                 $h->setAttribute('id', $id); // add id attribute so we can jump to this element
@@ -470,7 +382,6 @@ function pageload() {
 
         }
 
-
         $html = convert_infoboxes_to_aside($html);
 
         $html = replaceSemanticSpans($html);
@@ -494,7 +405,6 @@ function pageload() {
             $content
         );
 
-
         // Замена шаблона youtube на iframe
         $content = preg_replace_callback($patternYT, $replacementYT, $content);
 
@@ -506,7 +416,6 @@ function pageload() {
 
         // Регулярное выражение для замены шаблона счётчика загрузок
         $content = preg_replace_callback($patternDLCNT, $replacementDLCNT, $content);
-
 
         $content = str_replace("{{lambda}}", "<div style='font-family:monospace; white-space:nowrap; font-size:6rem; text-align:center'>&nbsp;<span class='a4'>&lambda;</span>++<br /><span class='a3'>&lambda;</span>&nbsp;<span class='a2'>&lambda;</span>&nbsp;</div>", $content);
 
@@ -522,19 +431,13 @@ function pageload() {
 
         $content = str_replace("{{clear}}", "<br style='clear: both;' />", $content);
 
-
         $content = preg_replace('/&(?![a-z][a-z0-9]*;|#\d+;|#x[0-9a-f]+;)/i', '&amp;', $content);
-
-
-
 
         foreach(['<h2', '<h3', '<h4', '<h5', '<h6'] as $heading) {
 
             $content = str_replace($heading, '</section><section>'.$heading, $content);
 
         }
-
-
 
         $content = ru_nbsp_typograf($content);
 
@@ -561,12 +464,9 @@ function pageload() {
             $errmsg = "";
         }
 
-
-
         
 
         $tplcomments .= "<p id='comm-title'><strong class='big'>КОММЕНТАРИИ</strong></p>";
-
 
         if(!isset($safeGet["creply"]) && !isset($safePost["pgcommnum"])) {
 
@@ -578,36 +478,27 @@ function pageload() {
             <fieldset><legend>Ваш комментарий:</legend><p><em>Интервал отправки = <strong>3 Минуты.</strong></em></p><label for='visitor'>Ваше имя:</label><input type='text' id='visitor' name='visitor' ".$visitor3." /><textarea rows='9' maxlength='2500' name='commpost' id='commpost' onkeyup='countChars(this);' onfocus='countChars(this);'>".$commRecov."</textarea><input type='hidden' name='commaddr' value='".$commaddr."' /><div class='el-in-line'><input type='submit' value='💾 Отправить' /><span id='symcount'>2500 Осталось.</span><br style='clear: both;' /><input type='text' name='captcha' placeholder='код' /><img loading='lazy' src='SYSTEM/modules/captcha.php?time=".time()."' alt='CAPTCHA' id='captcha_image' /><a href='javascript: refreshCaptcha();' title='Обновить картинку' class='refresh-captcha'>🔄</a></div></fieldset></form>";
         }
 
-
-
-
-
-
         if(is_file("DATABASE/comments/".$commaddr)) {
-
 
             /// $tplcomments .= "";
 
             $commlimit = 8;
 
-
             $total_commpages = calcTotPages($commaddr, $commlimit);
-
-
-
 
             if(!is_int($commpage) || $commpage > $total_commpages || $commpage < 0) {
 
                 $commpage = $total_commpages;
             }
 
-
             
-
 
             $filesource = openFileOrDie("DATABASE/comments/".$commaddr, "rb");
 
-            $pager = "<nav class='pager'><a href='?" . $_SERVER['QUERY_STRING'] . "&commpgcntrecalc=1' rel='nofollow' title='Пересчитать Количество Страниц!!!' onclick=\"return confirm('Это тяжёлая операция. Продолжить?');\">🪄</a>";
+            $queryString = $_SERVER['QUERY_STRING'] ?? '';
+            $queryBase = explode("&", $queryString)[0];
+
+            $pager = "<nav class='pager'><a href='?" . $queryString . "&commpgcntrecalc=1' rel='nofollow' title='Пересчитать Количество Страниц!!!' onclick=\"return confirm('Это тяжёлая операция. Продолжить?');\">🪄</a>";
             for($i = 0; $i <= $total_commpages; $i++) {
 
                 if($commpage === $i) {
@@ -616,7 +507,7 @@ function pageload() {
 
                 } else {
 
-                    $pgNumLink = " <a rel='nofollow' href='?".explode("&",$_SERVER['QUERY_STRING'])[0]."&commpage=$i#comm-section'>$i</a> ";
+                    $pgNumLink = " <a rel='nofollow' href='?".$queryBase."&commpage=$i#comm-section'>$i</a> ";
 
                 }
 
@@ -625,17 +516,11 @@ function pageload() {
             }
             $pager  .= "</nav>";
 
-
             $tplcomments .= $pager;
-
 
             $commstart = $commlimit * $commpage;
 
-
             $commentschunk = "";
-
-
-
 
             $i = $commstart;
 
@@ -645,12 +530,11 @@ function pageload() {
 
                 if($i < $commstart+$commlimit) {
 
-
                     $line = preg_replace("/<[0-9a-f]{40}>/", "", $line);
                     $line = preg_replace("/<[0-9a-f]{40} \/>/", "", $line);
 
                     $line = str_replace("<br!>", "\n", $line);
-                    $line = str_replace("%QUERYSTRING%", explode("&", $_SERVER['QUERY_STRING'])[0]."&amp;commpage=".$commpage, $line);
+                    $line = str_replace("%QUERYSTRING%", $queryBase."&amp;commpage=".$commpage, $line);
 
                     /// $line = preg_replace('/&(?!\w+;|#\d+;|#x[0-9a-fA-F]+;)/', '&amp;', $line);
                     
@@ -661,7 +545,6 @@ function pageload() {
                     $line = str_replace("</d>", "</div>", $line);
 
                     $line = str_replace("<id>", $commaddr."-", $line);
-
 
                     $commentschunk .= $line;
 
@@ -674,13 +557,7 @@ function pageload() {
             }
             $filesource = null;
 
-
-
-
-
-
             /// $commentschunk = mb_softTrim($commentschunk);
-
 
             $tplcomments .= $commentschunk ? "<div id='comm-section'><ul>".$commentschunk."</ul></div>" : "";
 
@@ -700,7 +577,7 @@ function pageload() {
                     
                     <input type='hidden' name='dbtimestamp' value='$dbMtime' />
                     
-                    <fieldset><legend>Ответ на комментарий:</legend><p><em>Интервал отправки = <strong>3 Минуты.</strong></em> <a href='?".explode("&", $_SERVER['QUERY_STRING'])[0]."&commpage=".$commpage."' onclick=\"return confirm('Вы действительно хотите покинуть редактор? Несохранённые данные БУДУТ УТЕРЯНЫ!');\">Отменить ответ ⬅️</a></p><label for='visitor'>Ваше имя:</label><input type='text' id='visitor' name='visitor' ".$visitor3." /><input type='hidden' name='commaddr' value='".$commreplyactarr[0]."' /><input type='hidden' name='pgcommnum' value='".$commreplyactarr[1]."' /><input type='hidden' name='repcommid' value='".$commreplyactarr[2]."' /><input type='hidden' name='commpage' value='".$commpage."' /><textarea rows='9' maxlength='2500' name='commpost' id='commpost' onkeyup='countChars(this);' onfocus='countChars(this);'>".$commRecov."</textarea><div class='el-in-line'><input type='submit' value='💾 Отправить' /> <span id='symcount'>2500 Осталось.</span><br style='clear: both;' /><input type='text' name='captcha' placeholder='код' /> <img loading='lazy' src='SYSTEM/modules/captcha.php?time=".time()."' alt='CAPTCHA' id='captcha_image' /><a href='javascript: refreshCaptcha();' title='Обновить картинку' class='refresh-captcha'>🔄</a></div></fieldset></form>";
+                    <fieldset><legend>Ответ на комментарий:</legend><p><em>Интервал отправки = <strong>3 Минуты.</strong></em> <a href='?".$queryBase."&commpage=".$commpage."' onclick=\"return confirm('Вы действительно хотите покинуть редактор? Несохранённые данные БУДУТ УТЕРЯНЫ!');\">Отменить ответ ⬅️</a></p><label for='visitor'>Ваше имя:</label><input type='text' id='visitor' name='visitor' ".$visitor3." /><input type='hidden' name='commaddr' value='".$commreplyactarr[0]."' /><input type='hidden' name='pgcommnum' value='".$commreplyactarr[1]."' /><input type='hidden' name='repcommid' value='".$commreplyactarr[2]."' /><input type='hidden' name='commpage' value='".$commpage."' /><textarea rows='9' maxlength='2500' name='commpost' id='commpost' onkeyup='countChars(this);' onfocus='countChars(this);'>".$commRecov."</textarea><div class='el-in-line'><input type='submit' value='💾 Отправить' /> <span id='symcount'>2500 Осталось.</span><br style='clear: both;' /><input type='text' name='captcha' placeholder='код' /> <img loading='lazy' src='SYSTEM/modules/captcha.php?time=".time()."' alt='CAPTCHA' id='captcha_image' /><a href='javascript: refreshCaptcha();' title='Обновить картинку' class='refresh-captcha'>🔄</a></div></fieldset></form>";
                 }
 
             } elseif(isset($safePost["pgcommnum"])) {
@@ -710,16 +587,14 @@ function pageload() {
                 
                 <input type='hidden' name='dbtimestamp' value='$dbMtime' />
                 
-                <fieldset><legend>Ответ на комментарий:</legend><p><em>Интервал отправки = <strong>3 Минуты.</strong></em> <a href='?".explode("&", $_SERVER['QUERY_STRING'])[0]."&commpage=".$safePost["commpage"]."' onclick=\"return confirm('Вы действительно хотите покинуть редактор? Несохранённые данные БУДУТ УТЕРЯНЫ!');\">Отменить ответ ⬅️</a></p><label for='visitor'>Ваше имя:</label><input type='text' id='visitor' name='visitor' ".$visitor3." /><input type='hidden' name='commaddr' value='".$safePost["commaddr"]."' /><input type='hidden' name='pgcommnum' value='".$safePost["pgcommnum"]."' /><input type='hidden' name='repcommid' value='".$safePost["repcommid"]."' /><input type='hidden' name='commpage' value='".$safePost["commpage"]."' /><textarea rows='9' maxlength='2500' name='commpost' id='commpost' onkeyup='countChars(this);' onfocus='countChars(this);'>".$commRecov."</textarea><div class='el-in-line'><input type='submit' value='💾 Отправить' /> <span id='symcount'>2500 Осталось.</span><br style='clear: both;' /><input type='text' name='captcha' placeholder='код' /> <img loading='lazy' src='SYSTEM/modules/captcha.php?time=".time()."' alt='CAPTCHA' id='captcha_image' /><a href='javascript: refreshCaptcha();' title='Обновить картинку' class='refresh-captcha'>🔄</a></div></fieldset></form>";
+                <fieldset><legend>Ответ на комментарий:</legend><p><em>Интервал отправки = <strong>3 Минуты.</strong></em> <a href='?".$queryBase."&commpage=".$safePost["commpage"]."' onclick=\"return confirm('Вы действительно хотите покинуть редактор? Несохранённые данные БУДУТ УТЕРЯНЫ!');\">Отменить ответ ⬅️</a></p><label for='visitor'>Ваше имя:</label><input type='text' id='visitor' name='visitor' ".$visitor3." /><input type='hidden' name='commaddr' value='".$safePost["commaddr"]."' /><input type='hidden' name='pgcommnum' value='".$safePost["pgcommnum"]."' /><input type='hidden' name='repcommid' value='".$safePost["repcommid"]."' /><input type='hidden' name='commpage' value='".$safePost["commpage"]."' /><textarea rows='9' maxlength='2500' name='commpost' id='commpost' onkeyup='countChars(this);' onfocus='countChars(this);'>".$commRecov."</textarea><div class='el-in-line'><input type='submit' value='💾 Отправить' /> <span id='symcount'>2500 Осталось.</span><br style='clear: both;' /><input type='text' name='captcha' placeholder='код' /> <img loading='lazy' src='SYSTEM/modules/captcha.php?time=".time()."' alt='CAPTCHA' id='captcha_image' /><a href='javascript: refreshCaptcha();' title='Обновить картинку' class='refresh-captcha'>🔄</a></div></fieldset></form>";
 
             }
         }
     }
 }
 
-
 function commentRemove() {
-
 
     global $safeGet, $idcache, $errmsg, $checkpermission;
 
@@ -731,27 +606,17 @@ function commentRemove() {
 
     } else {
 
-
         $remcommaddr = $safeGet["cmove"];
         $remcommaddr = mb_substr($remcommaddr, 0, 92);
         $remcommaddr = filter_filename($remcommaddr);
-
 
         $commaddr  = explode("-", $remcommaddr)[0] ?? 0;
         $pgcommnum = (int)(explode("-", $remcommaddr)[1] ?? 0);
         $commid    = explode("-", $remcommaddr)[2] ?? 0;
 
-
         $pgcommnum = abs($pgcommnum);
 
-
-
         if(in_array($commaddr, $idcache, true)) {
-
-
-
-
-
 
             $commdataline = "";
 
@@ -759,7 +624,6 @@ function commentRemove() {
 
             /// То-же самое, но проще.
             $commpage = intdiv($pgcommnum, 8); // при 0-based индексе
-
 
             dbprepApnd("DATABASE/comments/".$commaddr);
 
@@ -777,9 +641,6 @@ function commentRemove() {
             // Получаем текущую строку и её номер
             $commdataline = $filesource->current(); // Читаем строку
 
-
-
-
             $commdatarr = (array)explode("<$commid>",$commdataline);
             $commdatarr[2] = str_replace("<$commid />", "", $commdatarr[2] ?? "");
 
@@ -791,19 +652,15 @@ function commentRemove() {
 
             $commdataline = str_replace("</li>DEL", "</li>", $commdataline);
 
-
             $filesource->seekOrDie($pgcommnum);
 
             $firstChunkEnd = $filesource->ftell();
-
 
             $file = fopenOrDie("DATABASE/comments/".$commaddr.".new." . getmypid(), "r+b");
             ftruncateOrDie($file,$firstChunkEnd);
             fclose($file);
 
-
             $filesource->fgetsOrDie();
-
 
             $filedest = openFileOrDie("DATABASE/comments/".$commaddr.".new." . getmypid(), 'ab');
 
@@ -821,14 +678,10 @@ function commentRemove() {
 
             if(!dbdone("DATABASE/comments/".$commaddr, "")) return false;
 
-
-
-
             // mylog("<em style='color:DarkOrange'>Комментарий удалён. (".$_SESSION["username"].").</em>");
 
-
-
-            refreshhandle(0, "?".explode('&', $_SERVER['QUERY_STRING'])[0]."&ts=".microtime(true)."&commpage=".$commpage."#comm-section", false);
+            $queryString = $_SERVER['QUERY_STRING'] ?? '';
+            refreshhandle(0, "?".explode('&', $queryString)[0]."&ts=".microtime(true)."&commpage=".$commpage."#comm-section", false);
 
         } else {
 
@@ -837,7 +690,6 @@ function commentRemove() {
         }
     }
 }
-
 
 function pageEdit() {
 
@@ -914,7 +766,6 @@ function pageEdit() {
                         CKEDITOR.config.stylesSet = 'my_styles';
 
                         CKEDITOR.config.extraPlugins = 'codesnippet';
-
 
                         CKEDITOR.config.codeSnippet_languages = {
                             '1c': '1C',
@@ -1111,14 +962,11 @@ function pageEdit() {
                             'zephir': 'Zephir'
                         };
 
-
                         CKEDITOR.replace( 'textedit', {
                             removePlugins: 'forms,exportpdf,iframe',
                             disallowedContent: 'iframe; frame; frameset; object; embed',
                             format_tags: 'p;h2;h3;h4;h5;h6;pre;address;div'
                         } );
-
-
 
                         document.querySelectorAll('#sitemenu a, #prevnextslider a, header a, a.addpglast').forEach(function(link) {
 
@@ -1135,7 +983,6 @@ function pageEdit() {
 
                             link.setAttribute('href', href);
 
-
                             /*
                             link.addEventListener('click', event => {
                                 // показываем диалог
@@ -1149,11 +996,9 @@ function pageEdit() {
 
                         });
 
-
                         
 
                         let editorDirty = true; // изначально считаем, что есть изменения
-
 
                         window.addEventListener('beforeunload', function (event) {
                             if (editorDirty) {
@@ -1162,14 +1007,12 @@ function pageEdit() {
                             }
                         });
 
-
                         // перебор всех форм на странице
                         document.querySelectorAll('form').forEach(form => {
                             form.addEventListener('submit', function () {
                                 editorDirty = false;
                             });
                         });
-
 
                         document.getElementById('pagedelbutton').addEventListener('click', function (event) {
                             let ok = confirm('Удалить страницу? Вы уверены?');
@@ -1184,13 +1027,10 @@ function pageEdit() {
 
                 </script>";
 
-
-
-        $bytepos = $query['?'.explode("&", $_SERVER['QUERY_STRING'])[0]] ?? 0;
-
+        $queryString = $_SERVER['QUERY_STRING'] ?? '';
+        $bytepos = $query['?'.explode("&", $queryString)[0]] ?? 0;
 
         $dbMtime = filemtimeMy("DATABASE/DB/data.html");
-
 
         $content .= "<form method='post'>
         
@@ -1229,8 +1069,6 @@ function pageEdit() {
 
         $line = stripFirstLine($line);
 
-
-
         $hsel = "<select name='h'>
         <option value='1'>Уровень 1</option>
         <option value='2'>Уровень 2</option>
@@ -1254,17 +1092,19 @@ function pageEdit() {
 
         
 
+        $queryString = $_SERVER['QUERY_STRING'] ?? '';
+        $queryBase = explode('&', $queryString)[0];
+
         $content .= "<div class='el-in-line'><input type='submit' value='💾 Отправить' />
 
-            <a href='?".explode('&', $_SERVER['QUERY_STRING'])[0]."&amp;leaveedit=1'>Отменить ⬅️</a>
-            <a href='?".explode("&", $_SERVER['QUERY_STRING'])[0]."&amp;pagedel=1' id='pagedelbutton'>❌ Удалить страницу</a>
+            <a href='?".$queryBase."&amp;leaveedit=1'>Отменить ⬅️</a>
+            <a href='?".$queryBase."&amp;pagedel=1' id='pagedelbutton'>❌ Удалить страницу</a>
 
             </div></fieldset></form>";
 
             // mylog("<em style='color:DarkOrange'>Открыто редактирование страницы. (".$_SESSION["username"].").</em>");
     }
 }
-
 
 function loginPage() {
 
@@ -1283,7 +1123,6 @@ function loginPage() {
 
 }
 
-
 function registerg() {
 
     global $content, $mainPageTitle;
@@ -1301,7 +1140,6 @@ function registerg() {
     $mainPageTitle = "Страница регистрации";
 
 }
-
 
 function addPage() {
 
@@ -1332,8 +1170,6 @@ function addPage() {
             $seoPgIndex++;
         }
 
-
-
         $idKey = bin2hex(random_bytes(20)); // sha1(microtime().$ip.$userAgent);
 
         while(array_search($idKey, $idcache, true) !== false) {
@@ -1342,15 +1178,11 @@ function addPage() {
             $idKey = bin2hex(random_bytes(20)); // sha1(microtime().$ip.$userAgent);
         }
 
-
         $time = time();
-
 
         if($safeGet["addpage"] == "last") {
 
-
             $line = $idKey."<head1>New</head1>$seoPgIndex<!1!>".$time."<!2!><br!><br!><p>Чтобы показать заказчику эскизы сайта, нужно где-то найти тексты и картинки. Как правило, ни того, ни другого в момент показа эскизов у дизайнера нету.</p><br!><br!><p>Что же делает дизайнер? Он делает рыбу.</p><br!><br!><p>Рыбу можно вставлять, использовать, вешать, заливать, показывать, запихивать... Словом, с ней можно делать что угодно, лишь бы эскиз был максимально похож на готовую работу.</p><br!><br!><p>Если в качестве рыбных картинок использовать цветные прямоугольники, а вместо текста слова «тут будет текст тут будет текст тут будет текст тут будет текст», эскиз будет выглядеть неестественно.</p><br!><br!><p>Очень часто рыба становится частью готового сайта — так она нравится клиенту.</p><br!><br!><p>Рыба — это креатив чистой воды®</p><br!><br!><br!><p><img src='DATABASE/DB/ryba.jpg' alt='Рыба на подносе'></p><span class='big'><strong>Из жизни рыбы:</strong></span><br!><br!><p>Во время создания серии сайтов для Яндекса было решено придумать каждому проекту по слогану. Для проекта Почта.Яндекса был придуман рыбный слоган «Посылают все!», который успешно использовался и после открытия сайта.</p><br!><br!><p>На сайте компании «Арсеналъ» был сделан рыбный текст для графического заголовка: «Лучшее российское программное обеспечение». Эта фраза висела на сайте компании несколько лет и осталась даже при смене дизайна.</p><br!><br!><p>Для презентационного сайта о пластиковых карточках «VISA-Альфамобиль» вместо рубрик было написано: «во-первых», «во-вторых», «и, конечно», «а еще», «кроме того», «да что там». Все эти надписи сохранились в готовом сайте и висят там до сих пор.</p><br!><br!><p>А уж как часто рыбные картинки остаются жить в открытых сайтах… вы даже не представляете!</p>\n";
-
 
             dbprepApnd("DATABASE/DB/data.html");
 
@@ -1365,9 +1197,6 @@ function addPage() {
 
             mylog("<em style='color:DarkGreen'>В конец добавлена страница. (".$_SESSION["username"].").</em>");
 
-
-
-
             // $newpageaddr = (int)explode("/", $_SERVER['QUERY_STRING'])[0];
 
             // $newpageaddr = seoLinkDecode($newpageaddr) + 1;
@@ -1379,15 +1208,12 @@ function addPage() {
             /*
             $newpageaddr = $newpageaddr[0]."/New";
 
-
             refreshhandle(0, "?".$newpageaddr);
             */
 
             refreshhandle(0, "?nredir=".$newpageaddr);
 
         } else {
-
-
 
             $numlvl = mb_substr($safeGet["addpage"], 0, 21);
 
@@ -1399,12 +1225,7 @@ function addPage() {
 
             $numlvl[1] = (int)($numlvl[1] ?? 0);
 
-
-
-
             $line = $idKey."<head".$numlvl[1].">New</head".$numlvl[1].">$seoPgIndex<!1!>$time<!2!><br!><br!><p>Чтобы показать заказчику эскизы сайта, нужно где-то найти тексты и картинки. Как правило, ни того, ни другого в момент показа эскизов у дизайнера нету.</p><br!><br!><p>Что же делает дизайнер? Он делает рыбу.</p><br!><br!><p>Рыбу можно вставлять, использовать, вешать, заливать, показывать, запихивать... Словом, с ней можно делать что угодно, лишь бы эскиз был максимально похож на готовую работу.</p><br!><br!><p>Если в качестве рыбных картинок использовать цветные прямоугольники, а вместо текста слова «тут будет текст тут будет текст тут будет текст тут будет текст», эскиз будет выглядеть неестественно.</p><br!><br!><p>Очень часто рыба становится частью готового сайта — так она нравится клиенту.</p><br!><br!><p>Рыба — это креатив чистой воды®</p><br!><br!><br!><p><img src='DATABASE/DB/ryba.jpg' alt='Рыба на подносе'></p><span class='big'><strong>Из жизни рыбы:</strong></span><br!><br!><p>Во время создания серии сайтов для Яндекса было решено придумать каждому проекту по слогану. Для проекта Почта.Яндекса был придуман рыбный слоган «Посылают все!», который успешно использовался и после открытия сайта.</p><br!><br!><p>На сайте компании «Арсеналъ» был сделан рыбный текст для графического заголовка: «Лучшее российское программное обеспечение». Эта фраза висела на сайте компании несколько лет и осталась даже при смене дизайна.</p><br!><br!><p>Для презентационного сайта о пластиковых карточках «VISA-Альфамобиль» вместо рубрик было написано: «во-первых», «во-вторых», «и, конечно», «а еще», «кроме того», «да что там». Все эти надписи сохранились в готовом сайте и висят там до сих пор.</p><br!><br!><p>А уж как часто рыбные картинки остаются жить в открытых сайтах… вы даже не представляете!</p>\n";
-
-
 
             if(sanCheckAdd($numlvl[0], $numlvl[1])) {
 
@@ -1437,8 +1258,6 @@ function addPage() {
 
                 mylog("<em style='color:DarkGreen'>В середине меню добавлена страница. (".$_SESSION["username"].").</em>");
 
-
-
                 // $newpageaddr = (int)explode("/", $_SERVER['QUERY_STRING'])[0];
 
                 // $newpageaddr = seoLinkDecode($newpageaddr) + 1;
@@ -1466,7 +1285,6 @@ function addPage() {
         
     unlockByName($_SESSION['username'] ?? "dummy");
 }
-
 
 function logout() {
 
@@ -1500,9 +1318,6 @@ function logout() {
     refreshhandle(0, "?", false);
 }
 
-
-
-
 function movePageDown() {
 
     global $safeGet, $errmsg, $checkpermission;
@@ -1526,7 +1341,6 @@ function movePageDown() {
             dbprepApnd("DATABASE/DB/data.html");
 
             $filesource = openFileOrDie("DATABASE/DB/data.html.src." . getmypid(), 'rb');
-
 
             $filesource->seekOrDie($pg2mv);
 
@@ -1569,9 +1383,6 @@ function movePageDown() {
     unlockByName($_SESSION['username'] ?? "dummy");
 }
 
-
-
-
 function movePageUp() {
     
     global $safeGet, $errmsg, $checkpermission;
@@ -1595,7 +1406,6 @@ function movePageUp() {
             dbprepApnd("DATABASE/DB/data.html");
 
             $filesource = openFileOrDie("DATABASE/DB/data.html.src." . getmypid(), 'rb');
-
 
             $filesource->seekOrDie($pg2mv);
 
@@ -1638,12 +1448,6 @@ function movePageUp() {
     unlockByName($_SESSION['username'] ?? "dummy");
 }
 
-
-
-
-
-
-
 function gallery() {
 
     global $content, $safeGet, $mainPageTitle, $sMobile, $head;
@@ -1657,7 +1461,6 @@ function gallery() {
     $totimg = count($files);
 
     $galpg = (int)$safeGet["gallery"];
-
 
     // Рассчитываем количество страниц (с нумерацией с нуля)
     $pcount = ceil($totimg / $limit) - 1; // Поскольку нумерация с нуля, последняя страница будет pcount - 1
@@ -1761,7 +1564,6 @@ function gallery() {
         $content .= "</tr></table>";
     }
 
-
     ####################################################
     ####################################################
     ####################################################
@@ -1771,16 +1573,6 @@ function gallery() {
     $content .= $pager;
 
 }
-
-
-
-
-
-
-
-
-
-
 
 function dlFiles() {
 
@@ -1917,13 +1709,6 @@ function dlFiles() {
     sql, sqlite, db, db3</pre>";
 }
 
-
-
-
-
-
-
-
 function deletePage() {
 
     global $errmsg, $numcache, $checkpermission, $ispageexist;
@@ -1943,7 +1728,6 @@ function deletePage() {
         // $pagedel = (int)explode("/", $_SERVER['QUERY_STRING'])[0];
 
         // $pagedel = seoLinkDecode($pagedel);
-
 
         if(!$ispageexist) {
 
@@ -1972,10 +1756,7 @@ function deletePage() {
 
             } else {
 
-
-
                 dbprepApnd("DATABASE/DB/data.html");
-
 
                 $filesource = openFileOrDie("DATABASE/DB/data.html.src." . getmypid(), 'rb');
 
@@ -1989,10 +1770,7 @@ function deletePage() {
 
                 $pageid = $filesource->freadOrDie(40);
 
-
                 $filesource->fgetsOrDie();
-
-
 
                 $filedest = openFileOrDie("DATABASE/DB/data.html.new." . getmypid(), 'ab');
 
@@ -2054,13 +1832,6 @@ function deletePage() {
         
                 /// unlockByName($_SESSION['username'] ?? ""); ///
 
-
-
-
-
-
-
-
                 mylog("<strong style='color:DarkOrange'>Удалена страница ".$pagedel." (".$_SESSION["username"].").</strong>");
 
                 refreshhandle(0, "?nredir=".($pagedel - 1));
@@ -2070,14 +1841,6 @@ function deletePage() {
         
     unlockByName($_SESSION['username'] ?? "dummy");
 }
-
-
-
-
-
-
-
-
 
 function nredir() {
 
@@ -2090,14 +1853,6 @@ function nredir() {
 
     refreshhandle(0, $pgaddrcache[$pageMenuNum2 - 1], false);
 }
-
-
-
-
-
-
-
-
 
 function commPgCntRecalc() {
 
@@ -2117,24 +1872,17 @@ function commPgCntRecalc() {
 
     } else {
 
-        unlink("DATABASE/comments/" . $idcache[$numgen - 1] . ".pages-cache");
+        $pagesCache = "DATABASE/comments/" . $idcache[$numgen - 1] . ".pages-cache";
+        if(is_file($pagesCache)) {
+            unlink($pagesCache);
+        }
 
-        $link = "?".explode("&", $_SERVER['QUERY_STRING'])[0] . "#comm-section";
+        $queryString = $_SERVER['QUERY_STRING'] ?? '';
+        $link = "?".explode("&", $queryString)[0] . "#comm-section";
 
         refreshhandle(0, $link, false);
     }
 }
-
-
-
-
-
-
-
-
-
-
-
 
 function gobyava() {
 

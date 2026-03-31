@@ -2,31 +2,26 @@
 
 if(!defined('SECURE_ACCESS')) { die('Direct access not permitted'); }
 
-
 if(!defined('FILTER_INITIALIZED')) {
     define('FILTER_INITIALIZED', true);
 } else {
     die('<h1>ACCESS Exception :: filter re-execution blocked</h1>');
 }
 
-
 ################################################
 ################################################
 ################################################
 
-
-$methods = (string)$_SERVER['REQUEST_METHOD'];
-
+$methods = (string)($_SERVER['REQUEST_METHOD'] ?? '');
 
 $_REQUEST = [];
 $_ENV = [];
-
 
 # $vars_dl = [];
 
 if(in_array($methods, ['POST', 'GET'], true)) {
 
-    switch( $methods ) {
+    switch($methods) {
 
         case 'POST':
 
@@ -69,8 +64,7 @@ if(in_array($methods, ['POST', 'GET'], true)) {
 
                 "pobyava"  => FILTER_DEFAULT,
 
-
-            ] ) ?? [];
+            ]) ?? [];
 
             break;
 
@@ -86,4 +80,3 @@ if(in_array($methods, ['POST', 'GET'], true)) {
     die('<h1>ACCESS Exception :: method '. $methods .' blocked!</h1>');
 
 }
-

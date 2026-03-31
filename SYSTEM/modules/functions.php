@@ -6,14 +6,11 @@ if(!defined('SECURE_ACCESS')) { die('Direct access not permitted'); }
 ################################################
 ################################################
 
-
 # require_once "SYSTEM/PHPLIB/htmlpurifier/library/HTMLPurifier.auto.php";
 
 # require_once "SYSTEM/PHPLIB/simplehtmldom/simple_html_dom.php";
 
 // require_once "SYSTEM/cred.php";
-
-
 
 if(!is_file('SYSTEM/modules/null.txt') || !is_writable('SYSTEM/modules/null.txt')) {
     die("Файл SYSTEM/modules/null.txt не существует или недоступен для записи. Проверьте права доступа и владельца файла.");
@@ -23,15 +20,8 @@ if(!is_file('SYSTEM/modules/dummy.txt') || !is_writable('SYSTEM/modules/dummy.tx
     die("Файл SYSTEM/modules/dummy.txt не существует или недоступен для записи. Проверьте права доступа и владельца файла.");
 }
 
-
-
-
-
-
-
 $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? 'Unknown';
 $userAgent = substr($userAgent, 0, 512);
-
 
 $ip = $_SERVER['REMOTE_ADDR'] ?? "0.0.0.0";
 
@@ -40,24 +30,12 @@ if(!filter_var($ip, FILTER_VALIDATE_IP)) {
     $ip = "0.0.0.0"; // Неизвестный IP
 }
 
-
-
-
-
-
-
 $url = sprintf(
     "%s://%s%s",
     isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] != 'off' ? 'https' : 'http',
-    $_SERVER['SERVER_NAME'],
-    explode("?", $_SERVER['REQUEST_URI'])[0]
-  );
-
-
-
-
-
-
+    $_SERVER['SERVER_NAME'] ?? 'localhost',
+    explode("?", $_SERVER['REQUEST_URI'] ?? '/')[0]
+);
 
 if(isset($_SESSION["username"]) && isset($_SESSION["userhash"])) {
     $username = $_SESSION["username"];
@@ -69,13 +47,8 @@ if(isset($_SESSION["username"]) && isset($_SESSION["userhash"])) {
         $checkpermission = 0;
     }
 } else {
-        $checkpermission = 0;
+    $checkpermission = 0;
 }
-
-
-
-
-
 
 function is_arrays_equal(array $a, array $b, int $sortMethod = SORT_STRING): bool {
     $a_copy = $a;
@@ -84,11 +57,6 @@ function is_arrays_equal(array $a, array $b, int $sortMethod = SORT_STRING): boo
     ksort($b_copy, $sortMethod);
     return $a_copy === $b_copy;
 }
-
-
-
-
-
 
 /**
  * Сохраняет текущее microtime(true) или переданное значение в ПУТЬ_К_ФАЙЛУ.time
@@ -103,7 +71,6 @@ function touchMy(string $file, ?float $customTime = null): bool {
     touch($file, (int)$timeToWrite);
     return file_put_contents($timeFile, sprintf('%.4f', $timeToWrite), LOCK_EX) !== false;
 }
-
 
 /**
  * Читает microtime из ПУТЬ_К_ФАЙЛУ.time
@@ -136,18 +103,11 @@ function filemtimeMy(string $file): float {
 # DO NOT DELETE
 $chTimeDB = filemtimeMy("DATABASE/DB/data.html");
 
-
-
-
-
-
-
 class SafeSplFileObject extends SplFileObject {
 
     protected function getContext(): string {
         return $this->getRealPath() ?: 'неизвестный файл';
     }
-
 
     public function fwriteOrDie(string $data): void {
 
@@ -200,7 +160,6 @@ class SafeSplFileObject extends SplFileObject {
     }
 }
 
-
 function openFileOrDie(string $filename, string $mode = 'r'): SafeSplFileObject {
     try {
         return new SafeSplFileObject($filename, $mode);
@@ -208,11 +167,6 @@ function openFileOrDie(string $filename, string $mode = 'r'): SafeSplFileObject 
         die("Ошибка при открытии файла '$filename': " . $e->getMessage() . ", проверьте права доступа к файлам и их владельца.");
     }
 }
-
-
-
-
-
 
 function fopenOrDie(string $filename, string $mode = 'r') {
     $handle = fopen($filename, $mode);
@@ -222,10 +176,6 @@ function fopenOrDie(string $filename, string $mode = 'r') {
     return $handle;
 }
 
-
-
-
-
 function getFileOrDie(string $filename): string {
     $content = file_get_contents($filename);
     if($content === false) {
@@ -234,12 +184,6 @@ function getFileOrDie(string $filename): string {
     return $content;
 }
 
-
-
-
-
-
-
 function putFileOrDie(string $filename, string $data, int $flags = 0): int {
     $result = file_put_contents($filename, $data, $flags);
     if($result === false) {
@@ -247,11 +191,6 @@ function putFileOrDie(string $filename, string $data, int $flags = 0): int {
     }
     return $result;
 }
-
-
-
-
-
 
 function fwriteOrDie($handle, string $data) {
 
@@ -263,9 +202,6 @@ function fwriteOrDie($handle, string $data) {
         die("fwriteOrDie: ошибка записи в поток ($context)");
     }
 }
-
-
-
 
 function freadOrDie($handle, int $length): string|false {
 
@@ -284,9 +220,6 @@ function freadOrDie($handle, int $length): string|false {
     return $data;
 }
 
-
-
-
 function fgetsOrDie($handle): string|false {
 
     $meta = stream_get_meta_data($handle);
@@ -304,10 +237,6 @@ function fgetsOrDie($handle): string|false {
     return $line;
 }
 
-
-
-
-
 function ftruncateOrDie($handle, int $size) {
 
     $meta = stream_get_meta_data($handle);
@@ -317,10 +246,6 @@ function ftruncateOrDie($handle, int $size) {
         die("ftruncateOrDie: ошибка усечения файла ($context)");
     }
 }
-
-
-
-
 
 function fseekOrDie($handle, int $offset, int $whence = SEEK_SET): void {
     
@@ -332,14 +257,6 @@ function fseekOrDie($handle, int $offset, int $whence = SEEK_SET): void {
     }
 }
 
-
-
-
-
-
-
-
-
 function set_cookie($name, $value, $expires){
     $params = [
         'expires' => $expires,
@@ -350,14 +267,6 @@ function set_cookie($name, $value, $expires){
     ];
     setcookie($name, $value, $params);
 }
-
-
-
-
-
-
-
-
 
 function mb_superTrim(string $text): string {
 
@@ -427,7 +336,6 @@ function mb_superTrim(string $text): string {
         $text
     );
 
-
     
     // 2. Удаляем прочие невидимые символы, но оставляем ZWJ
     $text = preg_replace_callback('/[\p{C}]/u', static function ($m) {
@@ -448,15 +356,6 @@ function mb_superTrim(string $text): string {
     // 4. Нормализуем все пробельные символы внутри
     return preg_replace('/[\p{Z}]+/u', ' ', $text);
 }
-
-
-
-
-
-
-
-
-
 
 function mb_softTrim(string $text): string {
     
@@ -530,20 +429,12 @@ function mb_softTrim(string $text): string {
         $text
     );
 
-
     
     // Удаляем все пробельные и "невидимые" символы по краям, включая все Unicode-переносы
     $text = preg_replace('/^[\p{Z}]+|[\p{Z}]+$/u', '', $text);
 
     return $text;
 }
-
-
-
-
-
-
-
 
 // Регулярное выражение для замены шаблона {{youtube|ID|width}}
 $patternYT = '/\{\{youtube\|([a-zA-Z0-9_-]+)(?:\|(\d+))?\}\}/';
@@ -562,11 +453,6 @@ $replacementYT = static function ($matches) {
     }
 };
 
-
-
-
-
-
 // Регулярное выражение для замены шаблона {{vimeo|ID|width}}
 $patternVimeo = '/\{\{vimeo\|([0-9]+)(?:\|(\d+))?\}\}/'; // ID в Vimeo всегда числовое
 $replacementVimeo = static function ($matches) {
@@ -584,8 +470,6 @@ $replacementVimeo = static function ($matches) {
     }
 };
 
-
-
 // Регулярное выражение для замены шаблона {{dailymotion|ID|width}}
 $patternDM = '/\{\{dailymotion\|([a-zA-Z0-9]+)(?:\|(\d+))?\}\}/';
 $replacementDM = static function ($matches) {
@@ -602,9 +486,6 @@ $replacementDM = static function ($matches) {
         return "<div class='vid-wrapper' style='clear: both;'><iframe src='https://www.dailymotion.com/embed/video/$videoId' class='vid-iframe' allowfullscreen='allowfullscreen' title='Видео. Возможно музыка или, например, конференция.' loading='lazy'></iframe></div>";
     }
 };
-
-
-
 
 // {{download|FILE}}
 $patternDLCNT = '/\{\{download\|([^\}\r\n]+?)\}\}/u';
@@ -653,7 +534,6 @@ $replacementDLCNT = static function ($m) {
 
         $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
 
-
         $inlineExt = [
         'adoc'       => 1,
         'ass'        => 1,
@@ -684,7 +564,6 @@ $replacementDLCNT = static function ($m) {
         'yaml'       => 1,
         'yml'        => 1,
         ];
-
 
         $href = 'SYSTEM/modules/download.php?file=' . rawurlencode($file);
         $dlTable = "<table class='dl-tpl'><tbody>
@@ -717,14 +596,6 @@ $replacementDLCNT = static function ($m) {
 // Применение:
 // $html = preg_replace_callback($patternDLCNT, $replacementDLCNT, $html);
 
-
-
-
-
-
-
-
-
 function emojiToHtmlEntities(string $string): string {
     return preg_replace_callback('/\X/u', static function ($m) {
         $g = $m[0];
@@ -735,15 +606,6 @@ function emojiToHtmlEntities(string $string): string {
         return $g;
     }, $string);
 }
-
-
-
-
-
-
-
-
-
 
 function generateSalt($username, $password) {
     // Генерируем битовую маску соли на основе хэша имени пользователя
@@ -758,13 +620,6 @@ function generateSalt($username, $password) {
     // Преобразуем результат обратно в HEX и возвращаем
     return bin2hex($result);
 }
-
-
-
-
-
-
-
 
 /**
  * @param array      $array
@@ -784,13 +639,10 @@ function array_insert_m(&$array, $position, $insert) {
     }
 }
 
-
-
 function filterUsername($username) {
 
     // IGNOR THEM
-    $username = str_replace(["&#039;", "&apos;", " &amp; ", "&amp;"], "", $username); 
-
+    $username = str_replace(["&#039;", "&apos;", " &amp; ", "&amp;", /* " &laquo;", "&raquo; ", */ "&laquo;", "&raquo;"], "", $username);
 
     $filteredUsername = emojiToHtmlEntities($username);
 
@@ -798,7 +650,6 @@ function filterUsername($username) {
 
     // Убираем лишние пробелы
     $filteredUsername = mb_superTrim($filteredUsername);
-
 
     // Удаляем все символы, которые не являются:
     // - буквами любых языков (\p{L})
@@ -809,7 +660,7 @@ function filterUsername($username) {
 
     $filteredUsername = preg_replace('/[^\p{L}0-9 \p{P}\p{S}]+/u', '', $filteredUsername);
 
-    $filteredUsername = htmlspecialchars($filteredUsername, ENT_QUOTES | ENT_HTML5 | ENT_SUBSTITUTE, 'UTF-8', false);
+    /// $filteredUsername = htmlspecialchars($filteredUsername, ENT_QUOTES | ENT_HTML5 | ENT_SUBSTITUTE, 'UTF-8', false);
 
     /*
     // Проверяем, не пустой ли результат
@@ -824,15 +675,15 @@ function filterUsername($username) {
     }
 
     // Если имя пользователя не изменилось, возвращаем true
-    if($filteredUsername === $username) {
+    /* if($filteredUsername === $username) {
         return true;
     }
 
     return false;
+    */
+
+    return ($filteredUsername === $username);
 }
-
-
-
 
 function repeatCaptcha($userInput) {
     global $ip;
@@ -850,7 +701,6 @@ function repeatCaptcha($userInput) {
     if(is_file($sessionFile)) {
         // Чтение данных из файла
 
-
         $locktmp = fopenOrDie($sessionFile, 'rb');
         flock($locktmp, LOCK_SH);
 
@@ -858,7 +708,6 @@ function repeatCaptcha($userInput) {
 
         flock($locktmp, LOCK_UN);
         fclose($locktmp);
-
 
         /// $sessionData = json_decode(getFileOrDie($sessionFile), true);
 
@@ -885,10 +734,6 @@ function repeatCaptcha($userInput) {
     return true; // Ввод уникален, возвращаем true
 }
 
-
-
-
-
 function canProceed($datip) {
     // Путь к директории для хранения временных меток
     $lockDir = 'DATABASE/comments/lock/';
@@ -898,7 +743,6 @@ function canProceed($datip) {
     if(is_file($lockFile)) {
         // Читаем данные из файла
 
-
         $locktmp = fopenOrDie($lockFile, 'rb');
         flock($locktmp, LOCK_SH);
 
@@ -906,7 +750,6 @@ function canProceed($datip) {
 
         flock($locktmp, LOCK_UN);
         fclose($locktmp);
-
 
         /// $lockData = json_decode(getFileOrDie($lockFile), true);
         $lastCall = (int)($lockData['last_call'] ?? 0);
@@ -925,17 +768,9 @@ function canProceed($datip) {
     return true; // Можно продолжать
 }
 
-
-
-
-
-
-
-
 function refreshhandle($time, $link, $update=true) {
 
     global $head;
-
 
     if($update) {
 
@@ -961,13 +796,6 @@ function refreshhandle($time, $link, $update=true) {
         exit("<!DOCTYPE html><html><head><meta charset='utf-8' /><noscript><meta http-equiv='refresh' content='0;url=$link' /></noscript><script>location.replace('$link');</script></head><body>&nbsp;</body></html>");
     }
 }
-
-
-
-
-
-
-
 
 function filter_filename(string $filename): string {
 
@@ -1000,10 +828,6 @@ function filter_filename(string $filename): string {
     return ($ext !== '') ? ($base . '.' . $ext) : $base;
 }
 
-
-
-
-
 function dbprepApnd($filename) {
 
     if(function_exists('ignore_user_abort')) {
@@ -1029,10 +853,6 @@ function dbprepApnd($filename) {
     return true;
 }
 
-
-
-
-
 function dbprepCache($filename) {
 
     if(function_exists('ignore_user_abort')) {
@@ -1046,11 +866,9 @@ function dbprepCache($filename) {
     return true;
 }
 
-
 function dbdone($filename, $recovery) {
 
     global $errmsg, $content;
-
 
     $locktmp = fopenOrDie($filename.".lock", 'rb');
     flock($locktmp, LOCK_SH);
@@ -1060,8 +878,9 @@ function dbdone($filename, $recovery) {
     flock($locktmp, LOCK_UN);
     fclose($locktmp);
 
-    if(is_file($filename.".src." . getmypid()))
+    if(is_file($filename.".src." . getmypid())) {
         unlink($filename.".src." . getmypid());
+    }
 
     /// $lockvar = (int)@file_get_contents($filename.".lock");
 
@@ -1079,7 +898,9 @@ function dbdone($filename, $recovery) {
 
     } else {
 
-        unlink($filename.".new." . getmypid());
+        if(is_file($filename.".new." . getmypid())) {
+            unlink($filename.".new." . getmypid());
+        }
 
         if(!isset($safePost['commpost']) && !isset($safeGet["cmove"])) {
 
@@ -1104,7 +925,6 @@ function dbdone($filename, $recovery) {
     }
 }
 
-
 function mylog($line) {
 
     $datetime = new DateTime();
@@ -1113,15 +933,9 @@ function mylog($line) {
     putFileOrDie("DATABASE/DB/sys.log", $mydate.": ".$line."<br />\n", FILE_APPEND | LOCK_EX);
 }
 
-
 function stripFirstLine($text) {
     return substr($text, strpos($text, "\n") + 1);
 }
-
-
-
-
-
 
 function rusTranslitHelper($st) {
     $st = strtr($st, array(
@@ -1151,11 +965,6 @@ function rusTranslitHelper($st) {
     ));
     return $st;
 }
-
-
-
-
-
 
 function urlPrep($st) {
 
@@ -1259,7 +1068,6 @@ function urlPrep($st) {
     ]);
     
 
-
     /// $st = emojiToHtmlEntities($st);
 
     $st = strtr($st, [
@@ -1286,21 +1094,15 @@ function urlPrep($st) {
         ';'      => '.'
     ]);
 
-
-
     /// $st = remove_entities($st);
 
-
     $st = rusTranslitHelper($st);
-
 
     // Транслитерация символов
     $translit = "Any-Latin; Latin-ASCII; [:Nonspacing Mark:] Remove; NFC;";
     $st = transliterator_transliterate($translit, $st);
 
-
     $st = str_replace(" ", "_", $st);
-
 
     $st = preg_replace('/[^A-Za-z0-9\-\_\.\~\+\,\!\(\)\/]/', '', $st);
     
@@ -1310,17 +1112,12 @@ function urlPrep($st) {
         '/\.{2,}/',  // 2+ точек         → .
     ], ['_', '-', '.'], $st);
 
-
     // $st = str_replace(";.", ";", $st);
 
     // $st = preg_replace('/[.,!?;:)\]\}\'"…]+$/u', '', $st);
 
     return '?'.$st;
 }
-
-
-
-
 
 function urlPrep2($st) {
 
@@ -1424,7 +1221,6 @@ function urlPrep2($st) {
     ]);
     
 
-
     /// $st = emojiToHtmlEntities($st);
 
     $st = strtr($st, [
@@ -1451,13 +1247,9 @@ function urlPrep2($st) {
         ';'      => '.'
     ]);
 
-
-
     /// $st = remove_entities($st);
 
-
     $st = rusTranslitHelper($st);
-
 
     // Транслитерация символов
     $translit = "Any-Latin; Latin-ASCII; [:Nonspacing Mark:] Remove; NFC;";
@@ -1478,18 +1270,12 @@ function urlPrep2($st) {
         '/\.{2,}/',  // 2+ точек         → .
     ], ['_', '-', '.'], $st);
 
-
     // $st = str_replace(";.", ";", $st);
 
     // $st = preg_replace('/[.,!?;:)\]\}\'"…]+$/u', '', $st);
 
     return $st;
 }
-
-
-
-
-
 
 function urlPrep3($st) {
 
@@ -1513,13 +1299,6 @@ function urlPrep3($st) {
     return $st;
 }
 
-
-
-
-
-
-
-
 function logInOutLink($logintxt, $logouttxt) {
 
     global $checkpermission;
@@ -1536,28 +1315,6 @@ function logInOutLink($logintxt, $logouttxt) {
 
 }
 
-
-/*
-function checkMenuOrder($sanCheckTable) {
-    global $errmsg;
-
-    $i = 0;
-    foreach ($sanCheckTable as $item) {
-        if($i > 0) {
-            if($sanCheckTable[$i] - $sanCheckTable[$i-1] >= 2) {
-                $errmsg = "<h1>ОШИБКА.</h1><p class='big'><strong>Порядок уровней меню не был соблюдён.</strong></p>";
-                mylog("<span style='color:DarkMagenta'>Порядок уровней меню не был соблюдён. (".$_SESSION["username"].").</span>");
-                return false;
-            }
-        }
-        $i++;
-    }
-    return true;
-}
-*/
-
-
-
 function checkMenuOrder($sanCheckTable) {
     global $errmsg;
 
@@ -1573,9 +1330,6 @@ function checkMenuOrder($sanCheckTable) {
 
     return true;
 }
-
-
-
 
 function sanCheckHor($check, $h) {
 
@@ -1613,10 +1367,6 @@ function sanCheckHor($check, $h) {
     }
 }
 
-
-
-
-
 function sanCheckAdd($check, $h) {
 
     global $numcache, $errmsg, $ispageexist;
@@ -1635,7 +1385,6 @@ function sanCheckAdd($check, $h) {
 
         $sanCheckTable = $numcache;
 
-
         array_insert_m(
             $sanCheckTable,
             $check,
@@ -1646,11 +1395,6 @@ function sanCheckAdd($check, $h) {
     }
 }
 
-
-
-
-
-
 function sanCheckDown() {
 
     global $numcache, $safeGet, $errmsg;
@@ -1658,8 +1402,6 @@ function sanCheckDown() {
     $index = $safeGet["pgmovedown"] ? ((int)$safeGet["pgmovedown"] - 1) : "";
 
     $sanCheckTable = $numcache;
-
-
 
     if(!is_int($index) || $index < 0 || !isset($sanCheckTable[$index]) || !isset($sanCheckTable[$index + 1]) || $index >= (sizeof($sanCheckTable) - 1) || ($index == 0 && $sanCheckTable[0] != $sanCheckTable[1])) {
 
@@ -1673,12 +1415,9 @@ function sanCheckDown() {
         $sanCheckTable[ $index ] = $sanCheckTable[ $index + 1 ];
         $sanCheckTable[ $index + 1 ] = $item;
 
-
         return checkMenuOrder($sanCheckTable);
     }
 }
-
-
 
 function sanCheckUp() {
 
@@ -1687,8 +1426,6 @@ function sanCheckUp() {
     $sanCheckTable = $numcache;
 
     $index = $safeGet["pgmoveup"] ? ((int)$safeGet["pgmoveup"] - 1) : "";
-
-
 
     if(!is_int($index) || $index < 1 || !isset($sanCheckTable[$index]) || !isset($sanCheckTable[$index - 1])) {
 
@@ -1704,26 +1441,13 @@ function sanCheckUp() {
 
     } else {
 
-
         $item = $sanCheckTable[ $index ];
         $sanCheckTable[ $index ] = $sanCheckTable[ $index - 1 ];
         $sanCheckTable[ $index - 1 ] = $item;
 
-
         return checkMenuOrder($sanCheckTable);
     }
 }
-
-
-
-
-
-
-
-
-
-
-
 
 function pnotfound() {
 
@@ -1736,7 +1460,6 @@ function pnotfound() {
     return "<h1>404.</h1><p class='big'><strong>Страница не найдена.</strong></p>";
 }
 
-
 function pforbidden() {
 
     global $mainPageTitle;
@@ -1747,13 +1470,6 @@ function pforbidden() {
 
     return "<h1>403.</h1><p class='big'><strong>Доступ запрещён.</strong></p>";
 }
-
-
-
-
-
-
-
 
 function calcTotPages(string $commaddr, int $limit, bool $update = false): int
 {
@@ -1831,13 +1547,6 @@ function calcTotPages(string $commaddr, int $limit, bool $update = false): int
 
     return $totalPages;
 }
-
-
-
-
-
-
-
 
 function calcTotPages2(int $commcount, string $commaddr, int $limit, bool $update = false): int
 {
@@ -1920,13 +1629,6 @@ function calcTotPages2(int $commcount, string $commaddr, int $limit, bool $updat
     return $totalPages;
 }
 
-
-
-
-
-
-
-
 function loadTplSess() {
 
     // Папка с шаблонами
@@ -1946,9 +1648,6 @@ function loadTplSess() {
     // Возвращаем шаблон по умолчанию, если ничего не выбрано
     return 'default.tpl';
 }
-
-
-
 
 // Функция для генерации формы выбора шаблона
 function genTplForm() {
@@ -1977,15 +1676,6 @@ function genTplForm() {
     // Выводим текущий выбранный шаблон
     return $html;
 }
-
-
-
-
-
-
-
-
-
 
 function convertQuotBlocks(simple_html_dom $html): simple_html_dom {
     // $html = str_get_html($htmlString);
@@ -2038,7 +1728,6 @@ function convertQuotBlocks(simple_html_dom $html): simple_html_dom {
         $quotBlock->outertext = $figureHtml;
     }
 
-
     // Удалить всех .my-quot-author вне цитат
     foreach (iterator_to_array($html->find('span.my-quot-author'), false) as $orphanAuthor) {
         $orphanAuthor->outertext = '';
@@ -2048,11 +1737,6 @@ function convertQuotBlocks(simple_html_dom $html): simple_html_dom {
 
     return $html;
 }
-
-
-
-
-
 
 function parseSpoilers(simple_html_dom $html): simple_html_dom {
     // Сохраняем все спойлеры в массив и переворачиваем порядок
@@ -2068,11 +1752,6 @@ function parseSpoilers(simple_html_dom $html): simple_html_dom {
 
     return $html;
 }
-
-
-
-
-
 
 function wrap_images_with_figure(simple_html_dom $html): simple_html_dom {
     // Безопасный снимок массива элементов
@@ -2099,12 +1778,6 @@ function wrap_images_with_figure(simple_html_dom $html): simple_html_dom {
     return $html;
 }
 
-
-
-
-
-
-
 function convert_infoboxes_to_aside(simple_html_dom $html): simple_html_dom {
 
     // Меняем каждый элемент, не влияя на итерацию
@@ -2130,12 +1803,6 @@ function convert_infoboxes_to_aside(simple_html_dom $html): simple_html_dom {
     return $html;
 }
 
-
-
-
-
-
-
 function ulFix(simple_html_dom $html): simple_html_dom {
 
     // Найдём все <ul class="ul-fix">
@@ -2152,13 +1819,6 @@ function ulFix(simple_html_dom $html): simple_html_dom {
 
     return $html;
 }
-
-
-
-
-
-
-
 
 /**
  * Добавляет CSS-класс(ы) ко всем <ul>.
@@ -2186,7 +1846,6 @@ function addClassToAllUl(simple_html_dom $html, string $classes, ?callable $filt
         } elseif (method_exists($ul, 'getAttribute')) {
             $existing = (string)$ul->getAttribute('class');
         }
-
 
         /*    ПОЧИЩЕНО ПУРИФАЕРОМ, оставлено как страховка */
 
@@ -2219,12 +1878,6 @@ function addClassToAllUl(simple_html_dom $html, string $classes, ?callable $filt
     return $html;
 }
 
-
-
-
-
-
-
 /**
  * Заменяет все <span> на семантику
  *
@@ -2255,12 +1908,7 @@ function replaceSemanticSpans(simple_html_dom $html): simple_html_dom {
 
 // $html = replaceSemanticSpans($html);
 
-
-
-
-
-
-function refreshCaches() { 
+function refreshCaches() {
 
     if(is_file("DATABASE/DB/DB-TOC-Cache.txt")) {
         // rename("DATABASE/DB/DB-TOC-Cache.txt", "DATABASE/DB/DB-TOC-Cache.txt.del");
@@ -2293,12 +1941,6 @@ function refreshCaches() {
     }
 }
 
-
-
-
-
-
-
 function getCommCount($commaddr) {
 
     if(is_file("DATABASE/comments/".$commaddr.".count")) {
@@ -2317,14 +1959,6 @@ function getCommCount($commaddr) {
     }
 }
 
-
-
-
-
-
-
-
-
 /*
 function unwrapParagraphsAfterDiv($html) {
     return preg_replace_callback(
@@ -2341,7 +1975,6 @@ function unwrapParagraphsAfterDiv($html) {
     );
 }
 */
-
 
 function unwrapParagraphsAfter($txt) {
     return preg_replace_callback(
@@ -2363,8 +1996,6 @@ function unwrapParagraphsAfter($txt) {
     );
 }
 
-
-
 function seoLinkDecode(int $num) {
     global $seoNumEncode;
 
@@ -2375,9 +2006,6 @@ function seoLinkDecode(int $num) {
 
     return (int)1;
 }
-
-
-
 
 function seoMoveNum2End($addr) {
 
@@ -2394,13 +2022,9 @@ function seoMoveNum2End($addr) {
     return "?".implode("/", $linkArr);
 }
 
-
-
-
-
 function seoNumGet() {
 
-    $str = $_SERVER["QUERY_STRING"];
+    $str = $_SERVER["QUERY_STRING"] ?? '';
 
     $str = explode("&", $str)[0];
 
@@ -2410,11 +2034,6 @@ function seoNumGet() {
 
     return seoLinkDecode($str);
 }
-
-
-
-
-
 
 function skipCache(string $filepath): string {
     $mTime = 0;
@@ -2427,41 +2046,6 @@ function skipCache(string $filepath): string {
 
     return $filepath . $separator . $mTime;
 }
-
-
-
-
-
-
-/*
-function normalize_entities_my(string $text): string {
-
-    // 1. Десятичные сущности с ведущими нулями → канонический вид + проверка на предел
-    $text = preg_replace_callback('/&#0*(\d+);/', function ($matches) {
-        $num = (int)$matches[1];
-        if ($num > 0x10FFFF) $num = 0xFFFD; // REPLACEMENT CHARACTER
-        return '&#' . $num . ';';
-    }, $text);
-
-    // 2. Hex сущности (регистр независим) → переводим в десятичный + проверка на предел
-    $text = preg_replace_callback('/&#x0*([0-9a-f]+);/i', function ($matches) {
-        $num = (int)hexdec($matches[1]);
-        if ($num > 0x10FFFF) $num = 0xFFFD;
-        return '&#' . $num . ';';
-    }, $text);
-
-    // 3. Остальные именованные сущности → просто в нижний регистр
-    $text = preg_replace_callback('/&[a-z][a-z0-9]+;/i', function ($matches) {
-        return strtolower($matches[0]);
-    }, $text);
-
-    // 4. Экранируем одиночные & не входящие в сущности
-    $text = preg_replace('/&(?![a-z][a-z0-9]*;|#\d+;|#x[0-9a-f]+;)/i', '&amp;', $text);
-
-    return $text;
-}
-*/
-
 
 function normalize_entities_my(string $text): string {
     // HTML5: маппинг C1 (0x80–0x9F) → Unicode
@@ -2508,28 +2092,10 @@ function normalize_entities_my(string $text): string {
     return $text;
 }
 
-
-
-
-
-
-
-
-
-
-
 function escape_amp_txtarea(string $text): string
 {
     return str_replace("&", "&amp;", $text);
 }
-
-
-
-
-
-
-
-
 
 function remove_entities(string $text): string {
     // 1) именованные (&nbsp;)  2) десятичные (&#160;)  3) шестн. (&#xA0;)
@@ -2545,27 +2111,6 @@ function remove_entities(string $text): string {
 
     return $text;
 }
-
-
-
-
-
-
-/*
-
-function dbCleanupAllNewFiles(string $filename): void {
-    $pattern = $filename . '.new.*';
-
-    foreach (glob($pattern) as $path) {
-        if (is_file($path)) {
-            @unlink($path);
-        }
-    }
-}
-
-*/
-
-
 
 function atomicCounterIncrement($path) {
 
@@ -2589,14 +2134,6 @@ function atomicCounterIncrement($path) {
         fclose($fp);
     }
 }
-
-
-
-
-
-
-
-
 
 // Небольшой генератор ASCII-токена (на случай старых PHP без random_bytes)
 function _typo_token($prefix)
@@ -2682,14 +2219,6 @@ function restore_code_double_hyphen($html, $ctx)
     }
     return str_replace($token, ' -- ', $html);
 }
-
-
-
-
-
-
-
-
 
 /**
  * Быстрый кавычкер «ёлочки» со скоупом по HTML-тегам.
@@ -2888,13 +2417,6 @@ function typograph_guillemets($html)
     return implode('', $chunks);
 }
 
-
-
-
-
-
-
-
 /**
  * Перед типографом: прячет кавычки внутри <code>:
  *   1) "      -> DQUOTE token
@@ -2974,12 +2496,6 @@ function restore_code_quotes($html, $ctx)
     return $html;
 }
 
-
-
-
-
-
-
 /**
  * Добавляет неразрывные пробелы к русским предлогам, союзам, сокращениям и частицам.
  *
@@ -2992,14 +2508,11 @@ function restore_code_quotes($html, $ctx)
 function ru_nbsp_typograf(string $text, bool $useHtmlNbsp = true): string
 {
 
-
     $ctx = array();
 
     $text = protect_code_double_hyphen($text, $ctx);
 
     $text = protect_code_quotes($text, $ctx);   // новая: " -> токен
-
-
 
     // Неразрывный пробел и тире
     $nbsp  = $useHtmlNbsp ? '&nbsp;' : "\u{00A0}";
@@ -3148,7 +2661,6 @@ function ru_nbsp_typograf(string $text, bool $useHtmlNbsp = true): string
 
     $text = str_replace($searchWords, $replaceWords, $text);
 
-
     // ── 3) Частицы "же", "ли", "бы", "б" ───────────────────────────
     // NBSP СЛЕВА: "как же выйти" → "как&nbsp;же выйти"
 
@@ -3160,23 +2672,12 @@ function ru_nbsp_typograf(string $text, bool $useHtmlNbsp = true): string
 
     $text = typograph_guillemets($text);             // «ёлочки»
 
-
-
     $text = restore_code_double_hyphen($text, $ctx);
 
     $text = restore_code_quotes($text, $ctx);
 
-
     return $text;
 }
-
-
-
-
-
-
-
-
 
 /**
  * Шаблон: {{nobr|ТЕКСТ}}
@@ -3194,10 +2695,6 @@ function tpl_nobr(string $text): string
         $text
     );
 }
-
-
-
-
 
 function obyava() {
 

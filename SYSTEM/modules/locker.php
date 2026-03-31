@@ -22,17 +22,17 @@ function isDbLocked(): bool {
  * @return bool
  */
 function isLockedBy(string $username): bool {
-    if (!isDbLocked()) return false;
-
+    if(!isDbLocked()) return false;
 
     $locktmp = fopen(DBLOCK_FILE, 'rb');
+    if($locktmp === false) return false;
+
     flock($locktmp, LOCK_SH);
 
     $lockedBy = trim(stream_get_contents($locktmp));
 
     flock($locktmp, LOCK_UN);
     fclose($locktmp);
-
 
     /// $lockedBy = trim(@file_get_contents(DBLOCK_FILE));
     return $lockedBy === $username;
@@ -44,8 +44,8 @@ function isLockedBy(string $username): bool {
  * @return bool true, если успешно заблокировано, false — если уже заблокирована другим
  */
 function lockByName(string $username): bool {
-    if (isDbLocked()) {
-        if (isLockedBy($username)) {
+    if(isDbLocked()) {
+        if(isLockedBy($username)) {
             return true; // Уже заблокирована этим же пользователем
         }
         return false; // Заблокирована другим
@@ -59,24 +59,18 @@ function lockByName(string $username): bool {
  * @return bool
  */
 function unlockByName(string $username): bool {
-    if (isLockedBy($username)) {
-        return @unlink(DBLOCK_FILE);
+    if(isLockedBy($username)) {
+        if(is_file(DBLOCK_FILE)) {
+            return @unlink(DBLOCK_FILE);
+        }
     }
     return false;
 }
-
-
-
-
 
 if(isLockedBy($_SESSION['username'] ?? "dummy")) {
 
     touch(DBLOCK_FILE);
 }
-
-
-
-
 
 $last_executed3 = @filemtime(DBLOCK_FILE);
 
@@ -84,14 +78,12 @@ $diff3 = time() - (int)$last_executed3; // $last_executed is the value from the 
 
 if($last_executed3 && $diff3 > 5400) { // 1.5 hours
 
-    unlink(DBLOCK_FILE);
+    if(is_file(DBLOCK_FILE)) {
+        unlink(DBLOCK_FILE);
+    }
 }
 
-
-
-
-
-if( isset($_SESSION['username']) && (
+if(isset($_SESSION['username']) && (
     isset($_POST['title'], $_POST['h'], $_POST['textedit'], $_POST['dbtimestamp']) ||
 
     isset($_GET['edit'])     ||
@@ -100,28 +92,18 @@ if( isset($_SESSION['username']) && (
     isset($_GET['pagedel'])  ||
     isset($_GET['pgmoveup']) ||
     isset($_GET['pgmovedown'])
-        )
+    )
+) {
+    $lockPermission = $cred[$_SESSION['username']];
+    $lockPermission = (int)explode("<!!!>", $lockPermission)[0];
 
-    ) {
-
-        $lockPermission = $cred[$_SESSION['username']];
-        $lockPermission = (int)explode("<!!!>", $lockPermission)[0];
-
-        if(!isDbLocked() && $lockPermission > 2) {
-
-            lockByName($_SESSION['username']);
-        }
-
+    if(!isDbLocked() && $lockPermission > 2) {
+        lockByName($_SESSION['username']);
+    }
 } elseif(isset($_GET['leaveedit'])) {
 
     unlockByName($_SESSION['username'] ?? "dummy");
 }
-
-
-
-
-
-
 
 function plocked() {
 

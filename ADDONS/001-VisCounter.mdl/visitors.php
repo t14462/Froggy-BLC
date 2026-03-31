@@ -25,7 +25,7 @@ require_once getcwd() . "/SYSTEM/modules/functions.php";
 $dbfile = getcwd() . "/DATABASE/VisitorsOnline/visitors.db";
 $expire = 300;
 
-if (!is_file($dbfile)) {
+if(!is_file($dbfile)) {
     putFileOrDie($dbfile, serialize([])); // создаём пустой
 }
 
@@ -37,9 +37,11 @@ if (!is_writable($dbfile)) {
 
 function getVisitorID() {
     global $userAgent;
-    $ip = $_SERVER['HTTP_X_FORWARDED_FOR'] ?? $_SERVER['HTTP_CLIENT_IP'] ?? $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+
+    $ip = (string)($_SERVER['HTTP_X_FORWARDED_FOR'] ?? $_SERVER['HTTP_CLIENT_IP'] ?? $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0');
     $ip = explode(',', $ip)[0]; // Берём первый IP из цепочки
     $ip = mb_superTrim($ip);
+
     return (filter_var($ip, FILTER_VALIDATE_IP) ? $ip : '0.0.0.0') . ' + ' . $userAgent;
 }
 
@@ -55,12 +57,11 @@ function CountVisitors() {
     flock($fVisCnt, LOCK_UN);
     fclose($fVisCnt);
 
-
-    if (!is_array($data)) $data = [];
+    if(!is_array($data)) $data = [];
 
     // Чистим протухших
-    foreach ($data as $id => $time) {
-        if (($time + $expire) < $now) {
+    foreach($data as $id => $time) {
+        if(($time + $expire) < $now) {
             unset($data[$id]);
         }
     }
@@ -68,10 +69,9 @@ function CountVisitors() {
     // ksort($data, SORT_STRING);
 
     // Добавляем нового, если его ещё нет
-    if (!isset($data[$visitorID])) {
+    if(!isset($data[$visitorID])) {
         $data[$visitorID] = $now;
 
-        
         /// dbprepCache($dbfile);
 
         /// putFileOrDie($dbfile.".new." . getmypid(), serialize($data), LOCK_EX);
@@ -79,7 +79,6 @@ function CountVisitors() {
         /// dbdone($dbfile, "");
 
         putFileOrDie($dbfile, serialize($data), LOCK_EX);
-        
 
         /*
         file_put_contents($dbfile, serialize($data), LOCK_EX) or die('<!DOCTYPE html><html><head><meta http-equiv="refresh" content="1" /></head><body style="background: transparent;">&nbsp;</body></html>

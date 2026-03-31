@@ -1,13 +1,10 @@
 <?php
 
-
 if(!defined('SECURE_ACCESS')) { die('Direct access not permitted'); }
 
 ################################################
 ################################################
 ################################################
-
-
 
 function savePage() {
 
@@ -28,14 +25,12 @@ function savePage() {
         $pgtitle  = $safePost["title"];
         $htag     = (int)$safePost["h"];
 
-
         if( $checkpermission < 3 ) {
 
             $textedit = mb_strcut($textedit, 0, 129 * 1024, 'UTF-8');
         }
 
         /* $pgtitle  = str_ireplace("&nbsp;", " ", $pgtitle); */
-
 
         /*
         $pgtitle = str_ireplace(
@@ -44,7 +39,6 @@ function savePage() {
             $pgtitle
         );
         */
-
 
         // $pgtitle  = str_ireplace("<br!>", " ", $pgtitle);
         
@@ -70,8 +64,6 @@ function savePage() {
 
         // $pgtitle = preg_replace("/&amp;(#?\w+);/i", "&$1;", $pgtitle);
 
-
-
         $herror = 0;
 
         // $checknum = (int)explode("/", $_SERVER['QUERY_STRING'])[0];
@@ -79,7 +71,6 @@ function savePage() {
         // $checknum = seoLinkDecode($checknum) - 1;
 
         // $checknum = seoNumGet() - 1;
-
 
         if($safePost['dbtimestamp'] !== filemtimeMy("DATABASE/DB/data.html")) {
 
@@ -123,17 +114,7 @@ function savePage() {
 
         }
 
-
-
-
-
-
         $textedit3 = $textedit;
-
-
-
-
-
 
         ##############################################
         ##############################################
@@ -152,13 +133,9 @@ function savePage() {
         $purifier = new HTMLPurifier($config);
         $textedit = $purifier->purify($textedit);
 
-
         ##############################################
 
         
-
-
-
 
         /*
         $textedit = str_ireplace(
@@ -198,10 +175,6 @@ function savePage() {
             $textedit
         );
 
-
-
-
-
         $html = str_get_html($textedit, false, true, "UTF-8", false) or die("XSS?.. Пустой или битый HTML.");
 
         $html = ulFix($html);
@@ -211,16 +184,12 @@ function savePage() {
         $html->clear();  // чистим объект
         unset($html);    // удаляем переменную
 
-
         $textedit = str_ireplace(
             ['&@lt;', '&@gt;', '&@quot;', '&@apos;',  '&@amp;'],
             ['&lt;',  '&gt;',  '&quot;',  '&#039;',   '&amp;'],
             $textedit
         );
         */
-
-
-
 
         $textedit = str_replace("/>", " />", $textedit);
         $textedit = str_replace("  />", " />", $textedit);
@@ -230,18 +199,9 @@ function savePage() {
         
         $textedit = str_ireplace('<li></li>', '', $textedit);
 
-
-
         ##############################################
         ##############################################
         ##############################################
-
-
-
-
-
-
-
 
             $headEd = "<script src='SYSTEM/JSLIB/ckeditor/ckeditor.js'></script>";
             $bodyEd = "
@@ -298,7 +258,6 @@ function savePage() {
                             CKEDITOR.config.stylesSet = 'my_styles';
 
                             CKEDITOR.config.extraPlugins = 'codesnippet';
-
 
                             CKEDITOR.config.codeSnippet_languages = {
                                 '1c': '1C',
@@ -502,8 +461,6 @@ function savePage() {
                                 format_tags: 'p;h2;h3;h4;h5;h6;pre;address;div'
                             } );
 
-
-
                             document.querySelectorAll('#sitemenu a, #prevnextslider a, header a, a.addpglast').forEach(function(link) {
 
                                 let href = link.getAttribute('href');
@@ -519,7 +476,6 @@ function savePage() {
 
                                 link.setAttribute('href', href);
 
-
                                 /*
                                 link.addEventListener('click', event => {
                                     // показываем диалог
@@ -533,10 +489,7 @@ function savePage() {
 
                             });
 
-
-
                             let editorDirty = true; // изначально считаем, что есть изменения
-
 
                             window.addEventListener('beforeunload', function (event) {
                                 if (editorDirty) {
@@ -553,7 +506,6 @@ function savePage() {
                                 });
                             });
 
-
                             document.getElementById('pagedelbutton').addEventListener('click', function (event) {
                                 let ok = confirm('Удалить страницу? Вы уверены?');
                                 if (!ok) {
@@ -567,9 +519,6 @@ function savePage() {
 
                     </script>";
 
-
-
-
         $hsel = "<select name='h'>
         <option value='1'>Уровень 1</option>
         <option value='2'>Уровень 2</option>
@@ -581,7 +530,6 @@ function savePage() {
 
         $hsel = str_replace("<option value='".$htag."'>", "<option selected='selected' value='".$htag."'>", $hsel);
 
-
         $mainPageTitle = "Редактирование: ".$pgtitle;
 
         $dbMtime = filemtimeMy("DATABASE/DB/data.html");
@@ -589,6 +537,9 @@ function savePage() {
         // $textedit2 = protect_amp_entities_for_textarea($textedit);
 
         $textedit2 = escape_amp_txtarea($textedit);
+
+        $queryString = $_SERVER['QUERY_STRING'] ?? '';
+        $queryBase = explode('&', $queryString)[0];
 
         $dumpEdit = "<form method='post'>
 
@@ -602,18 +553,14 @@ function savePage() {
             <p><strong>{{download|DATABASE/fupload/Example.zip}}</strong>&nbsp;&mdash; Используйте это для вставки URL загрузок.</p>
             <p>Для вставки Тире используйте \" -- \" (без кавычек, с пробелами по краям)</p>
             <p><strong>{{lambda}} FROG!!!</strong></p>
-            
-
             <input id='edpagetitle' type='text' name='title' value='".$pgtitle."' />".$hsel.
             "<textarea rows='9' name='textedit' id='textedit'>"
             .$textedit2."</textarea><div class='el-in-line'> <input type='submit' value='💾 Отправить' />
 
-            <a href='?".explode('&', $_SERVER['QUERY_STRING'])[0]."&amp;leaveedit=1'>Отменить ⬅️</a>
-            <a href='?".explode("&", $_SERVER['QUERY_STRING'])[0]."&amp;pagedel=1' id='pagedelbutton'>❌ Удалить страницу</a>
-
+            <a href='?".$queryBase."&amp;leaveedit=1'>Отменить ⬅️</a>
+            <a href='?".$queryBase."&amp;pagedel=1' id='pagedelbutton'>❌ Удалить страницу</a>
 
             </div></fieldset></form>";
-
 
         switch ($herror) {
 
@@ -628,7 +575,6 @@ function savePage() {
                 /// $textedit = str_replace("<br />"  , "<br!>", $textedit);
                 $textedit = str_replace("\n", "<br!>", $textedit);
 
-
         
                 // $textedit = str_replace("&", "&amp;", $textedit);
                 // $textedit = str_replace("&amp;amp;", "&amp;", $textedit);
@@ -636,7 +582,6 @@ function savePage() {
                 // $textedit = escape_amp_txtarea($textedit);
 
                 // $textedit = protect_amp_entities_for_textarea($textedit);
-
 
                 // moved
                 // $textedit = '<head'.$htag.'>'.$pgtitle.'</head'.$htag.'><br!>'.$textedit;
@@ -656,7 +601,6 @@ function savePage() {
                 fclose($file);
 
                 $pageid = $filesource->freadOrDie(40);
-
 
                 $tmpLine = mb_substr($filesource->fgetsOrDie(), 0, 300);
 
@@ -681,7 +625,8 @@ function savePage() {
 
                 if(!dbdone("DATABASE/DB/data.html", $textedit3)) return false;
 
-                mylog("<em style='color:DarkOrange'>Страница сохранена. (" . explode("&", $_SERVER['QUERY_STRING'])[0] . " - " . $_SESSION["username"].").</em>");
+                $queryString = $_SERVER['QUERY_STRING'] ?? '';
+                mylog("<em style='color:DarkOrange'>Страница сохранена. (" . explode("&", $queryString)[0] . " - " . $_SESSION["username"].").</em>");
 
                 // $chkpgnum = (int)explode("/", $_SERVER['QUERY_STRING'])[0];
 
@@ -857,19 +802,11 @@ function savePage() {
     /// unlockByName($_SESSION['username'] ?? "");
 }
 
-
-
-
-
-
-
-
 function commentReply() {
 
     global $safePost, $idcache, $errmsg, $ip, $checkpermission, $patternYT, $replacementYT, $patternVimeo, $replacementVimeo, $patternDM, $replacementDM, $commRecov, $userAgent, $cred, $mySalt;
 
     // require_once "SYSTEM/cred.php";
-
 
     $commaddr  = $safePost["commaddr" ] ?? 0; //[0];
     $pgcommnum = (int)($safePost["pgcommnum"] ?? 0); //[1];
@@ -877,7 +814,6 @@ function commentReply() {
     $commpost  = $safePost["commpost" ];
     $visitor   = $safePost["visitor"  ];
     $captcha   = $safePost["captcha"  ];
-
 
     $commaddr = substr($commaddr, 0, 40);
     
@@ -887,7 +823,6 @@ function commentReply() {
         
         $pgcommnum = abs($pgcommnum);
 
-
         $commpost = mb_substr($commpost, 0, 2550);
 
         $commpost = normalize_entities_my($commpost);
@@ -895,8 +830,6 @@ function commentReply() {
         $commpost = mb_softTrim($commpost);
 
         /// $commpost = str_replace("\r", "", $commpost);
-
-
 
         $pgcommnum = (int)substr($pgcommnum, 0, 10);
         
@@ -917,7 +850,6 @@ function commentReply() {
 
         // $visitor = str_replace('...', '…', $visitor);
 
-
         if(filterUsername($visitor) && /* strtolower($visitor) != "аноним" && */ !array_key_exists($visitor, $cred)) {
             $_SESSION["visitor"] = $visitor;
         }
@@ -936,11 +868,6 @@ function commentReply() {
             $visitor2 = "👤<b> $visitor</b>";
         }
 
-
-
-
-
-
         $commdataline = "";
 
         $file = openFileOrDie("DATABASE/comments/".$commaddr, "rb");
@@ -957,21 +884,13 @@ function commentReply() {
         // Получаем текущую строку и её номер
         $commdataline = $file->current(); // Читаем строку
 
-
-
         $file = null; // Закрываем файл
 
-
-
-
         ####################
-
-
 
         // require_once "SYSTEM/salt.php";
 
         $today = date('Y-m-d');
-
 
         if($safePost['dbtimestamp'] !== filemtimeMy("DATABASE/comments/".$commaddr)) {
 
@@ -1004,7 +923,6 @@ function commentReply() {
             return;
 
         } elseif(!isset($_SESSION['captcha']) || !$_SESSION['captcha'] || (!$checkpermission && hash_equals($_SESSION['captcha'], hash('sha256', $captcha.$mySalt.$ip.$userAgent.$today)) && !repeatCaptcha($_SESSION['captcha']))) {
-
 
             $errmsg = "<h1>ОШИБКА.</h1><p class='big'><strong>Повторный ввод CAPTCHA, или её отключение недопустимы.</strong></p>";
             
@@ -1089,7 +1007,6 @@ function commentReply() {
             $commpost = str_replace("%QUERYSTRING%", "", $commpost);
             // $commpost = str_ireplace("<id>", "", $commpost);
 
-
             if($checkpermission) {
 
                 $commpost  = str_ireplace("<br!>", " ", $commpost);
@@ -1119,7 +1036,6 @@ function commentReply() {
                 /// $commpost = str_replace("\n", "<br!>", $commpost);
 
                 
-
 
                 $commpost = str_ireplace(
                     [
@@ -1158,9 +1074,6 @@ function commentReply() {
                     $commpost
                 );
 
-
-
-
                 $html = str_get_html($commpost, false, true, "UTF-8", false) or die("XSS?.. Пустой или битый HTML.");
 
                 /// $html = ulFix($html);
@@ -1183,13 +1096,11 @@ function commentReply() {
                 $html->clear();  // чистим объект
                 unset($html);    // удаляем переменную
 
-
                 $commpost = str_ireplace(
                     ['&@lt;', '&@gt;', '&@quot;', '&@apos;', '&@amp;'],
                     ['&lt;',  '&gt;',  '&quot;',  '&#039;',   '&amp;'],
                     $commpost
                 );
-
 
                 // Замена шаблона youtube на iframe
                 $commpost = preg_replace_callback($patternYT, $replacementYT, $commpost);
@@ -1219,8 +1130,6 @@ function commentReply() {
         
                 $commpost = str_ireplace('<li></li>', '', $commpost);
 
-
-
                 // $commpost = str_replace('<li><br /></li>', '', $commpost);
                 // $commpost = str_replace('<br /></li>', '</li>', $commpost);
                 ///
@@ -1231,7 +1140,6 @@ function commentReply() {
 
                 /// $commpost = str_replace("<br />", "<br!>", $commpost);
 
-
                 /// $commpost = preg_replace('/&(?!\w+;|#\d+;|#x[0-9a-fA-F]+;)/', '&amp;', $commpost);
 
             } else {
@@ -1241,19 +1149,13 @@ function commentReply() {
                 // $commpost = str_ireplace("\n", "<br />\n", $commpost);
             }
 
-
-
             dbprepApnd("DATABASE/comments/".$commaddr);
-
-
 
             $file = openFileOrDie("DATABASE/comments/".$commaddr
             . ".new." . getmypid(), "rb");            
             $file->seekOrDie($pgcommnum); // Переходим к нужной строке
             $commdataline = $file->current(); // Читаем строку
             $file = null; // Закрываем файл
-
-
 
             /*
             $commpost = str_replace("<br />\n", "<br />", $commpost);
@@ -1263,7 +1165,6 @@ function commentReply() {
             $commpost = str_replace("\n", "<br!>", $commpost);
 
             $commdataline = rtrim($commdataline);
-
 
             while(true) {
 
@@ -1281,12 +1182,9 @@ function commentReply() {
                 }
             }
 
-
             $commdataline = str_replace("<$repcommid />", "<ul><li><$commid>$visitor2<d>$commpost</d><a href='?%QUERYSTRING%&amp;creply=<id>{$pgcommnum}-$commid#R'>rep.</a> <a href='?%QUERYSTRING%&amp;cmove=<id>{$pgcommnum}-$commid'>del.</a><$commid><$commid /></li></ul><$repcommid />", $commdataline);
 
-
             
-
 
             $filesource = openFileOrDie("DATABASE/comments/".$commaddr . ".src." . getmypid(), 'rb');
 
@@ -1294,14 +1192,11 @@ function commentReply() {
 
             $firstChunkEnd = $filesource->ftell();
 
-
             $file = fopenOrDie("DATABASE/comments/".$commaddr.".new." . getmypid(), "r+b");
             ftruncateOrDie($file,$firstChunkEnd);
             fclose($file);
 
-
             $filesource->fgetsOrDie();
-
 
             $filedest = openFileOrDie("DATABASE/comments/".$commaddr.".new." . getmypid(), 'ab');
 
@@ -1318,29 +1213,6 @@ function commentReply() {
             
 
             if(!dbdone("DATABASE/comments/".$commaddr, $commpost2)) return false;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
             ###############################################
 
@@ -1364,22 +1236,12 @@ function commentReply() {
                 $commpage = $safePost["commpage"];
             }
 
-
-
-
-
-
-
-
-
-
             /*
 
             if(!is_file("DATABASE/comm.count/".$commaddr)) {
 
                 copy("SYSTEM/modules/null.txt", "DATABASE/comm.count/".$commaddr);
             }
-
 
             dbprepCommCnt("DATABASE/comm.count/".$commaddr);
 
@@ -1399,12 +1261,10 @@ function commentReply() {
 
             ###############################################
 
-
-
             // mylog("<em style='color:DarkGreen'>Добавлен ответ на комментарий <a href='".$url."?".explode("&", $_SERVER['QUERY_STRING'])[0]."&commpage=".$commpage."'>".$commaddr."</a> ".$ip."</em>");
 
-
-            refreshhandle(0, "?".explode("&", $_SERVER['QUERY_STRING'])[0]."&ts=".microtime(true)."&commpage=".$commpage."#comm-section", false);
+            $queryString = $_SERVER['QUERY_STRING'] ?? '';
+            refreshhandle(0, "?".explode("&", $queryString)[0]."&ts=".microtime(true)."&commpage=".$commpage."#comm-section", false);
 
         }
 
@@ -1417,25 +1277,21 @@ function commentReply() {
     }
 }
 
-
 function postComment() {
 
     global $safePost, $errmsg, $idcache, $ip, $checkpermission, $patternYT, $replacementYT, $patternVimeo, $replacementVimeo, $patternDM, $replacementDM, $commRecov, $userAgent, $cred, $mySalt;
 
     // require_once "SYSTEM/cred.php";
 
-
     $commpost = $safePost["commpost"];
     $commaddr = $safePost["commaddr"];
     $visitor  = $safePost["visitor" ];
     $captcha  = $safePost["captcha" ];
 
-
     $commaddr = substr($commaddr, 0, 40);
     /// $commaddr = filter_filename($commaddr);
 
     if(in_array($commaddr, $idcache, true)) {
-
 
         $commpost = mb_substr($commpost, 0, 2550);
         
@@ -1444,8 +1300,6 @@ function postComment() {
         $commpost = mb_softTrim($commpost);
 
         /// $commpost = str_replace("\r", "", $commpost);
-
-
 
         $captcha = substr($captcha, 0, 6);
 
@@ -1460,7 +1314,6 @@ function postComment() {
         //// $visitor = mb_superTrim($visitor);
 
         // $visitor = str_replace('...', '…', $visitor);
-
 
         if(filterUsername($visitor) && /* strtolower($visitor) != "аноним" && */ !array_key_exists($visitor, $cred)) {
             $_SESSION["visitor"] = $visitor;
@@ -1480,13 +1333,9 @@ function postComment() {
             $visitor2 = "👤<b> $visitor</b>";
         }
 
-
-
-
         // require_once "SYSTEM/salt.php";
 
         $today = date('Y-m-d');
-
 
         if($safePost['dbtimestamp'] !== filemtimeMy("DATABASE/comments/".$commaddr)) {
 
@@ -1520,7 +1369,6 @@ function postComment() {
 
         } elseif(!isset($_SESSION['captcha']) || !$_SESSION['captcha'] || (!$checkpermission && hash_equals($_SESSION['captcha'], hash('sha256', $captcha.$mySalt.$ip.$userAgent.$today)) && !repeatCaptcha($_SESSION['captcha']))) {
 
-
             $errmsg = "<h1>ОШИБКА.</h1><p class='big'><strong>Повторный ввод CAPTCHA, или её отключение недопустимы.</strong></p>";
             
             $commRecov = $commpost;
@@ -1533,7 +1381,6 @@ function postComment() {
             $commRecov .= " ";
             pageload();
             return;
-
 
         } elseif(!$checkpermission && (empty($captcha) || !hash_equals($_SESSION['captcha'], hash('sha256', $captcha.$mySalt.$ip.$userAgent.$today)))) {
 
@@ -1590,7 +1437,6 @@ function postComment() {
             $commpost = str_replace("%QUERYSTRING%", "", $commpost);
             // $commpost = str_ireplace("<id>", "", $commpost);
 
-
             if($checkpermission) {
 
                 $commpost  = str_ireplace("<br!>", " ", $commpost);
@@ -1619,7 +1465,6 @@ function postComment() {
 
                 /// $commpost = str_replace("\n", "<br!>", $commpost);
                 
-
 
                 $commpost = str_ireplace(
                     [
@@ -1658,9 +1503,6 @@ function postComment() {
                     $commpost
                 );
 
-
-
-
                 $html = str_get_html($commpost, false, true, "UTF-8", false) or die("XSS?.. Пустой или битый HTML.");
 
                 /// $html = ulFix($html);
@@ -1682,7 +1524,6 @@ function postComment() {
 
                 $html->clear();  // чистим объект
                 unset($html);    // удаляем переменную
-
 
                 $commpost = str_ireplace(
                     ['&@lt;', '&@gt;', '&@quot;', '&@apos;', '&@amp;'],
@@ -1719,8 +1560,6 @@ function postComment() {
         
                 $commpost = str_ireplace('<li></li>', '', $commpost);
 
-
-
                 // $commpost = str_replace('<li><br /></li>', '', $commpost);
                 // $commpost = str_replace('<br /></li>', '</li>', $commpost);
                 ///
@@ -1731,7 +1570,6 @@ function postComment() {
 
                 /// $commpost = str_replace("<br />", "<br!>", $commpost);
 
-
                 /// $commpost = preg_replace('/&(?!\w+;|#\d+;|#x[0-9a-fA-F]+;)/', '&amp;', $commpost);
                 
             } else {
@@ -1741,24 +1579,17 @@ function postComment() {
                 // $commpost = str_ireplace("\n", "<br />\n", $commpost);
             }
 
-
-
             if(!is_file("DATABASE/comments/".$commaddr)) {
                 copy("SYSTEM/modules/dummy.txt", "DATABASE/comments/".$commaddr);
             }
 
-
-
-
             dbprepApnd("DATABASE/comments/".$commaddr);
-
 
             $lastLineNumber = 0;
             $bufferSize = 128 * 1024; // 128 КБ
 
             $file = openFileOrDie("DATABASE/comments/".$commaddr
             . ".new." . getmypid(), "rb");
-
 
             while($data = $file->freadOrDie($bufferSize)) {
 
@@ -1776,13 +1607,9 @@ function postComment() {
             $commpost = str_replace("<br />"  , "<br!>", $commpost);
             $commpost = str_replace("\n", "<br!>", $commpost);
 
-
             $commid = bin2hex(random_bytes(20)); // sha1(microtime().$ip.$userAgent);
 
-
             $commpost = "<li><$commid>".$visitor2."<d>$commpost</d><a href='?%QUERYSTRING%&amp;creply=<id>{$lastLineNumber}-$commid#R'>rep.</a> <a href='?%QUERYSTRING%&amp;cmove=<id>{$lastLineNumber}-$commid'>del.</a><$commid><$commid /></li>";
-
-
 
             $file = fopenOrDie("DATABASE/comments/".$commaddr.".new." . getmypid(), "ab");
             fwriteOrDie($file, $commpost."\n");
@@ -1791,19 +1618,7 @@ function postComment() {
 
             if(!dbdone("DATABASE/comments/".$commaddr, $commpost2)) return false;
 
-
             $comTotalPages = calcTotPages2($lastLineNumber + 1, $commaddr, 8, true);
-
-
-
-
-
-
-
-
-
-
-
 
             /*
 
@@ -1811,7 +1626,6 @@ function postComment() {
 
                 copy("SYSTEM/modules/null.txt", "DATABASE/comm.count/".$commaddr);
             }
-
 
             dbprepCommCnt("DATABASE/comm.count/".$commaddr);
 
@@ -1832,11 +1646,8 @@ function postComment() {
             ##########################
             // mylog("<em style='color:DarkGreen'>Добавлен комментарий <a href='".$url."?".explode("&", $_SERVER['QUERY_STRING'])[0]."&commpage=".$comTotalPages."'>".$commaddr."</a> ".$ip."</em>");
 
-
-            refreshhandle(0, "?".explode("&", $_SERVER['QUERY_STRING'])[0]."&ts=".microtime(true)."&commpage=".$comTotalPages."#comm-section", false);
-
-
-
+            $queryString = $_SERVER['QUERY_STRING'] ?? '';
+            refreshhandle(0, "?".explode("&", $queryString)[0]."&ts=".microtime(true)."&commpage=".$comTotalPages."#comm-section", false);
 
         }
 
@@ -1852,9 +1663,7 @@ function loginPost() {
 
     global $safePost, $errmsg, $ip, $userAgent, $cred, $mySalt;
 
-
     // require_once "SYSTEM/cred.php";
-
 
     if(!filterUsername($safePost["username"])) {
 
@@ -1874,7 +1683,6 @@ function loginPost() {
 
         /// $lasttime = (int)getFileOrDie("DATABASE/lock/".$hashh);
 
-
         $locktmp = fopenOrDie("DATABASE/lock/".$hashh, 'rb');
         flock($locktmp, LOCK_SH);
 
@@ -1882,7 +1690,6 @@ function loginPost() {
 
         flock($locktmp, LOCK_UN);
         fclose($locktmp);
-
 
         // require_once "SYSTEM/salt.php";
 
@@ -1899,8 +1706,6 @@ function loginPost() {
 
             mylog("<strong style='color:DarkGreen'>Вход в систему (".$_SESSION["username"].").</strong>");
 
-
-
             refreshhandle(0, "?", false);
 
         } else {
@@ -1913,7 +1718,6 @@ function loginPost() {
         }
     }
 }
-
 
 function imageupload() {
 
@@ -1929,7 +1733,18 @@ function imageupload() {
 
         $errmsg = "<h1>Info.</h1><ol class='big'>";
 
-
+        if(
+            !isset($_FILES['fileToUpload']) ||
+            !is_array($_FILES['fileToUpload']) ||
+            empty($_FILES['fileToUpload']['name'])
+        ) {
+            $errmsg .= "<li>Файл не был передан.</li>";
+            mylog("<em style='color:DarkOrange'>Файл не был передан. (".$_SESSION["username"].").</em>");
+            $errmsg .= "</ol>";
+            $content = "";
+            refreshhandle(4, "?gallery=-1", false);
+            return;
+        }
 
         $target_dir = "DATABASE/gallery/";
         $target_file = basename($_FILES["fileToUpload"]["name"]);
@@ -1950,7 +1765,7 @@ function imageupload() {
             $target_file = $target_dir.$target_file;
 
             // Check if image file is a actual image or fake image
-            if(isset($safePost["imgup"])) {
+            if(isset($safePost["imgup"]) && is_uploaded_file($_FILES["fileToUpload"]["tmp_name"])) {
                 $check = getimagesize($_FILES["fileToUpload"]["tmp_name"]);
                 if($check !== false) {
                     $errmsg .= "<li>Файл является изображением - " . $check["mime"] . ".</li>";
@@ -1967,7 +1782,6 @@ function imageupload() {
                 $uploadOk = 0;
             }
 
-
             // Check if file already exists
             if(is_file($target_file)) {
                 $errmsg .= "<li>Извините, файл уже существует.</li>";
@@ -1976,7 +1790,7 @@ function imageupload() {
             }
 
             // Check file size
-            if($_FILES["fileToUpload"]["size"] > 2048*1024) {
+            if((int)($_FILES["fileToUpload"]["size"] ?? 0) > 2048 * 1024) {
                 $errmsg .= "<li>Извините, ваш файл слишком большой.</li>";
                 mylog("<em style='color:DarkOrange'>Извините, ваш файл слишком большой. (".$_SESSION["username"].").</em>");
                 $uploadOk = 0;
@@ -2020,10 +1834,6 @@ function imageupload() {
     }
 }
 
-
-
-
-
 function fileDlUpload() {
 
     global $errmsg, $content, $checkpermission;
@@ -2038,70 +1848,75 @@ function fileDlUpload() {
 
         $errmsg = "";
 
+        if(
+            !isset($_FILES['upfiledl']) ||
+            !is_array($_FILES['upfiledl']) ||
+            empty($_FILES['upfiledl']['name'])
+        ) {
+            $errmsg = "<h1>Info.</h1><p class='big'>Файл не был передан.</p>";
+            $content = "";
+            refreshhandle(4, "?dlfiles=-1", false);
+            return;
+        }
 
+        $file = $_FILES['upfiledl'];
 
-        if(!empty($_FILES['upfiledl'])) {
+        $srcFileName = $file['name'];
+        $srcFileName = filter_filename($srcFileName);
+        $newFilePath = 'DATABASE/fupload/' . $srcFileName;
 
+        $allowedExtensions = [
+            // Текстовые и данные
+            'txt', 'csv', 'tsv', 'json', 'xml', 'md', 'log', 'ini', 'yaml', 'yml',
 
-            $file = $_FILES['upfiledl'];
+            // Дополнительные безопасные текстовые форматы
+            'conf', 'cfg', 'toml', 'properties',
+            'rst', 'adoc', 'org',
+            'diff', 'patch', 'nfo',
+            'tex', 'bib',
 
-            $srcFileName = $file['name'];
-            
-            $srcFileName = filter_filename($srcFileName);
-            $newFilePath = 'DATABASE/fupload/' . $srcFileName;
+            // Документы и офисные файлы
+            'pdf', 'doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx', 'odt', 'ods', 'odp', 'rtf',
 
-            $allowedExtensions = [
-                // Текстовые и данные
-                'txt', 'csv', 'tsv', 'json', 'xml', 'md', 'log', 'ini', 'yaml', 'yml',
+            // Электронные книги
+            'epub', 'mobi', 'azw', 'azw3',
 
-                // Дополнительные безопасные текстовые форматы
-                'conf', 'cfg', 'toml', 'properties',
-                'rst', 'adoc', 'org',
-                'diff', 'patch', 'nfo',
-                'tex', 'bib',
+            // Архивы и образы
+            'zip', 'rar', '7z', 'tar', 'gz', 'bz2', 'xz', 'lz', 'lzma', 'iso',
 
-                // Документы и офисные файлы
-                'pdf', 'doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx', 'odt', 'ods', 'odp', 'rtf',
+            // Игровые и мод-ресурсы
+            'esp', 'esm',
 
-                // Электронные книги
-                'epub', 'mobi', 'azw', 'azw3',
+            // Субтитры и прочее медиасопровождение (без видео и изображений)
+            'srt', 'vtt', 'ass', 'ssa', 'sub',
 
-                // Архивы и образы
-                'zip', 'rar', '7z', 'tar', 'gz', 'bz2', 'xz', 'lz', 'lzma', 'iso',
+            // Шрифты (если нужны для фронта, но не исполняемы)
+            'ttf', 'otf', 'woff', 'woff2',
 
-                // Игровые и мод-ресурсы
-                'esp', 'esm',
+            // Базы данных/дампы
+            'sql', 'sqlite', 'db', 'db3',
+        ];
 
-                // Субтитры и прочее медиасопровождение (без видео и изображений)
-                'srt', 'vtt', 'ass', 'ssa', 'sub',
+        $extension = strtolower(pathinfo($srcFileName, PATHINFO_EXTENSION));
 
-                // Шрифты (если нужны для фронта, но не исполняемы)
-                'ttf', 'otf', 'woff', 'woff2',
+        /// if($srcFileName == "") {
 
-                // Базы данных/дампы
-                'sql', 'sqlite', 'db', 'db3',
-            ];
+        if(empty($srcFileName)) {
+            $errmsg = 'Имя файла пустое!';
+            mylog("<em style='color:DarkOrange'>Имя файла пустое! (".$_SESSION["username"].").</em>");
 
-            $extension = pathinfo($srcFileName, PATHINFO_EXTENSION);
+        } elseif(!in_array($extension, $allowedExtensions, true)) {
+            $errmsg = 'Загрузка файлов с таким расширением запрещена!';
+            mylog("<strong style='color:DarkRed'>Загрузка файлов с таким расширением запрещена! (".$_SESSION["username"].").</strong>");
 
+        } elseif($file['error'] !== UPLOAD_ERR_OK) {
+            $errmsg = 'Неизвестная ошибка при загрузке файла.';
+            mylog("<strong style='color:DarkRed'>Неизвестная ошибка при загрузке файла. (".$_SESSION["username"].").</strong>");
 
-            $fileSize = filesize($file['tmp_name']);
+        } else {
+            $fileSize = is_uploaded_file($file['tmp_name']) ? filesize($file['tmp_name']) : 0;
 
-            /// if($srcFileName == "") {
-
-            if(empty($srcFileName)) {
-                $errmsg = 'Имя файла пустое!';
-                mylog("<em style='color:DarkOrange'>Имя файла пустое! (".$_SESSION["username"].").</em>");
-
-            } elseif(!in_array($extension, $allowedExtensions, true)) {
-                $errmsg = 'Загрузка файлов с таким расширением запрещена!';
-                mylog("<strong style='color:DarkRed'>Загрузка файлов с таким расширением запрещена! (".$_SESSION["username"].").</strong>");
-
-            } elseif($file['error'] !== UPLOAD_ERR_OK) {
-                $errmsg = 'Неизвестная ошибка при загрузке файла.';
-                mylog("<strong style='color:DarkRed'>Неизвестная ошибка при загрузке файла. (".$_SESSION["username"].").</strong>");
-
-            } elseif(is_file($newFilePath)) {
+            if(is_file($newFilePath)) {
                 $errmsg = 'Файл с таким именем уже существует.';
                 mylog("<em style='color:DarkOrange'>Файл с таким именем уже существует. (".$_SESSION["username"].").</em>");
 
@@ -2118,28 +1933,23 @@ function fileDlUpload() {
                 mylog("<strong style='color:DarkRed'>Ошибка при перемещении файла. (".$_SESSION["username"].").</strong>");
 
             } else {
-
                 $errmsg = 'Успешно загружено.';
                 mylog("<strong style='color:DarkGreen'>Успешно загружен файл. (".$_SESSION["username"].").</strong>");
             }
-
-            $errmsg = "<h1>Info.</h1><p class='big'>".$errmsg."</p>";
-
-            $content = "";
-
-            refreshhandle(4, "?dlfiles=-1", false);
         }
+
+        $errmsg = "<h1>Info.</h1><p class='big'>".$errmsg."</p>";
+
+        $content = "";
+
+        refreshhandle(4, "?dlfiles=-1", false);
     }
 }
 
-
-
-
-
-
-
 function registerp() {
+
     global $content, $safePost, $errmsg, $cred, $mySalt;
+
     // require_once "SYSTEM/salt.php";
     // require_once "SYSTEM/cred.php";
 
@@ -2150,14 +1960,11 @@ function registerp() {
     $content = "";
     $errmsg = "";
 
-
     // Validate password strength
     $uppercase    = preg_match('@[A-Z]@', $password1);
     $lowercase    = preg_match('@[a-z]@', $password1);
     $number       = preg_match('@[0-9]@', $password1);
     $specialChars = preg_match('@[^\w]@', $password1);
-
-
 
     if(!filterUsername($username)) {
         $errmsg = "<h1>ОШИБКА.</h1><p class='big'><strong>Имя содержит недопустимые символы или пустое.</strong></p>";
@@ -2194,8 +2001,6 @@ function registerp() {
     registerg();
 }
 
-
-
 // Функция для обработки POST запроса и сохранения выбранного шаблона в сессии
 function saveTplSess() {
 
@@ -2212,17 +2017,11 @@ function saveTplSess() {
         // Сохраняем выбранный шаблон в сессии
         // $_SESSION['selected_template'] = $safePost['selected_template'];
         set_cookie("selected_template", $safePost['selected_template'], time() + (10 * 365 * 24 * 60 * 60));
-        
     }
 
-    refreshhandle(0, "?".$_SERVER['QUERY_STRING'], false);
+    $queryString = $_SERVER['QUERY_STRING'] ?? '';
+    refreshhandle(0, "?".$queryString, false);
 }
-
-
-
-
-
-
 
 function pobyava() {
 

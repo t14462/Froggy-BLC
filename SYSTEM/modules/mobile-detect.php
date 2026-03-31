@@ -2,8 +2,6 @@
 
 if(!defined('SECURE_ACCESS')) { die('Direct access not permitted'); }
 
-// example.php contents
-
 use Detection\Exception\MobileDetectException;
 use Detection\MobileDetectStandalone;
 
@@ -14,20 +12,12 @@ $mobileDetection = new MobileDetectStandalone();
 
 // $mobileDetection->setUserAgent('iPhone'); ///
 
-
 try {
-
     if($mobileDetection->isMobile()) $sMobile = "-mobile";
-
-} catch (MobileDetectException $e) {
-    
+} catch(MobileDetectException $e) {
 }
 
-
 try {
-
     if($mobileDetection->isTablet()) $sMobile = "";
-
-} catch (MobileDetectException $e) {
-    
+} catch(MobileDetectException $e) {
 }

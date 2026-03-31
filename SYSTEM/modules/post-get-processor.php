@@ -9,14 +9,10 @@ if(!defined('SECURE_ACCESS')) { die('Direct access not permitted'); }
 require_once "SYSTEM/modules/action-post.php";
 require_once "SYSTEM/modules/action-get.php";
 
-
-
-
-function detectaction(){
+function detectaction() {
 
     global $safeGet;
     global $safePost;
-
 
     if(
         // Редактирование и админ-действия
@@ -46,12 +42,10 @@ function detectaction(){
         isset($safePost['fuptrigger'])
     ) {
         return true;
-    } else {
-        return false;
     }
+
+    return false;
 }
-
-
 
 if(!$checkpermission && detectaction()) {
 
@@ -121,12 +115,10 @@ if(!$checkpermission && detectaction()) {
 
     pobyava();
 
-
 ##################################################
 ################################################## 
 ##################################################
 ##################################################
-
 
 } elseif(isset($safeGet["permalink"])) {
 

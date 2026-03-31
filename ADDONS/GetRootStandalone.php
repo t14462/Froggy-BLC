@@ -6,26 +6,17 @@ if(!defined('SECURE_ACCESS')) { die('Direct access not permitted'); }
 ################################################
 ################################################
 
-
-
 function rtrim_word(string $str, string $word): string {
     // Если слово не пустое и строка заканчивается этим словом
-    if ($word !== '' && substr($str, -strlen($word)) === $word) {
+    if($word !== '' && substr($str, -strlen($word)) === $word) {
         return substr($str, 0, -strlen($word));
     }
     return $str;
 }
 
+$docRoot = realpath($_SERVER['DOCUMENT_ROOT'] ?? '') ?: ''; // например: /var/www/html
 
-
-
-
-
-
-
-$docRoot = realpath($_SERVER['DOCUMENT_ROOT']); // например: /var/www/html
-
-$scriptName = str_replace('\\', '/', $_SERVER['SCRIPT_NAME']); // например: /my/ADDONS/test.php
+$scriptName = str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? ''); // например: /my/ADDONS/test.php
 $baseDir = trim(dirname($scriptName), '/'); // например: "my/ADDONS"
 
 $parts = explode('/', $baseDir);
