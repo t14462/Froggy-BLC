@@ -101,7 +101,7 @@ if(!is_dir($COUNT_DIR)) {
 }
 $cntFile = $COUNT_DIR . '/' . $file . '.dlcnt';
 
-if(is_dir($COUNT_DIR)) {
+if(is_dir($COUNT_DIR) && is_writable($COUNT_DIR)) {
     $fp = @fopen($cntFile, 'c+b');
     if($fp) {
         if(flock($fp, LOCK_EX)) {
@@ -112,9 +112,9 @@ if(is_dir($COUNT_DIR)) {
             $val++;
 
             rewind($fp);
-            ftruncate($fp, 0);
-            fwrite($fp, (string)$val);
-            fflush($fp);
+            if(ftruncate($fp, 0) !== false && fwrite($fp, (string)$val) !== false) {
+                fflush($fp);
+            }
             flock($fp, LOCK_UN);
         }
         fclose($fp);

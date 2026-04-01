@@ -52,8 +52,11 @@ function CountVisitors() {
     $visitorID = getVisitorID();
 
     $fVisCnt = fopenOrDie($dbfile, 'rb');
-    flock($fVisCnt, LOCK_SH);
-    $data = @unserialize(stream_get_contents($fVisCnt), ['allowed_classes' => false]);
+    if(!flock($fVisCnt, LOCK_SH)) {
+        fclose($fVisCnt);
+        return '0000';
+    }
+    $data = @unserialize((string)stream_get_contents($fVisCnt), ['allowed_classes' => false]);
     flock($fVisCnt, LOCK_UN);
     fclose($fVisCnt);
 

@@ -54,7 +54,11 @@ function getRandomLineFromLargeFile(string $filename) {
 
 $randQuot = getRandomLineFromLargeFile($filename);
 
-$randQuot = explode("<!!!>", $randQuot);
+if(!is_string($randQuot) || $randQuot === '') {
+    return;
+}
+
+$randQuot = explode("<!!!>", $randQuot, 2);
 
 $randQuot[0] = mb_superTrim($randQuot[0]);
 

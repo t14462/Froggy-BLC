@@ -110,9 +110,15 @@ $text_box = imagettfbbox(
     $captcha_font,
     $captcha_code
 );
+
+if($text_box === false) {
+    http_response_code(500);
+    exit('Captcha font error');
+}
+
 $x = ($captcha_image_width - $text_box[4]) / 2;
 $y = ($captcha_image_height - $text_box[5]) / 2;
-imagettftext(
+$text_drawn = imagettftext(
     $captcha_image,
     $captcha_font_size,
     0,
@@ -123,10 +129,19 @@ imagettftext(
     $captcha_code
 );
 
+if($text_drawn === false) {
+    http_response_code(500);
+    exit('Captcha draw error');
+}
+
 /* Show captcha image in the html page */
 // Defining the image type to be shown in browser window
 header('Content-Type: image/jpeg');
-imagejpeg($captcha_image, null, 16); // showing the image
+$jpeg_output = imagejpeg($captcha_image, null, 16); // showing the image
+if($jpeg_output === false) {
+    http_response_code(500);
+    exit('Captcha output error');
+}
 /// imagedestroy($captcha_image); // destroying the image instance DEPRECATED
 unset($captcha_image); // NEW
 

@@ -33,7 +33,7 @@ function delimg() {
 
         if(is_file("DATABASE/gallery/".$filetodel)) {
             // rename("DATABASE/gallery/".$filetodel, "DATABASE/gallery/img.del");
-            unlink("DATABASE/gallery/".$filetodel);
+            @unlink("DATABASE/gallery/".$filetodel);
             mylog("<em style='color:DarkOrange'>Изображение ".$filetodel." успешно удалено. (".$_SESSION["username"].").</em>");
         }
 
@@ -52,7 +52,7 @@ function delfile() {
 
         if(is_file("DATABASE/fupload/".$filetodel)) {
             // rename("DATABASE/fupload/".$filetodel, "DATABASE/fupload/file.del");
-            unlink("DATABASE/fupload/".$filetodel);
+            @unlink("DATABASE/fupload/".$filetodel);
             mylog("<em style='color:DarkOrange'>Файл ".$filetodel." успешно удалён. (".$_SESSION["username"].").</em>");
         }
 
@@ -138,7 +138,7 @@ function purgelog() {
         // if(!dbdone("DATABASE/DB/sys.log", "ЛОГ БЫЛ ИЗМЕНЁН ИЛИ ЗАБЛОКИРОВАН ВНЕШНИМ ПРОЦЕССОМ")) return false;
 
         if(is_file("DATABASE/DB/sys.log")) {
-            unlink("DATABASE/DB/sys.log");
+            @unlink("DATABASE/DB/sys.log");
         }
 
         mylog("<strong style='color:DarkRed'>Лог был очищен. (".$_SESSION["username"].").</strong>");
@@ -1454,9 +1454,9 @@ function gallery() {
 
     $limit = 12;
 
-    $files = glob('DATABASE/gallery/*.{jpg,jpeg,png,gif,webp}', GLOB_BRACE);
+    $files = glob('DATABASE/gallery/*.{jpg,jpeg,png,gif,webp}', GLOB_BRACE) ?: [];
 
-    usort($files, fn($a, $b) => filemtime($a) - filemtime($b));
+    usort($files, fn($a, $b) => ((int)@filemtime($a)) <=> ((int)@filemtime($b)));
 
     $totimg = count($files);
 
@@ -1613,9 +1613,9 @@ function dlFiles() {
     ];
     
     $pattern = 'DATABASE/fupload/*.{'.implode(',', $exts).'}';
-    $files = glob($pattern, GLOB_BRACE);
+    $files = glob($pattern, GLOB_BRACE) ?: [];
 
-    usort($files, fn($a, $b) => filemtime($a) - filemtime($b));
+    usort($files, fn($a, $b) => ((int)@filemtime($a)) <=> ((int)@filemtime($b)));
 
     $totimg = count($files);
 
@@ -1788,34 +1788,34 @@ function deletePage() {
 
                 if(is_file("DATABASE/comments/".$pageid)) {
 
-                    unlink("DATABASE/comments/".$pageid);
+                    @unlink("DATABASE/comments/".$pageid);
                 }
 
                 if(is_file("DATABASE/comments/".$pageid.".bak")) {
 
-                    unlink("DATABASE/comments/".$pageid.".bak");
+                    @unlink("DATABASE/comments/".$pageid.".bak");
                 }
 
                 if(is_file("DATABASE/comments/".$pageid.".time")) {
 
-                    unlink("DATABASE/comments/".$pageid.".time");
+                    @unlink("DATABASE/comments/".$pageid.".time");
                 }
 
                 if(is_file("DATABASE/comments/".$pageid.".pages-cache")) {
 
-                    unlink("DATABASE/comments/".$pageid.".pages-cache");
+                    @unlink("DATABASE/comments/".$pageid.".pages-cache");
                 }
 
                 if(is_file("DATABASE/comments/".$pageid.".lock")) {
 
-                    unlink("DATABASE/comments/".$pageid.".lock");
+                    @unlink("DATABASE/comments/".$pageid.".lock");
                 }
 
                 //////////////////////
 
                 if(is_file("DATABASE/comments/".$pageid.".count")) {
 
-                    unlink("DATABASE/comments/".$pageid.".count");
+                    @unlink("DATABASE/comments/".$pageid.".count");
                 }
 
                 /*
@@ -1874,7 +1874,7 @@ function commPgCntRecalc() {
 
         $pagesCache = "DATABASE/comments/" . $idcache[$numgen - 1] . ".pages-cache";
         if(is_file($pagesCache)) {
-            unlink($pagesCache);
+            @unlink($pagesCache);
         }
 
         $queryString = $_SERVER['QUERY_STRING'] ?? '';

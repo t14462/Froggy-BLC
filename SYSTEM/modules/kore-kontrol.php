@@ -37,7 +37,7 @@ if( $chTimeMenu < $chTimeDB && is_file("DATABASE/DB/MenuCache.txt")) {
     // rename("DATABASE/DB/MenuCache.txt", "DATABASE/DB/MenuCache.txt.del");
 
     if(is_file("DATABASE/DB/MenuCache.txt")) {
-        unlink("DATABASE/DB/MenuCache.txt");
+        @unlink("DATABASE/DB/MenuCache.txt");
     }
 }
 
@@ -63,10 +63,12 @@ if(    is_file("DATABASE/DB/DB-TOC-Cache.txt")
     $mydump2 = getFileOrDie('DATABASE/DB/DB-TOC-Cache.txt');
 
     $mydump2 = unserialize($mydump2, ['allowed_classes' => false]);
+    if(!is_array($mydump2)) $mydump2 = [];
 
     $seoNumEncode = getFileOrDie('DATABASE/DB/SEO-Cache.txt');
 
     $seoNumEncode = unserialize($seoNumEncode, ['allowed_classes' => false]);
+    if(!is_array($seoNumEncode)) $seoNumEncode = [];
 
     while($i < count($mydump2)) {
 

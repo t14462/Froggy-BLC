@@ -41,8 +41,12 @@ if(isset($_SESSION["username"]) && isset($_SESSION["userhash"])) {
     $username = $_SESSION["username"];
     $userhash = $_SESSION["userhash"];
 
-    if(array_key_exists($username, $cred) && hash_equals($userhash, hash('sha512', explode("<!!!>", $cred[$username])[1].$ip.$userAgent))) {
-        $checkpermission = (int)explode("<!!!>", $cred[$username])[0];
+    if(array_key_exists($username, $cred)) {
+        $credParts = explode("<!!!>", $cred[$username], 2);
+    }
+
+    if(array_key_exists($username, $cred) && isset($credParts[1]) && hash_equals($userhash, hash('sha512', $credParts[1].$ip.$userAgent))) {
+        $checkpermission = (int)$credParts[0];
     } else {
         $checkpermission = 0;
     }
@@ -85,7 +89,7 @@ function filemtimeMy(string $file): float {
         $locktmp = fopenOrDie($timeFile, 'rb');
         flock($locktmp, LOCK_SH);
 
-        $contents = stream_get_contents($locktmp);
+        $contents = (string)stream_get_contents($locktmp);
 
         /// $contents = file_get_contents($timeFile);
 
@@ -505,7 +509,7 @@ $replacementDLCNT = static function ($m) {
 
     if (is_file($pathFile)) {
 
-        $dlSize = filesize($pathFile) / 1024;
+        $dlSize = ((int)@filesize($pathFile)) / 1024;
 
         $dlSize = round($dlSize, 2);
 
@@ -515,7 +519,7 @@ $replacementDLCNT = static function ($m) {
             $ftmp = fopenOrDie($pathCnt, 'rb');
             flock($ftmp, LOCK_SH);
 
-            $dlcnt = (int)@stream_get_contents($ftmp);
+            $dlcnt = (int)(string)stream_get_contents($ftmp);
 
             flock($ftmp, LOCK_UN);
             fclose($ftmp);
@@ -704,12 +708,16 @@ function repeatCaptcha($userInput) {
         $locktmp = fopenOrDie($sessionFile, 'rb');
         flock($locktmp, LOCK_SH);
 
-        $sessionData = json_decode(stream_get_contents($locktmp), true);
+        $sessionData = json_decode((string)stream_get_contents($locktmp), true);
 
         flock($locktmp, LOCK_UN);
         fclose($locktmp);
 
         /// $sessionData = json_decode(getFileOrDie($sessionFile), true);
+
+        if(!is_array($sessionData)) {
+            $sessionData = ['captchas' => []];
+        }
 
         // Проверка на совпадение с предыдущими вводами
         if(in_array($userInput, $sessionData['captchas'] ?? [], true)) {
@@ -746,12 +754,16 @@ function canProceed($datip) {
         $locktmp = fopenOrDie($lockFile, 'rb');
         flock($locktmp, LOCK_SH);
 
-        $lockData = json_decode(stream_get_contents($locktmp), true);
+        $lockData = json_decode((string)stream_get_contents($locktmp), true);
 
         flock($locktmp, LOCK_UN);
         fclose($locktmp);
 
         /// $lockData = json_decode(getFileOrDie($lockFile), true);
+        if(!is_array($lockData)) {
+            $lockData = [];
+        }
+
         $lastCall = (int)($lockData['last_call'] ?? 0);
         $currentTime = time();
 
@@ -873,13 +885,13 @@ function dbdone($filename, $recovery) {
     $locktmp = fopenOrDie($filename.".lock", 'rb');
     flock($locktmp, LOCK_SH);
 
-    $lockvar = (int)stream_get_contents($locktmp);
+    $lockvar = (int)(string)stream_get_contents($locktmp);
 
     flock($locktmp, LOCK_UN);
     fclose($locktmp);
 
     if(is_file($filename.".src." . getmypid())) {
-        unlink($filename.".src." . getmypid());
+        @unlink($filename.".src." . getmypid());
     }
 
     /// $lockvar = (int)@file_get_contents($filename.".lock");
@@ -899,7 +911,7 @@ function dbdone($filename, $recovery) {
     } else {
 
         if(is_file($filename.".new." . getmypid())) {
-            unlink($filename.".new." . getmypid());
+            @unlink($filename.".new." . getmypid());
         }
 
         if(!isset($safePost['commpost']) && !isset($safeGet["cmove"])) {
@@ -1485,7 +1497,7 @@ function calcTotPages(string $commaddr, int $limit, bool $update = false): int
         $fh = @fopen($cacheFile, 'rb');
         if ($fh) {
             @flock($fh, LOCK_SH);
-            $raw = (int)stream_get_contents($fh);
+            $raw = (int)(string)stream_get_contents($fh);
             @flock($fh, LOCK_UN);
             fclose($fh);
 
@@ -1562,7 +1574,7 @@ function calcTotPages2(int $commcount, string $commaddr, int $limit, bool $updat
         $fh = @fopen($cacheFile, 'rb');
         if ($fh) {
             @flock($fh, LOCK_SH);
-            $raw = (int)stream_get_contents($fh);
+            $raw = (int)(string)stream_get_contents($fh);
             @flock($fh, LOCK_UN);
             fclose($fh);
 
@@ -1635,7 +1647,7 @@ function loadTplSess() {
     $templateDir = 'TEMPLATES/';
 
     // Получаем список директорий-шаблонов
-    $templates = array_map('basename', glob($templateDir . '*.tpl', GLOB_ONLYDIR));
+    $templates = array_map('basename', glob($templateDir . '*.tpl', GLOB_ONLYDIR) ?: []);
 
     if (isset($_COOKIE['selected_template']) &&
         is_string($_COOKIE['selected_template']) &&
@@ -1658,7 +1670,7 @@ function genTplForm() {
     $templateDir = 'TEMPLATES/';
 
     // Получаем список директорий-шаблонов
-    $templates = array_map('basename', glob($templateDir . '*.tpl', GLOB_ONLYDIR));
+    $templates = array_map('basename', glob($templateDir . '*.tpl', GLOB_ONLYDIR) ?: []);
 
     // Генерируем HTML формы
     $html  = '<form method="post" id="templateForm">';
@@ -1913,31 +1925,31 @@ function refreshCaches() {
     if(is_file("DATABASE/DB/DB-TOC-Cache.txt")) {
         // rename("DATABASE/DB/DB-TOC-Cache.txt", "DATABASE/DB/DB-TOC-Cache.txt.del");
 
-        unlink("DATABASE/DB/DB-TOC-Cache.txt");
+        @unlink("DATABASE/DB/DB-TOC-Cache.txt");
     }
 
     if(is_file("DATABASE/DB/SEO-Cache.txt")) {
         // rename("DATABASE/DB/SEO-Cache.txt", "DATABASE/DB/SEO-Cache.txt.del");
 
-        unlink("DATABASE/DB/SEO-Cache.txt");
+        @unlink("DATABASE/DB/SEO-Cache.txt");
     }
 
     if(is_file("DATABASE/DB/MenuCache.txt")) {
         // rename("DATABASE/DB/MenuCache.txt", "DATABASE/DB/MenuCache.txt.del");
 
-        unlink("DATABASE/DB/MenuCache.txt");
+        @unlink("DATABASE/DB/MenuCache.txt");
     }
 
     if(is_file("sitemap.txt")) {
         // rename("sitemap.txt", "sitemap.txt.del");
 
-        unlink("sitemap.txt");
+        @unlink("sitemap.txt");
     }
 
     if(is_file("sitemap.xml")) {
         // rename("sitemap.xml", "sitemap.xml.del");
 
-        unlink("sitemap.xml");
+        @unlink("sitemap.xml");
     }
 }
 
@@ -1947,7 +1959,7 @@ function getCommCount($commaddr) {
 
         $locktmp = fopenOrDie("DATABASE/comments/".$commaddr.".count", 'rb');
         flock($locktmp, LOCK_SH);
-        $contents = stream_get_contents($locktmp);
+        $contents = (string)stream_get_contents($locktmp);
         flock($locktmp, LOCK_UN);
         fclose($locktmp);
 
@@ -2039,7 +2051,7 @@ function skipCache(string $filepath): string {
     $mTime = 0;
 
     if (is_file($filepath)) {
-        $mTime = filemtime($filepath) ?? 0;
+        $mTime = (int)@filemtime($filepath);
     }
 
     $separator = (strpos($filepath, '?') === false) ? '?' : '&';
@@ -2115,20 +2127,20 @@ function remove_entities(string $text): string {
 function atomicCounterIncrement($path) {
 
     $fp = @fopenOrDie($path, 'c+b'); // создаст файл при отсутствии
-    if ($fp) {
-        if (flock($fp, LOCK_EX)) {
+    if($fp) {
+        if(flock($fp, LOCK_EX)) {
             $val  = 0;
             rewind($fp);
-            $data = stream_get_contents($fp);
+            $data = (string)stream_get_contents($fp);
             $data = trim((string)$data);
-            if ($data !== '' && ctype_digit($data)) {
+            if($data !== '' && ctype_digit($data)) {
                 $val = (int)$data;
             }
             $val++;
             rewind($fp);
-            ftruncate($fp, 0);
-            fwrite($fp, (string)$val);
-            fflush($fp);
+            if(ftruncate($fp, 0) !== false && fwrite($fp, (string)$val) !== false) {
+                fflush($fp);
+            }
             flock($fp, LOCK_UN);
         }
         fclose($fp);

@@ -1580,7 +1580,7 @@ function postComment() {
             }
 
             if(!is_file("DATABASE/comments/".$commaddr)) {
-                copy("SYSTEM/modules/dummy.txt", "DATABASE/comments/".$commaddr);
+                @copy("SYSTEM/modules/dummy.txt", "DATABASE/comments/".$commaddr);
             }
 
             dbprepApnd("DATABASE/comments/".$commaddr);
@@ -1678,7 +1678,7 @@ function loginPost() {
         $hashh = hash('sha512', $ip);
 
         if(!is_file("DATABASE/lock/".$hashh)) {
-            copy("SYSTEM/modules/null.txt", "DATABASE/lock/".$hashh);
+            @copy("SYSTEM/modules/null.txt", "DATABASE/lock/".$hashh);
         }
 
         /// $lasttime = (int)getFileOrDie("DATABASE/lock/".$hashh);
@@ -1686,7 +1686,7 @@ function loginPost() {
         $locktmp = fopenOrDie("DATABASE/lock/".$hashh, 'rb');
         flock($locktmp, LOCK_SH);
 
-        $lasttime = (int)stream_get_contents($locktmp);
+        $lasttime = (int)(string)stream_get_contents($locktmp);
 
         flock($locktmp, LOCK_UN);
         fclose($locktmp);
@@ -1697,7 +1697,11 @@ function loginPost() {
         $password = $safePost["password"];
         $userhash = hash('sha512', $username."@".$password."@".generateSalt($username, $password).$mySalt);
 
-        if((time() - $lasttime) > 600 && array_key_exists($username, $cred) && explode("<!!!>", $cred[$username])[1] === $userhash) {
+        if(array_key_exists($username, $cred)) {
+            $credParts = explode("<!!!>", $cred[$username], 2);
+        }
+
+        if((time() - $lasttime) > 600 && array_key_exists($username, $cred) && isset($credParts[1]) && hash_equals($credParts[1], $userhash)) {
 
             session_regenerate_id(true);
 
@@ -1815,7 +1819,10 @@ function imageupload() {
                 mylog("<em style='color:DarkOrange'>Извините, ваш файл не загрузился. (".$_SESSION["username"].").</em>");
                 // if everything is ok, try to upload file
             } else {
-                if(move_uploaded_file($_FILES["fileToUpload"]["tmp_name"], $target_file)) {
+                if(!is_uploaded_file($_FILES["fileToUpload"]["tmp_name"])) {
+                    $errmsg .= "<li>Временный файл загрузки недоступен.</li>";
+                    mylog("<em style='color:DarkRed'>Временный файл загрузки недоступен. (".$_SESSION["username"].").</em>");
+                } elseif(move_uploaded_file($_FILES["fileToUpload"]["tmp_name"], $target_file)) {
                     $errmsg .= "<li>Файл ". htmlspecialchars( basename( $_FILES["fileToUpload"]["name"]), ENT_QUOTES | ENT_HTML5 | ENT_SUBSTITUTE, 'UTF-8', false). " был загружен.</li>";
                     mylog("<em style='color:DarkGreen'>Файл ". htmlspecialchars( basename( $_FILES["fileToUpload"]["name"]), ENT_QUOTES | ENT_HTML5 | ENT_SUBSTITUTE, 'UTF-8', false). " был загружен. (".$_SESSION["username"].").</em>");
                 } else {
@@ -1928,6 +1935,10 @@ function fileDlUpload() {
                 $errmsg = 'Файл больше 3-х мегабайт.';
                 mylog("<em style='color:DarkMagenta'>Файл больше 3-х мегабайт. (".$_SESSION["username"].").</em>");
 
+            } elseif(!is_uploaded_file($file['tmp_name'])) {
+                $errmsg = 'Временный файл загрузки недоступен.';
+                mylog("<strong style='color:DarkRed'>Временный файл загрузки недоступен. (".$_SESSION["username"].").</strong>");
+
             } elseif(!move_uploaded_file($file['tmp_name'], $newFilePath)) {
                 $errmsg = 'Ошибка при перемещении файла.';
                 mylog("<strong style='color:DarkRed'>Ошибка при перемещении файла. (".$_SESSION["username"].").</strong>");
@@ -2010,7 +2021,7 @@ function saveTplSess() {
     $templateDir = 'TEMPLATES/';
 
     // Получаем список директорий-шаблонов
-    $templates = array_map('basename', glob($templateDir . '*.tpl', GLOB_ONLYDIR));
+    $templates = array_map('basename', glob($templateDir . '*.tpl', GLOB_ONLYDIR) ?: []);
 
     // Если шаблон отправлен через POST и он существует в списке шаблонов
     if(isset($safePost['selected_template']) && in_array($safePost['selected_template'], $templates, true)) {

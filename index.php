@@ -93,7 +93,7 @@ if($last_executed2 && $diff2 > 10799) { // 3 hours
     // rename("DATABASE/DB/MenuCache.txt", "DATABASE/DB/MenuCache.txt.del");
 
     if(is_file("DATABASE/DB/MenuCache.txt")) {
-        unlink("DATABASE/DB/MenuCache.txt");
+        @unlink("DATABASE/DB/MenuCache.txt");
     }
 }
 

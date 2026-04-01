@@ -24,12 +24,15 @@ function isDbLocked(): bool {
 function isLockedBy(string $username): bool {
     if(!isDbLocked()) return false;
 
-    $locktmp = fopen(DBLOCK_FILE, 'rb');
+    $locktmp = @fopen(DBLOCK_FILE, 'rb');
     if($locktmp === false) return false;
 
-    flock($locktmp, LOCK_SH);
+    if(!flock($locktmp, LOCK_SH)) {
+        fclose($locktmp);
+        return false;
+    }
 
-    $lockedBy = trim(stream_get_contents($locktmp));
+    $lockedBy = trim((string)stream_get_contents($locktmp));
 
     flock($locktmp, LOCK_UN);
     fclose($locktmp);
@@ -67,9 +70,9 @@ function unlockByName(string $username): bool {
     return false;
 }
 
-if(isLockedBy($_SESSION['username'] ?? "dummy")) {
+if(isLockedBy($_SESSION['username'] ?? "dummy") && is_file(DBLOCK_FILE)) {
 
-    touch(DBLOCK_FILE);
+    @touch(DBLOCK_FILE);
 }
 
 $last_executed3 = @filemtime(DBLOCK_FILE);
@@ -79,11 +82,11 @@ $diff3 = time() - (int)$last_executed3; // $last_executed is the value from the 
 if($last_executed3 && $diff3 > 5400) { // 1.5 hours
 
     if(is_file(DBLOCK_FILE)) {
-        unlink(DBLOCK_FILE);
+        @unlink(DBLOCK_FILE);
     }
 }
 
-if(isset($_SESSION['username']) && (
+if(isset($_SESSION['username'], $cred[$_SESSION['username']]) && (
     isset($_POST['title'], $_POST['h'], $_POST['textedit'], $_POST['dbtimestamp']) ||
 
     isset($_GET['edit'])     ||
@@ -95,7 +98,7 @@ if(isset($_SESSION['username']) && (
     )
 ) {
     $lockPermission = $cred[$_SESSION['username']];
-    $lockPermission = (int)explode("<!!!>", $lockPermission)[0];
+    $lockPermission = (int)explode("<!!!>", $lockPermission, 2)[0];
 
     if(!isDbLocked() && $lockPermission > 2) {
         lockByName($_SESSION['username']);
