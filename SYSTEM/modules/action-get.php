@@ -1903,7 +1903,7 @@ function gobyava() {
         $text = escape_amp_txtarea($text);
 
         $content = "<form method='post'>
-        <textarea name='pobyava' rows='20'>$text</textarea>
+        <textarea name='pobyava' rows='15' maxlength='3000'>$text</textarea>
         <input type='submit' value='Сохранить' />
         </form>";
     }
