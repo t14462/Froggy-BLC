@@ -547,7 +547,7 @@ figure.fig-img figcaption {
 
 
 
-.clearfix::after, main article section::after {
+.clearfix::after, main article section::after, #comm-section ul:not(.ul-fix) > li > div::after {
     content: "";
     display: table;
     clear: both;

@@ -1332,7 +1332,7 @@ iframe[src$="visitors.php"] {
     height: 3rem !important;
 }
 
-.clearfix::after, main article section::after {
+.clearfix::after, main article section::after, #comm-section ul:not(.ul-fix) > li > div::after {
     content: "";
     display: table;
     clear: both;
