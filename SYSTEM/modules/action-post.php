@@ -1028,7 +1028,7 @@ function commentReply() {
                 $config->set('HTML.TidyLevel', 'heavy'); // all changes, minus...
                 $config->set('HTML.TidyRemove', 'br@clear');
 
-                $config->set('HTML.ForbiddenElements', 'h1,b');
+                $config->set('HTML.ForbiddenElements', 'h1,h2,h3,h4,h5,h6,b');
 
                 $purifier = new HTMLPurifier($config);
                 $commpost = $purifier->purify($commpost);
@@ -1458,7 +1458,7 @@ function postComment() {
                 $config->set('HTML.TidyLevel', 'heavy'); // all changes, minus...
                 $config->set('HTML.TidyRemove', 'br@clear');
 
-                $config->set('HTML.ForbiddenElements', 'h1,b');
+                $config->set('HTML.ForbiddenElements', 'h1,h2,h3,h4,h5,h6,b');
 
                 $purifier = new HTMLPurifier($config);
                 $commpost = $purifier->purify($commpost);
