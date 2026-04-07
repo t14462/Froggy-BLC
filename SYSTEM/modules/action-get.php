@@ -382,12 +382,12 @@ function pageload() {
 
         }
 
+        // Генератор Обёртки из Alt
+        $html = wrap_images_with_figure($html);
+
         $html = convert_infoboxes_to_aside($html);
 
         $html = replaceSemanticSpans($html);
-
-        // Генератор Обёртки из Alt
-        $html = wrap_images_with_figure($html);
 
         // Шаблон ЦИТАТА
         $html = convertQuotBlocks($html);

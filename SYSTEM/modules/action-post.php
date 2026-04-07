@@ -1076,15 +1076,17 @@ function commentReply() {
 
                 $html = str_get_html($commpost, false, true, "UTF-8", false) or die("XSS?.. Пустой или битый HTML.");
 
+                // Генератор Обёртки из Alt
+                $html = wrap_images_with_figure($html);
+
+                $html = replaceBr($html);
+
                 /// $html = ulFix($html);
                 $html = addClassToAllUl($html, 'ul-fix');
 
                 $html = convert_infoboxes_to_aside($html);
 
                 $html = replaceSemanticSpans($html);
-
-                // Генератор Обёртки из Alt
-                $html = wrap_images_with_figure($html);
 
                 // Шаблон ЦИТАТА
                 $html = convertQuotBlocks($html);
@@ -1124,17 +1126,18 @@ function commentReply() {
                 $commpost = str_replace("/>", " />", $commpost);
                 $commpost = str_replace("  />", " />", $commpost);
 
-                ///
+                /*
                 $commpost = preg_replace('~(?:[\p{Zs}\s]*<br />[\p{Zs}\s]*)+(<ul\b|<ol\b|</li>)~ui', '$1', $commpost);
                 $commpost = preg_replace('~(?:[\p{Zs}\s])+(<ul\b|<ol\b|</li>)~ui', '$1', $commpost);
         
                 $commpost = str_ireplace('<li></li>', '', $commpost);
+                */
 
                 // $commpost = str_replace('<li><br /></li>', '', $commpost);
                 // $commpost = str_replace('<br /></li>', '</li>', $commpost);
                 ///
 
-                $commpost = str_replace("<p>{{clear}}</p>", "<br style='clear: both;' />", $commpost);
+                /// $commpost = str_replace("<p>{{clear}}</p>", "<br style='clear: both;' />", $commpost);
 
                 $commpost = str_replace("{{clear}}", "<br style='clear: both;' />", $commpost);
 
@@ -1161,7 +1164,7 @@ function commentReply() {
             $commpost = str_replace("<br />\n", "<br />", $commpost);
             $commpost = str_replace("\n<br />", "<br />", $commpost);
             */
-            $commpost = str_replace("<br />"  , "<br!>", $commpost);
+            /// $commpost = str_replace("<br />"  , "<br!>", $commpost);
             $commpost = str_replace("\n", "<br!>", $commpost);
 
             $commdataline = rtrim($commdataline);
@@ -1505,15 +1508,17 @@ function postComment() {
 
                 $html = str_get_html($commpost, false, true, "UTF-8", false) or die("XSS?.. Пустой или битый HTML.");
 
+                // Генератор Обёртки из Alt
+                $html = wrap_images_with_figure($html);
+
+                $html = replaceBr($html);
+
                 /// $html = ulFix($html);
                 $html = addClassToAllUl($html, 'ul-fix');
 
                 $html = convert_infoboxes_to_aside($html);
 
                 $html = replaceSemanticSpans($html);
-
-                // Генератор Обёртки из Alt
-                $html = wrap_images_with_figure($html);
 
                 // Шаблон ЦИТАТА
                 $html = convertQuotBlocks($html);
@@ -1554,17 +1559,18 @@ function postComment() {
                 $commpost = str_replace("/>", " />", $commpost);
                 $commpost = str_replace("  />", " />", $commpost);
 
-                ///
+                /*
                 $commpost = preg_replace('~(?:[\p{Zs}\s]*<br />[\p{Zs}\s]*)+(<ul\b|<ol\b|</li>)~ui', '$1', $commpost);
                 $commpost = preg_replace('~(?:[\p{Zs}\s])+(<ul\b|<ol\b|</li>)~ui', '$1', $commpost);
         
                 $commpost = str_ireplace('<li></li>', '', $commpost);
+                */
 
                 // $commpost = str_replace('<li><br /></li>', '', $commpost);
                 // $commpost = str_replace('<br /></li>', '</li>', $commpost);
                 ///
 
-                $commpost = str_replace("<p>{{clear}}</p>", "<br style='clear: both;' />", $commpost);
+                /// $commpost = str_replace("<p>{{clear}}</p>", "<br style='clear: both;' />", $commpost);
 
                 $commpost = str_replace("{{clear}}", "<br style='clear: both;' />", $commpost);
 
@@ -1604,7 +1610,7 @@ function postComment() {
             $commpost = str_replace("<br />\n", "<br />", $commpost);
             $commpost = str_replace("\n<br />", "<br />", $commpost);
             */
-            $commpost = str_replace("<br />"  , "<br!>", $commpost);
+            /// $commpost = str_replace("<br />"  , "<br!>", $commpost);
             $commpost = str_replace("\n", "<br!>", $commpost);
 
             $commid = bin2hex(random_bytes(20)); // sha1(microtime().$ip.$userAgent);

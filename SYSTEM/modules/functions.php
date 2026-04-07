@@ -1920,6 +1920,20 @@ function replaceSemanticSpans(simple_html_dom $html): simple_html_dom {
 
 // $html = replaceSemanticSpans($html);
 
+
+function replaceBr(simple_html_dom $html): simple_html_dom
+{
+    // Снимок элементов, чтобы безопасно менять DOM во время обхода
+    $brs = iterator_to_array($html->find('br'), false);
+
+    foreach ($brs as $br) {
+        $br->outertext = "\n";
+    }
+
+    return $html;
+}
+
+
 function refreshCaches() {
 
     if(is_file("DATABASE/DB/DB-TOC-Cache.txt")) {
