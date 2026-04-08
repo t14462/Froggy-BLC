@@ -2002,6 +2002,17 @@ function unwrapParagraphsAfterDiv($html) {
 }
 */
 
+
+function unwrapParagraphsBefore(string $content): string
+{
+    return preg_replace(
+        '~<p\b[^>]*>\s*(?=<(?:div|figure|aside|details|table)\b)~iu',
+        '',
+        $content
+    );
+}
+
+
 function unwrapParagraphsAfter($txt) {
     return preg_replace_callback(
         '#</(div|figure|aside|details|table)>(.*?)</p>#s',

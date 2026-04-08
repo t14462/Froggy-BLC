@@ -1115,11 +1115,15 @@ function commentReply() {
 
                 $commpost = str_replace("{{lambda}}", "<div style='font-family:monospace; white-space:nowrap; font-size:6rem; text-align:center'>&nbsp;<span class='a4'>&lambda;</span>++<br /><span class='a3'>&lambda;</span>&nbsp;<span class='a2'>&lambda;</span>&nbsp;</div>", $commpost);
 
+                /*
                 $commpost = str_replace(
                     ["<p><figure", "<p><div", "<p><aside", "<p><details", "<p><table"],
                     ["<figure", "<div", "<aside", "<details", "<table"],
                     $commpost
                 );
+                */
+
+                $commpost = unwrapParagraphsBefore($commpost);
 
                 $commpost = unwrapParagraphsAfter($commpost);
 
@@ -1548,11 +1552,15 @@ function postComment() {
 
                 $commpost = str_replace("{{lambda}}", "<div style='font-family:monospace; white-space:nowrap; font-size:6rem; text-align:center'>&nbsp;<span class='a4'>&lambda;</span>++<br /><span class='a3'>&lambda;</span>&nbsp;<span class='a2'>&lambda;</span>&nbsp;</div>", $commpost);
 
+                /*
                 $commpost = str_replace(
                     ["<p><figure", "<p><div", "<p><aside", "<p><details", "<p><table"],
                     ["<figure", "<div", "<aside", "<details", "<table"],
                     $commpost
                 );
+                */
+
+                $commpost = unwrapParagraphsBefore($commpost);
 
                 $commpost = unwrapParagraphsAfter($commpost);
 
