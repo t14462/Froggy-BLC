@@ -431,7 +431,7 @@ function pageload() {
 
         $content = unwrapParagraphsAfter($content);
 
-        $content = str_replace("<p>{{clear}}</p>", "<br style='clear: both;' />", $content);
+        /// $content = str_replace("<p>{{clear}}</p>", "<br style='clear: both;' />", $content);
 
         $content = str_replace("{{clear}}", "<br style='clear: both;' />", $content);
 
