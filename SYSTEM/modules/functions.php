@@ -54,13 +54,7 @@ if(isset($_SESSION["username"]) && isset($_SESSION["userhash"])) {
     $checkpermission = 0;
 }
 
-function is_arrays_equal(array $a, array $b, int $sortMethod = SORT_STRING): bool {
-    $a_copy = $a;
-    $b_copy = $b;
-    ksort($a_copy, $sortMethod);
-    ksort($b_copy, $sortMethod);
-    return $a_copy === $b_copy;
-}
+
 
 /**
  * Сохраняет текущее microtime(true) или переданное значение в ПУТЬ_К_ФАЙЛУ.time
@@ -2022,35 +2016,8 @@ function unwrapParagraphsAfterDiv($html) {
 */
 
 
-function unwrapParagraphsBefore(string $content): string
-{
-    return preg_replace(
-        '~<p\b[^>]*>\s*(?=<(?:div|figure|aside|details|table)\b)~iu',
-        '',
-        $content
-    );
-}
 
 
-function unwrapParagraphsAfter($txt) {
-    return preg_replace_callback(
-        '#</(div|figure|aside|details|table)>(.*?)</p>#s',
-        static function ($matches) {
-            // $matches[1] — 'div' или 'figure'
-            // $matches[2] — содержимое между </div> или </figure> и </p>
-
-            // Быстрое игнорирование <p — без копирования строки
-            if(stripos($matches[2], '<p>') !== false ||
-                stripos($matches[2], '<p ') !== false) {
-                
-                return $matches[0];
-            }
-
-            return '</' . $matches[1] . '>' . $matches[2];
-        },
-        $txt
-    );
-}
 
 function seoLinkDecode(int $num) {
     global $seoNumEncode;
