@@ -385,6 +385,8 @@ function pageload() {
         // Генератор Обёртки из Alt
         $html = wrap_images_with_figure($html);
 
+        $html = replaceParagraphs($html);
+
         $html = convert_infoboxes_to_aside($html);
 
         $html = replaceSemanticSpans($html);
@@ -427,9 +429,9 @@ function pageload() {
         );
         */
 
-        $content = unwrapParagraphsBefore($content);
+        /// $content = unwrapParagraphsBefore($content);
 
-        $content = unwrapParagraphsAfter($content);
+        /// $content = unwrapParagraphsAfter($content);
 
         /// $content = str_replace("<p>{{clear}}</p>", "<br style='clear: both;' />", $content);
 

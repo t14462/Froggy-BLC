@@ -1636,3 +1636,11 @@ main article *, #sitemenu a {
 
     padding-top: .5rem;
 }
+
+
+
+rich-paragraph {
+    display: block;
+    margin: 1em 0;
+    text-indent: .75rem;
+}

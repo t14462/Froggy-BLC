@@ -1081,6 +1081,8 @@ function commentReply() {
 
                 $html = replaceBr($html);
 
+                $html = replaceParagraphs($html);
+
                 /// $html = ulFix($html);
                 $html = addClassToAllUl($html, 'ul-fix');
 
@@ -1123,9 +1125,9 @@ function commentReply() {
                 );
                 */
 
-                $commpost = unwrapParagraphsBefore($commpost);
+                /// $commpost = unwrapParagraphsBefore($commpost);
 
-                $commpost = unwrapParagraphsAfter($commpost);
+                /// $commpost = unwrapParagraphsAfter($commpost);
 
                 $commpost = str_replace("/>", " />", $commpost);
                 $commpost = str_replace("  />", " />", $commpost);
@@ -1517,6 +1519,8 @@ function postComment() {
 
                 $html = replaceBr($html);
 
+                $html = replaceParagraphs($html);
+
                 /// $html = ulFix($html);
                 $html = addClassToAllUl($html, 'ul-fix');
 
@@ -1560,9 +1564,9 @@ function postComment() {
                 );
                 */
 
-                $commpost = unwrapParagraphsBefore($commpost);
+                /// $commpost = unwrapParagraphsBefore($commpost);
 
-                $commpost = unwrapParagraphsAfter($commpost);
+                /// $commpost = unwrapParagraphsAfter($commpost);
 
                 $commpost = str_replace("/>", " />", $commpost);
                 $commpost = str_replace("  />", " />", $commpost);

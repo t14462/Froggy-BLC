@@ -1934,6 +1934,25 @@ function replaceBr(simple_html_dom $html): simple_html_dom
 }
 
 
+
+function replaceParagraphs(simple_html_dom $html): simple_html_dom
+{
+    // Безопасный снимок массива элементов
+    $paragraphs = iterator_to_array($html->find('p'), false);
+
+    foreach ($paragraphs as $p) {
+        $p->tag = 'rich-paragraph';
+
+        if (!isset($p->attr['role'])) {
+            $p->attr['role'] = 'paragraph';
+        }
+    }
+
+    return $html;
+}
+
+
+
 function refreshCaches() {
 
     if(is_file("DATABASE/DB/DB-TOC-Cache.txt")) {

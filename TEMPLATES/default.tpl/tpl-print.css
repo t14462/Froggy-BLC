@@ -565,3 +565,11 @@ main article *, #sitemenu a {
     -webkit-hyphens: auto;
     -ms-hyphens: auto;
 }
+
+
+
+rich-paragraph {
+    display: block;
+    margin: .75rem 0;
+    text-indent: .75rem;
+}
