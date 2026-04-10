@@ -1037,7 +1037,7 @@ function commentReply() {
 
                 
 
-                $commpost = str_ireplace(
+                /* $commpost = str_ireplace(
                     [
                         // Именованные сущности
                         '&lt;', '&gt;', '&quot;', '&#039;', '&apos;', '&amp;',
@@ -1072,7 +1072,9 @@ function commentReply() {
                         '&@amp;'
                     ],
                     $commpost
-                );
+                ); */
+
+                $commpost = escape_amp_txtarea($commpost);
 
                 $html = str_get_html($commpost, false, true, "UTF-8", false) or die("XSS?.. Пустой или битый HTML.");
 
@@ -1100,11 +1102,11 @@ function commentReply() {
                 $html->clear();  // чистим объект
                 unset($html);    // удаляем переменную
 
-                $commpost = str_ireplace(
+                /* $commpost = str_ireplace(
                     ['&@lt;', '&@gt;', '&@quot;', '&@apos;', '&@amp;'],
                     ['&lt;',  '&gt;',  '&quot;',  '&#039;',   '&amp;'],
                     $commpost
-                );
+                ); */
 
                 // Замена шаблона youtube на iframe
                 $commpost = preg_replace_callback($patternYT, $replacementYT, $commpost);
@@ -1475,7 +1477,7 @@ function postComment() {
                 /// $commpost = str_replace("\n", "<br!>", $commpost);
                 
 
-                $commpost = str_ireplace(
+                /* $commpost = str_ireplace(
                     [
                         // Именованные сущности
                         '&lt;', '&gt;', '&quot;', '&#039;', '&apos;', '&amp;',
@@ -1510,7 +1512,9 @@ function postComment() {
                         '&@amp;'
                     ],
                     $commpost
-                );
+                ); */
+
+                $commpost = escape_amp_txtarea($commpost);
 
                 $html = str_get_html($commpost, false, true, "UTF-8", false) or die("XSS?.. Пустой или битый HTML.");
 
@@ -1538,11 +1542,11 @@ function postComment() {
                 $html->clear();  // чистим объект
                 unset($html);    // удаляем переменную
 
-                $commpost = str_ireplace(
+                /* $commpost = str_ireplace(
                     ['&@lt;', '&@gt;', '&@quot;', '&@apos;', '&@amp;'],
                     ['&lt;',  '&gt;',  '&quot;',  '&#039;',   '&amp;'],
                     $commpost
-                );
+                ); */
                 
 
                 // Замена шаблона youtube на iframe

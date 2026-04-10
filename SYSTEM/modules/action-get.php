@@ -242,7 +242,7 @@ function pageload() {
 
         $mainPageTitle = $ptitle[2];
 
-        $ptitle[2] = str_ireplace(
+        /* $ptitle[2] = str_ireplace(
             [
                 // Именованные сущности
                 '&lt;', '&gt;', '&quot;', '&#039;', '&apos;', '&amp;',
@@ -277,9 +277,11 @@ function pageload() {
                 '&@amp;'
             ],
             $ptitle[2]
-        );
+        ); */
 
-        $article = str_ireplace(
+        $ptitle[2] = escape_amp_txtarea($ptitle[2]);
+
+        /* $article = str_ireplace(
             [
                 // Именованные сущности
                 '&lt;', '&gt;', '&quot;', '&#039;', '&apos;', '&amp;',
@@ -314,7 +316,9 @@ function pageload() {
                 '&@amp;'
             ],
             $article
-        );
+        ); */
+
+        $article = escape_amp_txtarea($article);
 
         // $permalinkA = (int)explode("/", $_SERVER['QUERY_STRING'])[0];
 
@@ -347,7 +351,7 @@ function pageload() {
 
                 $innerTEXT = strip_tags($h->innertext);
 
-                $innerTEXT = str_replace("&@", "&", $innerTEXT);
+                /// $innerTEXT = str_replace("&@", "&", $innerTEXT);
                 
                 $innerTEXT = normalize_entities_my($innerTEXT);
 
@@ -401,11 +405,11 @@ function pageload() {
         $html->clear();  // чистим объект
         unset($html);    // удаляем переменную
 
-        $content = str_ireplace(
+        /* $content = str_ireplace(
             ['&@lt;', '&@gt;', '&@quot;', '&@apos;', '&@amp;' ],
             ['&lt;',  '&gt;',  '&quot;',  '&#039;', '&amp;'],
             $content
-        );
+        ); */
 
         // Замена шаблона youtube на iframe
         $content = preg_replace_callback($patternYT, $replacementYT, $content);

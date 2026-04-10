@@ -2528,7 +2528,7 @@ function restore_code_quotes($html, $ctx)
  *
  * @return string
  */
-function ru_nbsp_typograf(string $text, bool $useHtmlNbsp = true): string
+function ru_nbsp_typograf(string $text, bool $useHtmlNbsp = false): string
 {
 
     $ctx = array();
@@ -2734,7 +2734,7 @@ function obyava() {
 
         $obstring = normalize_entities_my($obstring);
 
-        $obstring = str_ireplace(
+        /* $obstring = str_ireplace(
             [
                 // Именованные сущности
                 '&lt;', '&gt;', '&quot;', '&#039;', '&apos;', '&amp;',
@@ -2769,7 +2769,9 @@ function obyava() {
                 '&@amp;'
             ],
             $obstring
-        );
+        ); */
+
+        $obstring = escape_amp_txtarea($obstring);
 
         $html = str_get_html($obstring, false, true, "UTF-8", false) or die("XSS?.. Пустой или битый HTML.");
 
@@ -2777,11 +2779,11 @@ function obyava() {
 
         $obstring = $html->save();
 
-        $obstring = str_ireplace(
+        /* $obstring = str_ireplace(
             ['&@lt;', '&@gt;', '&@quot;', '&@apos;', '&@amp;'],
             ['&lt;',  '&gt;',  '&quot;',  '&#039;',   '&amp;'],
             $obstring
-        );
+        ); */
 
         $obstring = typograph_guillemets($obstring);
         $obstring = ru_nbsp_typograf($obstring);
