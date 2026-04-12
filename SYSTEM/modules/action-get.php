@@ -441,7 +441,7 @@ function pageload() {
 
         $content = str_replace("{{clear}}", "<br style='clear: both;' />", $content);
 
-        $content = preg_replace('/&(?![a-z][a-z0-9]*;|#\d+;|#x[0-9a-f]+;)/i', '&amp;', $content);
+        /// $content = preg_replace('/&(?![a-z][a-z0-9]*;|#\d+;|#x[0-9a-f]+;)/i', '&amp;', $content);
 
         foreach(['<h2', '<h3', '<h4', '<h5', '<h6'] as $heading) {
 
