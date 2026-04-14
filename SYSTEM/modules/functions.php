@@ -524,11 +524,11 @@ $replacementDLCNT = static function ($m) {
             }
             */
         }
-
-        $safeName = htmlspecialchars($file, ENT_QUOTES | ENT_HTML5 | ENT_SUBSTITUTE, 'UTF-8');
         $dlcntFmt = number_format($dlcnt, 0, ',', ' ');
 
-        $targetIframe = urlPrep2($safeName);
+        $targetIframe = urlPrep2($file);
+
+        $safeName = htmlspecialchars($file, ENT_QUOTES | ENT_HTML5 | ENT_SUBSTITUTE, 'UTF-8');
 
         $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
 
@@ -774,32 +774,37 @@ function canProceed($datip) {
     return true; // Можно продолжать
 }
 
-function refreshhandle($time, $link, $update=true) {
+function refreshhandle($time, $link, $update = true) {
 
     global $head;
 
-    if($update) {
-
+    if ($update) {
         refreshCaches();
-
-        unlockByName($_SESSION['username'] ?? "dummy");
+        unlockByName($_SESSION['username'] ?? 'dummy');
     }
 
-    if($time > 0) {
+    $time = (int)$time;
 
-        $head .= "\n<noscript><meta http-equiv='refresh' content='$time;url=$link' /></noscript>
+    $linkHtml = htmlspecialchars($link, ENT_QUOTES | ENT_HTML5 | ENT_SUBSTITUTE, 'UTF-8');
+    $linkJs   = json_encode($link, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT);
+
+    if ($time > 0) {
+        $head .= "\n<noscript><meta http-equiv='refresh' content='{$time};url={$linkHtml}' /></noscript>
         <script>
             function addrrefr() {
                 setTimeout(function() {
-                    window.location.replace('$link');
-                }, $time * 1000);
+                    window.location.replace({$linkJs});
+                }, {$time} * 1000);
             }
             window.addEventListener('DOMContentLoaded', addrrefr);
         </script>\n";
-        
     } else {
-
-        exit("<!DOCTYPE html><html><head><meta charset='utf-8' /><noscript><meta http-equiv='refresh' content='0;url=$link' /></noscript><script>location.replace('$link');</script></head><body>&nbsp;</body></html>");
+        exit(
+            "<!DOCTYPE html><html><head><meta charset='utf-8' />" .
+            "<noscript><meta http-equiv='refresh' content='0;url={$linkHtml}' /></noscript>" .
+            "<script>location.replace({$linkJs});</script>" .
+            "</head><body>&nbsp;</body></html>"
+        );
     }
 }
 
@@ -1178,7 +1183,16 @@ function urlPrep(string $st): string
         $part = trim($part, '._-');
 
         // Финальный safeguard
-        $part = rawurlencode($part);
+        /// $part = rawurlencode($part);
+
+
+        $part = preg_replace_callback(
+            '/[^A-Za-z0-9._~!(),+:;@\/\\\\$-]+/u',
+            static function ($m) {
+                return rawurlencode($m[0]);
+            },
+            $part
+        );
     }
     unset($part);
 
@@ -1402,7 +1416,16 @@ function urlPrep2(string $st): string
         $part = trim($part, '._-');
 
         // Финальный safeguard
-        $part = rawurlencode($part);
+        /// $part = rawurlencode($part);
+
+        
+        $part = preg_replace_callback(
+            '/[^A-Za-z0-9._~!(),+:;@\/\\\\$-]+/u',
+            static function ($m) {
+                return rawurlencode($m[0]);
+            },
+            $part
+        );
     }
     unset($part);
 
