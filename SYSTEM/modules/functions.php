@@ -972,6 +972,8 @@ function rusTranslitHelper($st) {
     return $st;
 }
 
+
+/*
 function urlPrep($st) {
 
     $st = ltrim($st, '?');
@@ -1054,7 +1056,7 @@ function urlPrep($st) {
     
         // Дополнительные, которых нет в whitelist
         '^' => '.pow.',
-        /* '~' => '.tilde.', */ // оставлен только если ты захочешь удалять его
+        /* '~' => '.tilde.', * / // оставлен только если ты захочешь удалять его
         '`' => '.bqt.',
         '¬' => '.not.',
         '©' => '.copy.',
@@ -1080,21 +1082,21 @@ function urlPrep($st) {
         '&laquo;'=> '.lq.',
         '&raquo;'=> '.rq.',
      /* '\''     => '.apos.',
-        '&#039;' => '.apos.', */
+        '&#039;' => '.apos.', * /
         '&#39;'  => '-',
-     /* '&#x27;' => '.apos.', */
+     /* '&#x27;' => '.apos.', * /
         '&#'     => '.',         // Обработка всех &#123; сущностей
      /* '"'      => '.quot.',
         '<'      => '.lt.',
         '>'      => '.gt.',
         '&lt;'   => '.lt.',
         '&gt;'   => '.gt.',
-        '&quot;' => '.quot.', */
+        '&quot;' => '.quot.', * /
         '&amp;'  => '.n.',
         '#' => '.sharp.',
      /* '&'      => '.',
         ';'      => '.',          
-        ';.' => ';' */
+        ';.' => ';' * /
 
         '&'      => '.',
         ';'      => '.'
@@ -1125,6 +1127,73 @@ function urlPrep($st) {
     return '?'.$st;
 }
 
+*/
+
+
+
+
+function urlPrep(string $st): string
+{
+    // Снять только первый ведущий ?
+    if (isset($st[0]) && $st[0] === '?') {
+        $st = substr($st, 1);
+    }
+
+    // 1) Декодировать сущности
+    $st = html_entity_decode($st, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+
+    // 2) Супер-трим
+    /// $st = mb_superTrim($st);
+
+    // 3) Транслитерация
+    $st = rusTranslitHelper($st);
+
+    $tmp = transliterator_transliterate(
+        'Any-Latin; Latin-ASCII; [:Nonspacing Mark:] Remove; NFC;',
+        $st
+    );
+    if ($tmp !== false) {
+        $st = $tmp;
+    }
+
+    // 4) Сегменты пути
+    $parts = explode('/', $st);
+
+    foreach ($parts as &$part) {
+        $part = mb_superTrim($part);
+
+        // Пробелы -> _
+        $part = preg_replace('/\s+/u', '_', $part);
+
+        // Оставить только RFC3986 unreserved:
+        // A-Z a-z 0-9 - _ . ~
+        /// $part = preg_replace('/[^A-Za-z0-9._~-]+/', '', $part);
+
+        // Схлопнуть повторы
+        $part = preg_replace('/_+/', '_', $part);
+        $part = preg_replace('/-+/', '-', $part);
+        $part = preg_replace('/\.{2,}/', '.', $part);
+
+        // Подчистить края
+        $part = trim($part, '._-');
+
+        // Финальный safeguard
+        $part = rawurlencode($part);
+    }
+    unset($part);
+
+    // Убрать пустые сегменты
+    $parts = array_values(array_filter(
+        $parts,
+        static fn(string $p): bool => $p !== ''
+    ));
+
+    return '?' . implode('/', $parts);
+}
+
+
+
+/*
 function urlPrep2($st) {
 
     // $st = ltrim($st, '?');
@@ -1207,7 +1276,7 @@ function urlPrep2($st) {
     
         // Дополнительные, которых нет в whitelist
         '^' => '.pow.',
-        /* '~' => '.tilde.', */ // оставлен только если ты захочешь удалять его
+        /* '~' => '.tilde.', * / // оставлен только если ты захочешь удалять его
         '`' => '.bqt.',
         '¬' => '.not.',
         '©' => '.copy.',
@@ -1233,21 +1302,21 @@ function urlPrep2($st) {
         '&laquo;'=> '.lq.',
         '&raquo;'=> '.rq.',
      /* '\''     => '.apos.',
-        '&#039;' => '.apos.', */
+        '&#039;' => '.apos.', * /
         '&#39;'  => '-',
-     /* '&#x27;' => '.apos.', */
+     /* '&#x27;' => '.apos.', * /
         '&#'     => '.',         // Обработка всех &#123; сущностей
      /* '"'      => '.quot.',
         '<'      => '.lt.',
         '>'      => '.gt.',
         '&lt;'   => '.lt.',
         '&gt;'   => '.gt.',
-        '&quot;' => '.quot.', */
+        '&quot;' => '.quot.', * /
         '&amp;'  => '.n.',
         '#' => '.sharp.',
      /* '&'      => '.',
         ';'      => '.',         
-        ';.' => ';' */
+        ';.' => ';' * /
 
         '&'      => '.',
         ';'      => '.'
@@ -1282,6 +1351,73 @@ function urlPrep2($st) {
 
     return $st;
 }
+*/
+
+
+
+
+function urlPrep2(string $st): string
+{
+    // Снять только первый ведущий ?
+    /* if (isset($st[0]) && $st[0] === '?') {
+        $st = substr($st, 1);
+    } */
+
+    // 1) Декодировать сущности
+    $st = html_entity_decode($st, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+
+    // 2) Супер-трим
+    /// $st = mb_superTrim($st);
+
+    // 3) Транслитерация
+    $st = rusTranslitHelper($st);
+
+    $tmp = transliterator_transliterate(
+        'Any-Latin; Latin-ASCII; [:Nonspacing Mark:] Remove; NFC;',
+        $st
+    );
+    if ($tmp !== false) {
+        $st = $tmp;
+    }
+
+    // 4) Сегменты пути
+    $parts = explode('/', $st);
+
+    foreach ($parts as &$part) {
+        $part = mb_superTrim($part);
+
+        // Пробелы -> _
+        $part = preg_replace('/\s+/u', '_', $part);
+
+        // Оставить только RFC3986 unreserved:
+        // A-Z a-z 0-9 - _ . ~
+        /// $part = preg_replace('/[^A-Za-z0-9._~-]+/', '', $part);
+
+        // Схлопнуть повторы
+        $part = preg_replace('/_+/', '_', $part);
+        $part = preg_replace('/-+/', '-', $part);
+        $part = preg_replace('/\.{2,}/', '.', $part);
+
+        // Подчистить края
+        $part = trim($part, '._-');
+
+        // Финальный safeguard
+        $part = rawurlencode($part);
+    }
+    unset($part);
+
+    // Убрать пустые сегменты
+    $parts = array_values(array_filter(
+        $parts,
+        static fn(string $p): bool => $p !== ''
+    ));
+
+    /// return '?' . implode('/', $parts);
+    return implode('/', $parts);
+}
+
+
+
 
 function urlPrep3($st) {
 
