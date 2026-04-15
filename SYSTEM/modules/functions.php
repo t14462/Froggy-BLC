@@ -1187,7 +1187,7 @@ function urlPrep(string $st): string
 
 
         $part = preg_replace_callback(
-            '/[^A-Za-z0-9._~!(),+:;@\/\\\\$-]+/u',
+            '/[^A-Za-z0-9._~!(),+:;@\\\\$-]+/u',
             static function ($m) {
                 return rawurlencode($m[0]);
             },
@@ -1420,7 +1420,7 @@ function urlPrep2(string $st): string
 
         
         $part = preg_replace_callback(
-            '/[^A-Za-z0-9._~!(),+:;@\/\\\\$-]+/u',
+            '/[^A-Za-z0-9._~!(),+:;@\\\\$-]+/u',
             static function ($m) {
                 return rawurlencode($m[0]);
             },
