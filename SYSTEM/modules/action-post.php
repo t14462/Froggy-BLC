@@ -1185,9 +1185,11 @@ function commentReply() {
 
                 /// $commarrtmp = explode("<$commid>", $commtmp);
 
-                $commarrtmp = explode("<$commid>", $commdataline);
+                /// $commarrtmp = explode("<$commid>", $commdataline);
 
-                if((string)$commid !== (string)$repcommid && count($commarrtmp) === 1) {
+                /// if((string)$commid !== (string)$repcommid && count($commarrtmp) === 1) {
+
+                if(strpos($commdataline, '<'.$commid) === false) {
 
                     break;
                 }
