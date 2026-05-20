@@ -2944,7 +2944,7 @@ function obyava() {
             $obstring
         ); */
 
-        $obstring = typograph_guillemets($obstring);
+        // $obstring = typograph_guillemets($obstring);
         $obstring = ru_nbsp_typograf($obstring);
 
         $obstring = "<aside id='obyava' class='clearfix' aria-label='Объявление'>$obstring</aside>";
