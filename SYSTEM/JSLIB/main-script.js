@@ -299,6 +299,76 @@ ready(function () {
 
 
 
+
+
+    var links = document.querySelectorAll('#obyava a[href], article a[href], #comm-section a[href]');
+    var currentHost = location.hostname.replace(/^www\./i, '').toLowerCase();
+
+    links.forEach(function (link) {
+        var href = link.getAttribute('href');
+
+        if (!href) {
+            return;
+        }
+
+        href = href.trim();
+
+        // Пропускаем якоря и специальные схемы
+        if (
+            href.charAt(0) === '#' ||
+            /^(mailto|tel|javascript|data):/i.test(href)
+        ) {
+            return;
+        }
+
+        var url;
+
+        try {
+            // Автоматически превращает относительные ссылки в абсолютные
+            url = new URL(href, location.href);
+        } catch (e) {
+            return;
+        }
+
+        // Пропускаем не-web ссылки
+        if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+            return;
+        }
+
+        var linkHost = url.hostname.replace(/^www\./i, '').toLowerCase();
+
+        // Пропускаем текущий сайт:
+        // /page
+        // ?Article/1
+        // https://твой-сайт/...
+        // https://www.твой-сайт/...
+        if (linkHost === currentHost) {
+            return;
+        }
+
+        // Внешняя ссылка
+        link.setAttribute('target', '_blank');
+
+        // Безопасность для target="_blank"
+        var rel = link.getAttribute('rel') || '';
+        var relParts = rel.toLowerCase().split(/\s+/);
+
+        if (relParts.indexOf('noopener') === -1) {
+            rel += ' noopener';
+        }
+
+        if (relParts.indexOf('noreferrer') === -1) {
+            rel += ' noreferrer';
+        }
+
+        link.setAttribute('rel', rel.trim());
+    });
+
+
+
+
+
+
 });
 
 
