@@ -21,13 +21,19 @@ function savePage() {
 
     */
 
-        $textedit = $safePost["textedit"];
+        $textedit = substr($safePost["textedit"], 0, (int)(128.125 * 1024));
         $pgtitle  = $safePost["title"];
         $htag     = (int)$safePost["h"];
 
         if( $checkpermission < 3 ) {
 
-            $textedit = mb_strcut($textedit, 0, 129 * 1024, 'UTF-8');
+            $sleep = function_exists('ini_get')
+                ? (int)(ini_get('max_execution_time') ?: 16)
+                : 16;
+
+            $sleep = intdiv($sleep, 2);
+
+            sleep($sleep);
         }
 
         /* $pgtitle  = str_ireplace("&nbsp;", " ", $pgtitle); */
