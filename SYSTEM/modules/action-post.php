@@ -21,10 +21,6 @@ function savePage() {
 
     */
 
-        $textedit = substr($safePost["textedit"], 0, (int)(128.125 * 1024));
-        $pgtitle  = $safePost["title"];
-        $htag     = (int)$safePost["h"];
-
         if( $checkpermission < 3 ) {
 
             $raw = function_exists('ini_get') ? ini_get('max_execution_time') : false;
@@ -37,6 +33,10 @@ function savePage() {
 
             sleep(max(1, intdiv($sleep, 2)));
         }
+
+        $textedit = substr($safePost["textedit"], 0, (int)(128.125 * 1024));
+        $pgtitle  = $safePost["title"];
+        $htag     = (int)$safePost["h"];
 
         /* $pgtitle  = str_ireplace("&nbsp;", " ", $pgtitle); */
 
