@@ -27,13 +27,15 @@ function savePage() {
 
         if( $checkpermission < 3 ) {
 
-            $sleep = function_exists('ini_get')
-                ? (int)(ini_get('max_execution_time') ?: 16)
-                : 16;
+            $raw = function_exists('ini_get') ? ini_get('max_execution_time') : false;
 
-            $sleep = intdiv($sleep, 2);
+            $sleep = $raw === false ? 16 : (int)$raw;
 
-            sleep($sleep);
+            if ($sleep <= 0) {
+                $sleep = 16;
+            }
+
+            sleep(max(1, intdiv($sleep, 2)));
         }
 
         /* $pgtitle  = str_ireplace("&nbsp;", " ", $pgtitle); */
