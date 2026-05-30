@@ -200,10 +200,40 @@ function savePage() {
         $textedit = str_replace("/>", " />", $textedit);
         $textedit = str_replace("  />", " />", $textedit);
 
+
+        // Удаляем <br /> и пробелы перед списками и закрытием li
+        $textedit = preg_replace(
+            '~(?:[\p{Zs}\s]*<br\s*/?>[\p{Zs}\s]*)+(<ul\b|<ol\b|</li>)~ui',
+                                 '$1',
+                                 $textedit
+        );
+
+        $textedit = preg_replace(
+            '~(?:[\p{Zs}\s])+(<ul\b|<ol\b|</li>)~ui',
+                                 '$1',
+                                 $textedit
+        );
+
+        // Удаляем пустые li
+        $textedit = preg_replace(
+            '~<li\b[^>]*>(?:[\p{Zs}\s]|<br\s*/?>)*</li>~ui',
+                                 '',
+                                 $textedit
+        );
+
+        // Удаляем пустые ul/ol
+        $textedit = preg_replace(
+            '~<(ul|ol)\b[^>]*>(?:[\p{Zs}\s]|<br\s*/?>)*</\1>~ui',
+                                 '',
+                                 $textedit
+        );
+
+        /*
         $textedit = preg_replace('~(?:[\p{Zs}\s]*<br />[\p{Zs}\s]*)+(<ul\b|<ol\b|</li>)~ui', '$1', $textedit);
         $textedit = preg_replace('~(?:[\p{Zs}\s])+(<ul\b|<ol\b|</li>)~ui', '$1', $textedit);
         
         $textedit = str_ireplace('<li></li>', '', $textedit);
+        */
 
         ##############################################
         ##############################################
