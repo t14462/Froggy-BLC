@@ -1837,7 +1837,7 @@ function imageupload() {
 
             // Check file size
             if((int)($_FILES["fileToUpload"]["size"] ?? 0) > (3.5 * 1024 * 1024)) {
-                $errmsg .= "<li>Извините, ваш файл слишком большой.</li>";
+                $errmsg .= "<li>Извините, ваш файл слишком большой. (&gt; 3.5 МиБ)</li>";
                 mylog("<em style='color:DarkOrange'>Извините, ваш файл слишком большой. (".$_SESSION["username"].").</em>");
                 $uploadOk = 0;
             }
@@ -1974,8 +1974,8 @@ function fileDlUpload() {
                 mylog("<em style='color:DarkMagenta'>Файл пустой. (".$_SESSION["username"].").</em>");
 
             } elseif($fileSize > (3.5 * 1024 * 1024)) {
-                $errmsg = 'Файл больше 3-х мегабайт.';
-                mylog("<em style='color:DarkMagenta'>Файл больше 3-х мегабайт. (".$_SESSION["username"].").</em>");
+                $errmsg = 'Файл больше 3.5 МиБ.';
+                mylog("<em style='color:DarkMagenta'>Файл больше 3.5 МиБ. (".$_SESSION["username"].").</em>");
 
             } elseif(!is_uploaded_file($file['tmp_name'])) {
                 $errmsg = 'Временный файл загрузки недоступен.';
