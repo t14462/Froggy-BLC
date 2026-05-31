@@ -1836,7 +1836,7 @@ function imageupload() {
             }
 
             // Check file size
-            if((int)($_FILES["fileToUpload"]["size"] ?? 0) > 2048 * 1024) {
+            if((int)($_FILES["fileToUpload"]["size"] ?? 0) > (3.5 * 1024 * 1024)) {
                 $errmsg .= "<li>Извините, ваш файл слишком большой.</li>";
                 mylog("<em style='color:DarkOrange'>Извините, ваш файл слишком большой. (".$_SESSION["username"].").</em>");
                 $uploadOk = 0;
@@ -1973,7 +1973,7 @@ function fileDlUpload() {
                 $errmsg = 'Файл пустой.';
                 mylog("<em style='color:DarkMagenta'>Файл пустой. (".$_SESSION["username"].").</em>");
 
-            } elseif($fileSize > 3145728) {
+            } elseif($fileSize > (3.5 * 1024 * 1024)) {
                 $errmsg = 'Файл больше 3-х мегабайт.';
                 mylog("<em style='color:DarkMagenta'>Файл больше 3-х мегабайт. (".$_SESSION["username"].").</em>");
 
