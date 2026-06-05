@@ -640,7 +640,7 @@ function array_insert_m(&$array, $position, $insert) {
 function filterUsername($username) {
 
     // IGNOR THEM
-    $username = str_replace(["&#039;", "&apos;", " &amp; ", "&amp;", /* " &laquo;", "&raquo; ", */ "&laquo;", "&raquo;"], "", $username);
+    $username = str_ireplace(["&#039;", "&apos;", " &amp; ", "&amp;", /* " &laquo;", "&raquo; ", */ "&laquo;", "&raquo;"], "", $username);
 
     $filteredUsername = emojiToHtmlEntities($username);
 
