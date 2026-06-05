@@ -658,6 +658,9 @@ function filterUsername($username) {
 
     $filteredUsername = preg_replace('/[^\p{L}0-9 \p{P}\p{S}]+/u', '', $filteredUsername);
 
+    // Запрещаем слэши
+    $filteredUsername = str_replace(['/', '\\'], '', $filteredUsername);
+
     /// $filteredUsername = htmlspecialchars($filteredUsername, ENT_QUOTES | ENT_HTML5 | ENT_SUBSTITUTE, 'UTF-8', false);
 
     /*
