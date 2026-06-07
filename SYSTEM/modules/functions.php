@@ -155,6 +155,8 @@ class SafeSplFileObject extends SplFileObject {
 
             $myPIDseek = getmypid();
 
+            $context = $this->getContext();
+
             if(is_file("DATABASE/DB/data.html.src.".$myPIDseek)) {
 
                 unlink("DATABASE/DB/data.html.src.".$myPIDseek);
@@ -166,7 +168,12 @@ class SafeSplFileObject extends SplFileObject {
                 unlink("DATABASE/DB/data.html.new.".$myPIDseek);
             }
 
-            $context = $this->getContext();
+
+            if(is_file("DATABASE/DB/DBLOCK")) {
+
+                unlink("DATABASE/DB/DBLOCK");
+            }
+
             die("seekOrDie: строка $line выходит за пределы файла ($context)");
         }
     }
