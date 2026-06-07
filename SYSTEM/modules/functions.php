@@ -152,6 +152,20 @@ class SafeSplFileObject extends SplFileObject {
     public function seekOrDie(int $line): void {
         $this->seek($line);
         if(!$this->valid()) {
+
+            $myPIDseek = getmypid();
+
+            if(is_file("DATABASE/DB/data.html.src.".$myPIDseek)) {
+
+                unlink("DATABASE/DB/data.html.src.".$myPIDseek);
+            }
+
+
+            if(is_file("DATABASE/DB/data.html.new.".$myPIDseek)) {
+
+                unlink("DATABASE/DB/data.html.new.".$myPIDseek);
+            }
+
             $context = $this->getContext();
             die("seekOrDie: строка $line выходит за пределы файла ($context)");
         }
