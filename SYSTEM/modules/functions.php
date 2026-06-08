@@ -150,29 +150,24 @@ class SafeSplFileObject extends SplFileObject {
     }
 
     public function seekOrDie(int $line): void {
-        $this->seek($line);
-        if(!$this->valid()) {
 
-            $myPIDseek = getmypid();
+        if($line < 0) {
 
             $context = $this->getContext();
 
-            if(is_file("DATABASE/DB/data.html.src.".$myPIDseek)) {
+            unlockByName($_SESSION['username'] ?? 'dummy');
 
-                unlink("DATABASE/DB/data.html.src.".$myPIDseek);
-            }
-
-
-            if(is_file("DATABASE/DB/data.html.new.".$myPIDseek)) {
-
-                unlink("DATABASE/DB/data.html.new.".$myPIDseek);
-            }
+            die("seekOrDie: отрицательный номер строки $line ($context)");
+        }
 
 
-            if(is_file("DATABASE/DB/DBLOCK")) {
+        $this->seek($line);
 
-                unlink("DATABASE/DB/DBLOCK");
-            }
+        if(!$this->valid()) {
+
+            $context = $this->getContext();
+
+            unlockByName($_SESSION['username'] ?? 'dummy');
 
             die("seekOrDie: строка $line выходит за пределы файла ($context)");
         }
@@ -1538,7 +1533,7 @@ function sanCheckHor($check, $h) {
 
     $sanCheckTable[$check] = $h;
 
-    if(!is_int($check) || !is_int($h) || $check < 0 || $h < 1 || $h > 6 || !isset($sanCheckTable[$check])) {
+    if(!is_int($check) || !is_int($h) || $check < 0 || $check >= sizeof($sanCheckTable) || $h < 1 || $h > 6 || !isset($sanCheckTable[$check])) {
 
         $errmsg = "<h1>ОШИБКА.</h1><p class='big'><strong>Недопустимое значение Уровня Страницы.</strong></p>";
         mylog("<span style='color:DarkMagenta'>Недопустимое значение Уровня Страницы. (".$_SESSION["username"].").</span>");
@@ -1560,7 +1555,7 @@ function sanCheckAdd($check, $h) {
 
     global $numcache, $errmsg, $ispageexist;
 
-    if(!$ispageexist || !is_int($check) || !is_int($h) || $check < 1 || $h < 1 || $h > 6 ) {
+    if(!$ispageexist || !is_int($check) || !is_int($h) || $check < 1 || $check > sizeof($numcache) || $h < 1 || $h > 6 ) {
 
         $errmsg = "<h1>ОШИБКА.</h1><p class='big'><strong>Недопустимое значение Уровня Страницы.</strong></p>";
         mylog("<span style='color:DarkMagenta'>Недопустимое значение Уровня Страницы. (".$_SESSION["username"].").</span>");
@@ -3035,3 +3030,4 @@ function remEmptyLi($textedit) {
 
     return $textedit;
 }
+
