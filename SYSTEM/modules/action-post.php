@@ -835,7 +835,7 @@ function commentReply() {
     if(in_array($commaddr, $idcache, true) && is_file("DATABASE/comments/".$commaddr)) {
 
         
-        $pgcommnum = abs($pgcommnum);
+        /// $pgcommnum = abs($pgcommnum);
 
         $commpost = mb_substr($commpost, 0, 2550);
 
