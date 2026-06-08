@@ -624,7 +624,7 @@ function commentRemove() {
         $pgcommnum = (int)(explode("-", $remcommaddr)[1] ?? 0);
         $commid    = explode("-", $remcommaddr)[2] ?? 0;
 
-        $pgcommnum = abs($pgcommnum);
+        /// $pgcommnum = abs($pgcommnum);
 
         if(in_array($commaddr, $idcache, true)) {
 
