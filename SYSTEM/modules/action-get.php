@@ -628,6 +628,14 @@ function commentRemove() {
 
         if(in_array($commaddr, $idcache, true)) {
 
+
+            $check = openFileOrDie("DATABASE/comments/".$commaddr, 'rb');
+
+            $check->seekOrDie($pgcommnum);
+
+            $check = null;
+
+
             $commdataline = "";
 
             ///$commpage = ceil(($pgcommnum + 1) / 8) - 1; // Используем номер строки для вычисления страницы
