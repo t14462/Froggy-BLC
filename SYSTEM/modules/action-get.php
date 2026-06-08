@@ -1233,7 +1233,7 @@ function addPage() {
 
         } else {
 
-            $numlvl = mb_substr($safeGet["addpage"], 0, 21);
+            $numlvl = mb_substr($safeGet["addpage"], 0, 12);
 
             $numlvl = explode("-", $numlvl);
 
