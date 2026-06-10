@@ -1001,7 +1001,7 @@ function commentReply() {
             pageload();
             return;
 
-        } elseif(strlen($commdataline) >= (192 * 1024)) {
+        } elseif(strlen($commdataline) >= (128 * 1024)) {
 
             $errmsg = "<h1>ОШИБКА.</h1><p class='big'><strong>Превышен лимит вложенных комментариев в ветке дискуссии.</strong></p>";
             
