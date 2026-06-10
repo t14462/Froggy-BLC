@@ -839,6 +839,14 @@ function commentReply() {
 
     if(in_array($commaddr, $idcache, true) && is_file("DATABASE/comments/".$commaddr)) {
 
+
+        $check = openFileOrDie("DATABASE/comments/".$commaddr, 'rb');
+
+        $check->seekOrDie($pgcommnum + 1);
+
+        $check = null;
+
+
         
         /// $pgcommnum = abs($pgcommnum);
 
