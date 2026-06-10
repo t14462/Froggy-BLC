@@ -631,7 +631,7 @@ function commentRemove() {
 
             $check = openFileOrDie("DATABASE/comments/".$commaddr, 'rb');
 
-            $check->seekOrDie($pgcommnum);
+            $check->seekOrDie($pgcommnum + 1);
 
             $check = null;
 
