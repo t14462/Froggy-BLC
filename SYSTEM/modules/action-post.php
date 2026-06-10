@@ -839,13 +839,13 @@ function commentReply() {
 
     if(in_array($commaddr, $idcache, true) && is_file("DATABASE/comments/".$commaddr)) {
 
-
-        $check = openFileOrDie("DATABASE/comments/".$commaddr, 'rb');
-
-        $check->seekOrDie($pgcommnum + 1);
-
-        $check = null;
-
+/*
+ *      $check = openFileOrDie("DATABASE/comments/".$commaddr, 'rb');
+ *
+ *      $check->seekOrDie($pgcommnum + 1);
+ *
+ *      $check = null;
+ */
 
         
         /// $pgcommnum = abs($pgcommnum);
@@ -919,7 +919,22 @@ function commentReply() {
 
         $today = date('Y-m-d');
 
-        if($safePost['dbtimestamp'] !== filemtimeMy("DATABASE/comments/".$commaddr)) {
+        if($commdataline === "") {
+
+            $errmsg = "<h1>ОШИБКА.</h1><p class='big'><strong>Недопустимый номер строки.</strong></p>";
+
+            $commRecov = $commpost;
+            $commRecov = str_ireplace("<textarea", "&lt;textarea", $commRecov);
+            $commRecov = str_ireplace("</textarea", "&lt;/textarea", $commRecov);
+            $commRecov = str_ireplace("textarea>", "textarea&gt;", $commRecov);
+            // $commRecov = str_ireplace("&", "&amp;", $commRecov);
+            // $commRecov = str_ireplace("&amp;amp;", "&amp;", $commRecov);
+            $commRecov = escape_amp_txtarea($commRecov);
+            $commRecov .= " ";
+            pageload();
+            return;
+
+        } elseif($safePost['dbtimestamp'] !== filemtimeMy("DATABASE/comments/".$commaddr)) {
 
             $errmsg = "<h1>ПРЕДУПРЕЖДЕНИЕ.</h1><p class='big'><strong>Во время написания комментария БД изменилась.</strong></p>";
             
