@@ -852,7 +852,7 @@ function commentReply() {
 
         $pgcommnum = (int)substr($pgcommnum, 0, 10);
         
-        $repcommid = substr($repcommid, 0, 40);
+        /// $repcommid = substr($repcommid, 0, 40);
         /// $repcommid = filter_filename($repcommid);
 
         $captcha = substr($captcha, 0, 6);

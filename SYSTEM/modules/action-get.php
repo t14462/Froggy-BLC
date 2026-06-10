@@ -11,7 +11,7 @@ function permalink() {
 
     $queryString = $_SERVER['QUERY_STRING'] ?? '';
     $articleHash = explode("&", $queryString)[0];
-    $articleHash = mb_substr($articleHash, 0, 40);
+    $articleHash = substr($articleHash, 0, 40);
     $pageMenuNum = array_search($articleHash, $idcache, true);
 
     if(!is_int($pageMenuNum)) {
