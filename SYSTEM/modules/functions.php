@@ -3031,3 +3031,21 @@ function remEmptyLi($textedit) {
     return $textedit;
 }
 
+
+
+
+
+
+
+
+
+
+
+
+function validateHex(string $hex): void {
+
+    if($hex === '' || preg_match('/[^a-f0-9]/', $hex)) {
+        die('PANIC: invalid hex');
+    }
+}
+

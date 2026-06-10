@@ -617,7 +617,7 @@ function commentRemove() {
     } else {
 
         $remcommaddr = $safeGet["cmove"];
-        $remcommaddr = mb_substr($remcommaddr, 0, 92);
+        $remcommaddr = substr($remcommaddr, 0, 92);
         $remcommaddr = filter_filename($remcommaddr);
 
         $commaddr  = explode("-", $remcommaddr)[0] ?? 0;
@@ -1233,7 +1233,7 @@ function addPage() {
 
         } else {
 
-            $numlvl = mb_substr($safeGet["addpage"], 0, 12);
+            $numlvl = substr($safeGet["addpage"], 0, 12);
 
             $numlvl = explode("-", $numlvl);
 
