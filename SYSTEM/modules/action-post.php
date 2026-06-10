@@ -830,9 +830,9 @@ function commentReply() {
     $captcha   = $safePost["captcha"  ];
 
 
-    $commaddr = normalizeHex40($commaddr);
+    validateHex40($commaddr);
 
-    $repcommid = normalizeHex40($repcommid);
+    validateHex40($repcommid);
 
     /// $commaddr = substr($commaddr, 0, 40);
     
@@ -1322,7 +1322,7 @@ function postComment() {
     $visitor  = $safePost["visitor" ];
     $captcha  = $safePost["captcha" ];
 
-    $commaddr = normalizeHex40($commaddr);
+    validateHex40($commaddr);
 
     /// $commaddr = substr($commaddr, 0, 40);
     /// $commaddr = filter_filename($commaddr);

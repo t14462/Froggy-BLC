@@ -625,9 +625,9 @@ function commentRemove() {
         $commid    = explode("-", $remcommaddr)[2] ?? 0;
 
 
-        $commaddr = normalizeHex40($commaddr);
+        validateHex40($commaddr);
 
-        $commid = normalizeHex40($commid);
+        validateHex40($commid);
 
 
         /// $pgcommnum = abs($pgcommnum);
