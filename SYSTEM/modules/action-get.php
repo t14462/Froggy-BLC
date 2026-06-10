@@ -618,11 +618,17 @@ function commentRemove() {
 
         $remcommaddr = $safeGet["cmove"];
         $remcommaddr = substr($remcommaddr, 0, 92);
-        $remcommaddr = filter_filename($remcommaddr);
+        /// $remcommaddr = filter_filename($remcommaddr);
 
         $commaddr  = explode("-", $remcommaddr)[0] ?? 0;
         $pgcommnum = (int)(explode("-", $remcommaddr)[1] ?? 0);
         $commid    = explode("-", $remcommaddr)[2] ?? 0;
+
+
+        $commaddr = normalizeHex40($commaddr);
+
+        $commid = normalizeHex40($commid);
+
 
         /// $pgcommnum = abs($pgcommnum);
 

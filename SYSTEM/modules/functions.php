@@ -3042,10 +3042,16 @@ function remEmptyLi($textedit) {
 
 
 
-function validateHex(string $hex): void {
+function normalizeHex40(string $hex): string {
+
+    if(strlen($hex) > 40) {
+        die('PANIC: hex too long');
+    }
 
     if($hex === '' || preg_match('/[^a-f0-9]/', $hex)) {
         die('PANIC: invalid hex');
     }
+
+    return str_pad(strtolower($hex), 40, '0', STR_PAD_LEFT);
 }
 

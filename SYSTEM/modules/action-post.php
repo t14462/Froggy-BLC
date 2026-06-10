@@ -829,7 +829,12 @@ function commentReply() {
     $visitor   = $safePost["visitor"  ];
     $captcha   = $safePost["captcha"  ];
 
-    $commaddr = substr($commaddr, 0, 40);
+
+    $commaddr = normalizeHex40($commaddr);
+
+    $repcommid = normalizeHex40($repcommid);
+
+    /// $commaddr = substr($commaddr, 0, 40);
     
 
     if(in_array($commaddr, $idcache, true) && is_file("DATABASE/comments/".$commaddr)) {
@@ -849,8 +854,6 @@ function commentReply() {
         
         $repcommid = substr($repcommid, 0, 40);
         /// $repcommid = filter_filename($repcommid);
-
-        validateHex($repcommid);
 
         $captcha = substr($captcha, 0, 6);
 
@@ -1319,7 +1322,9 @@ function postComment() {
     $visitor  = $safePost["visitor" ];
     $captcha  = $safePost["captcha" ];
 
-    $commaddr = substr($commaddr, 0, 40);
+    $commaddr = normalizeHex40($commaddr);
+
+    /// $commaddr = substr($commaddr, 0, 40);
     /// $commaddr = filter_filename($commaddr);
 
     if(in_array($commaddr, $idcache, true)) {
