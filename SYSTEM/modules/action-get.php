@@ -1771,7 +1771,7 @@ function deletePage() {
 
                 refreshhandle(4, "?nredir=".$pagedel, false);
 
-            } elseif($numcache[$pagedel-1] < $numcache[$pagedel] && $numcache[$pagedel-1] != $numcache[$pagedel-2] && $numcache[$pagedel] - $numcache[$pagedel-2] > 1) {
+            } elseif($numcache[$pagedel] - $numcache[$pagedel-2] > 1) {
 
                 $errmsg = "<h1>ОШИБКА.</h1><p class='big'><strong>У <em>ВЛОЖЕННОЙ</em> страницы есть потомки.</strong></p>";
                 mylog("<em style='color:DarkBlue'>У ВЛОЖЕННОЙ страницы есть потомки. (".$_SESSION["username"].").</em>");

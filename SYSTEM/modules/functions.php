@@ -1502,6 +1502,14 @@ function logInOutLink($logintxt, $logouttxt) {
 function checkMenuOrder($sanCheckTable) {
     global $errmsg;
 
+
+    if($sanCheckTable[0] !== "1") {
+        $errmsg = "<h1>ОШИБКА.</h1><p class='big'><strong>Порядок уровней меню не был соблюдён.</strong></p>";
+        mylog("<span style='color:DarkMagenta'>Порядок уровней меню не был соблюдён. ({$_SESSION["username"]}).</span>");
+        return false;
+    }
+
+
     $count = count($sanCheckTable);
 
     for ($i = 1; $i < $count; $i++) {
@@ -1531,21 +1539,22 @@ function sanCheckHor($check, $h) {
     }
     */
 
-    $sanCheckTable[$check] = $h;
-
-    if(!is_int($check) || !is_int($h) || $check < 0 || $check >= sizeof($sanCheckTable) || $h < 1 || $h > 6 || !isset($sanCheckTable[$check])) {
+    if(!is_int($check) || !is_int($h) /* || $check < 0 || $check >= sizeof($sanCheckTable) */ || $h < 1 || $h > 6 || !isset($sanCheckTable[$check])) {
 
         $errmsg = "<h1>ОШИБКА.</h1><p class='big'><strong>Недопустимое значение Уровня Страницы.</strong></p>";
         mylog("<span style='color:DarkMagenta'>Недопустимое значение Уровня Страницы. (".$_SESSION["username"].").</span>");
         return false;
 
+    /*
     } elseif($sanCheckTable[0] > 1) {
 
         $errmsg = "<h1>ОШИБКА.</h1><p class='big'><strong>Порядок уровней меню не был соблюдён.</strong></p>";
         mylog("<span style='color:DarkMagenta'>Порядок уровней меню не был соблюдён. (".$_SESSION["username"].").</span>");
-        return false;
+        return false; */
 
     } else {
+
+        $sanCheckTable[$check] = $h;
 
         return checkMenuOrder($sanCheckTable);
     }
@@ -1555,19 +1564,20 @@ function sanCheckAdd($check, $h) {
 
     global $numcache, $errmsg, $ispageexist;
 
-    if(!$ispageexist || !is_int($check) || !is_int($h) || $check < 1 || $check > sizeof($numcache) || $h < 1 || $h > 6 ) {
+    $sanCheckTable = $numcache;
+
+    if(!$ispageexist || !is_int($check) || !is_int($h) || /* $check < 1 || $check > sizeof($numcache) || */ $h < 1 || $h > 6 || !isset($sanCheckTable[$check-1])) {
 
         $errmsg = "<h1>ОШИБКА.</h1><p class='big'><strong>Недопустимое значение Уровня Страницы.</strong></p>";
         mylog("<span style='color:DarkMagenta'>Недопустимое значение Уровня Страницы. (".$_SESSION["username"].").</span>");
         return false;
 
+    /*
     } elseif($check == 1 && ($h == 1 || $h == 2)) {
 
-        return true;
+        return true; */
 
     } else {
-
-        $sanCheckTable = $numcache;
 
         array_insert_m(
             $sanCheckTable,
@@ -1587,7 +1597,7 @@ function sanCheckDown() {
 
     $sanCheckTable = $numcache;
 
-    if(!is_int($index) || $index < 0 || !isset($sanCheckTable[$index]) || !isset($sanCheckTable[$index + 1]) || $index >= (sizeof($sanCheckTable) - 1) || ($index == 0 && $sanCheckTable[0] != $sanCheckTable[1])) {
+    if(!is_int($index) /* || $index < 0 */ || !isset($sanCheckTable[$index], $sanCheckTable[$index + 1]) /* || $index >= (sizeof($sanCheckTable) - 1) || ($index == 0 && $sanCheckTable[0] != $sanCheckTable[1]) */ ) {
 
         $errmsg = "<h1>ОШИБКА.</h1><p class='big'><strong>Недопустимое значение Уровня Страницы.</strong></p>";
         mylog("<span style='color:DarkMagenta'>Недопустимое значение Уровня Страницы. (".$_SESSION["username"].").</span>");
@@ -1611,17 +1621,18 @@ function sanCheckUp() {
 
     $index = $safeGet["pgmoveup"] ? ((int)$safeGet["pgmoveup"] - 1) : "";
 
-    if(!is_int($index) || $index < 1 || !isset($sanCheckTable[$index]) || !isset($sanCheckTable[$index - 1])) {
+    if(!is_int($index) /* || $index < 1 */ || !isset($sanCheckTable[$index], $sanCheckTable[$index - 1])) {
 
         $errmsg = "<h1>ОШИБКА.</h1><p class='big'><strong>Недопустимое значение Уровня Страницы.</strong></p>";
         mylog("<span style='color:DarkMagenta'>Недопустимое значение Уровня Страницы. (".$_SESSION["username"].").</span>");
         return false;
 
+    /*
     } elseif($index == 1 && $sanCheckTable[0] != $sanCheckTable[1]) {
 
         $errmsg = "<h1>ОШИБКА.</h1><p class='big'><strong>Порядок уровней меню не был соблюдён.</strong></p>";
         mylog("<span style='color:DarkMagenta'>Порядок уровней меню не был соблюдён. (".$_SESSION["username"].").</span>");
-        return false;
+        return false; */
 
     } else {
 
