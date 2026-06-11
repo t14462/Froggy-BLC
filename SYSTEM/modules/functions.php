@@ -2080,10 +2080,12 @@ function replaceSemanticSpans(simple_html_dom $html): simple_html_dom {
 
         if (stripos($style, 'line-through') !== false) {
             $span->outertext = '<del>' . $span->innertext . '</del>';
+            continue;
         }
 
         if (stripos($style, 'underline') !== false) {
             $span->outertext = '<u>' . $span->innertext . '</u>';
+            continue;
         }
     }
 
