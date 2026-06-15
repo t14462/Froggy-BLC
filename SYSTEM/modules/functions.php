@@ -507,7 +507,7 @@ $replacementDLCNT = static function ($m) {
 
     $raw = trim($m[1] ?? '');
     // последний сегмент пути, без подкаталогов + ваша фильтрация
-    $file = basename(str_replace('\\', '/', $raw));
+    /// $file = basename(str_replace('\\', '/', $raw));
     $file = filter_filename($file);
 
     if (empty($file)) {
