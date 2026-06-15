@@ -508,7 +508,7 @@ $replacementDLCNT = static function ($m) {
     $raw = trim($m[1] ?? '');
     // последний сегмент пути, без подкаталогов + ваша фильтрация
     /// $file = basename(str_replace('\\', '/', $raw));
-    $file = filter_filename($file);
+    $file = filter_filename($raw);
 
     if (empty($file)) {
         return "<div style='background:#F00; color:#FFF; font-size: 3rem;'>ERR: bad file</div>";
