@@ -831,6 +831,11 @@ function refreshhandle($time, $link, $update = true) {
 
 function filter_filename(string $filename): string {
 
+    if(!mb_check_encoding($filename, 'UTF-8')) {
+
+        die("PANIC: Broken Encoding!");
+    }
+
     $filename = basename(str_replace('\\', '/', $filename));
 
     $filename = emojiToHtmlEntities($filename);
