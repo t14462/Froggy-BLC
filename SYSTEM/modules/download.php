@@ -32,6 +32,11 @@ function mb_superTrimLocal(string $text): string {
 
 function filter_filename(string $filename): string {
 
+    if(!mb_check_encoding($filename, 'UTF-8')) {
+
+        die();
+    }
+
     $filename = basename(str_replace('\\', '/', $filename));
 
     $filename = emojiToHtmlEntities($filename);
@@ -70,8 +75,13 @@ $UPLOAD_REAL = realpath($UPLOAD_DIR);
 $PUBLIC_BASE_URL = '../../DATABASE/fupload'; // ведущий / обязателен
 
 // ─── Имя файла ─────────────────────────────────────────────────────
-$file = (string)($_GET['file'] ?? '');
-$file = rawurldecode($file);
+if(!isset($_GET['file']) || !is_string($_GET['file'])) {
+    http_response_code(400);
+    exit('Bad request: bad file parameter');
+}
+
+$file = $_GET['file'];
+/// $file = rawurldecode($file);
 // $file = str_replace('\\', '/', $file);
 // $file = basename($file);
 $file = filter_filename($file);
@@ -87,7 +97,7 @@ if (
     !$absFile ||
     !$UPLOAD_REAL ||
     strpos($absFile, $UPLOAD_REAL . DIRECTORY_SEPARATOR) !== 0 ||
-    is_link($absFile) ||
+    is_link($UPLOAD_REAL . '/' . $file) ||
     !is_file($absFile) ||
     !is_readable($absFile)
 ) {
@@ -99,7 +109,10 @@ if (
 if(!is_dir($COUNT_DIR)) {
     @mkdir($COUNT_DIR, 0775, true);
 }
-$cntFile = $COUNT_DIR . '/' . $file . '.dlcnt';
+
+$cntTmp = filter_filename($file . '.dlcnt');
+
+$cntFile = $COUNT_DIR . '/' . $cntTmp;
 
 if(is_dir($COUNT_DIR) && is_writable($COUNT_DIR)) {
     $fp = @fopen($cntFile, 'c+b');

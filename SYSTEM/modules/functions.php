@@ -514,8 +514,10 @@ $replacementDLCNT = static function ($m) {
         return "<div style='background:#F00; color:#FFF; font-size: 3rem;'>ERR: bad file</div>";
     }
 
+    $cntTmp = filter_filename($file . ".dlcnt");
+
     $pathFile = "DATABASE/fupload/$file";
-    $pathCnt  = "DATABASE/dl.count/$file.dlcnt";
+    $pathCnt  = "DATABASE/dl.count/$cntTmp";
 
     if (is_file($pathFile)) {
 
@@ -1194,8 +1196,8 @@ function urlPrep(string $st): string
         /// $part = preg_replace('/[^A-Za-z0-9._~-]+/', '', $part);
 
         // Схлопнуть повторы
-        $part = preg_replace('/_+/', '_', $part);
-        $part = preg_replace('/-+/', '-', $part);
+        $part = preg_replace('/_{2,}/', '_', $part);
+        $part = preg_replace('/-{2,}/', '-', $part);
         $part = preg_replace('/\.{2,}/', '.', $part);
 
         // Подчистить края
@@ -1427,8 +1429,8 @@ function urlPrep2(string $st): string
         /// $part = preg_replace('/[^A-Za-z0-9._~-]+/', '', $part);
 
         // Схлопнуть повторы
-        $part = preg_replace('/_+/', '_', $part);
-        $part = preg_replace('/-+/', '-', $part);
+        $part = preg_replace('/_{2,}/', '_', $part);
+        $part = preg_replace('/-{2,}/', '-', $part);
         $part = preg_replace('/\.{2,}/', '.', $part);
 
         // Подчистить края
@@ -1439,7 +1441,7 @@ function urlPrep2(string $st): string
 
         
         $part = preg_replace_callback(
-            '/[^A-Za-z0-9._~!(),+:;@\\\\$-]+/u',
+            '/[^A-Za-z0-9_.:-]+/u',
             static function ($m) {
                 return rawurlencode($m[0]);
             },

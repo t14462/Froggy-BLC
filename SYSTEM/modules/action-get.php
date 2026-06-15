@@ -360,7 +360,7 @@ function pageload() {
 
                 $innerTEXT = mb_superTrim($innerTEXT);
 
-                $id = $iID.'-'.urlPrep2($innerTEXT);
+                $id = 'h'.$iID.'-'.urlPrep2($innerTEXT);
 
                 // $h->id= $id; // add id attribute so we can jump to this element
                 $h->setAttribute('id', $id); // add id attribute so we can jump to this element
