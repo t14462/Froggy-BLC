@@ -1826,7 +1826,8 @@ function imageupload() {
         $target_file = filter_filename($_FILES["fileToUpload"]["name"]);
         $uploadOk = 1;
 
-        $imageFileType = strtolower(pathinfo($target_file,PATHINFO_EXTENSION));
+        /// $imageFileType = strtolower(pathinfo($target_file,PATHINFO_EXTENSION));
+        $imageFileType = pathinfo($target_file,PATHINFO_EXTENSION);
 
         /// if($target_file == "") {
 
@@ -1972,7 +1973,8 @@ function fileDlUpload() {
             'sql', 'sqlite', 'db', 'db3',
         ];
 
-        $extension = strtolower(pathinfo($srcFileName, PATHINFO_EXTENSION));
+        /// $extension = strtolower(pathinfo($srcFileName, PATHINFO_EXTENSION));
+        $extension = pathinfo($srcFileName, PATHINFO_EXTENSION);
 
         /// if($srcFileName == "") {
 
