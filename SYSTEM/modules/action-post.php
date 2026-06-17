@@ -1812,7 +1812,8 @@ function imageupload() {
         if(
             !isset($_FILES['fileToUpload']) ||
             !is_array($_FILES['fileToUpload']) ||
-            empty($_FILES['fileToUpload']['name'])
+            empty($_FILES['fileToUpload']['name']) ||
+            !is_string($_FILES['fileToUpload']['name'])
         ) {
             $errmsg .= "<li>Файл не был передан.</li>";
             mylog("<em style='color:DarkOrange'>Файл не был передан. (".$_SESSION["username"].").</em>");
@@ -1928,7 +1929,8 @@ function fileDlUpload() {
         if(
             !isset($_FILES['upfiledl']) ||
             !is_array($_FILES['upfiledl']) ||
-            empty($_FILES['upfiledl']['name'])
+            empty($_FILES['upfiledl']['name']) ||
+            !is_string($_FILES['upfiledl']['name'])
         ) {
             $errmsg = "<h1>Info.</h1><p class='big'>Файл не был передан.</p>";
             $content = "";
