@@ -1823,10 +1823,9 @@ function imageupload() {
         }
 
         $target_dir = "DATABASE/gallery/";
-        $target_file = basename($_FILES["fileToUpload"]["name"]);
+        $target_file = filter_filename($_FILES["fileToUpload"]["name"]);
         $uploadOk = 1;
 
-        $target_file = filter_filename($target_file);
         $imageFileType = strtolower(pathinfo($target_file,PATHINFO_EXTENSION));
 
         /// if($target_file == "") {
@@ -1858,13 +1857,6 @@ function imageupload() {
                 $uploadOk = 0;
             }
 
-            // Check if file already exists
-            if(is_file($target_file)) {
-                $errmsg .= "<li>Извините, файл уже существует.</li>";
-                mylog("<em style='color:DarkOrange'>Извините, файл уже существует. (".$_SESSION["username"].").</em>");
-                $uploadOk = 0;
-            }
-
             // Check file size
             if((int)($_FILES["fileToUpload"]["size"] ?? 0) > (3.5 * 1024 * 1024)) {
                 $errmsg .= "<li>Извините, ваш файл слишком большой. (&gt; 3.5 МиБ)</li>";
@@ -1882,6 +1874,11 @@ function imageupload() {
             ) {
                 $errmsg .= "<li>Извините, только WEBP, JPG, JPEG, PNG и GIF файлы разрешены.</li>";
                 mylog("<em style='color:DarkOrange'>Извините, только WEBP, JPG, JPEG, PNG и GIF файлы разрешены. (".$_SESSION["username"].").</em>");
+                $uploadOk = 0;
+
+            } elseif(is_file($target_file)) { // Check if file already exists
+                $errmsg .= "<li>Извините, файл уже существует.</li>";
+                mylog("<em style='color:DarkOrange'>Извините, файл уже существует. (".$_SESSION["username"].").</em>");
                 $uploadOk = 0;
             }
 
@@ -1980,7 +1977,7 @@ function fileDlUpload() {
 
         /// if($srcFileName == "") {
 
-        if(empty($srcFileName)) {
+        if($srcFileName === '') {
             $errmsg = 'Имя файла пустое!';
             mylog("<em style='color:DarkOrange'>Имя файла пустое! (".$_SESSION["username"].").</em>");
 
@@ -1993,7 +1990,7 @@ function fileDlUpload() {
             mylog("<strong style='color:DarkRed'>Неизвестная ошибка при загрузке файла. (".$_SESSION["username"].").</strong>");
 
         } else {
-            $fileSize = is_uploaded_file($file['tmp_name']) ? filesize($file['tmp_name']) : 0;
+            $fileSize = is_uploaded_file($file['tmp_name']) ? (int)filesize($file['tmp_name']) : 0;
 
             if(is_file($newFilePath)) {
                 $errmsg = 'Файл с таким именем уже существует.';
