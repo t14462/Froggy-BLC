@@ -1937,8 +1937,7 @@ function fileDlUpload() {
 
         $file = $_FILES['upfiledl'];
 
-        $srcFileName = $file['name'];
-        $srcFileName = filter_filename($srcFileName);
+        $srcFileName = filter_filename($file['name']);
         $newFilePath = 'DATABASE/fupload/' . $srcFileName;
 
         $allowedExtensions = [
