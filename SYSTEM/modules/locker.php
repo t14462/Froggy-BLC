@@ -47,13 +47,34 @@ function isLockedBy(string $username): bool {
  * @return bool true, если успешно заблокировано, false — если уже заблокирована другим
  */
 function lockByName(string $username): bool {
-    if(isDbLocked()) {
-        if(isLockedBy($username)) {
-            return true; // Уже заблокирована этим же пользователем
-        }
-        return false; // Заблокирована другим
+
+    if(isLockedBy($username)) {
+        return true;
     }
-    return file_put_contents(DBLOCK_FILE, $username . "\n", LOCK_EX) !== false;
+
+    $locktmp = @fopen(DBLOCK_FILE, 'xb'); // x = создать только если файла ещё нет
+
+    if($locktmp === false) {
+        return false;
+    }
+
+    if(!flock($locktmp, LOCK_EX)) {
+        fclose($locktmp);
+        @unlink(DBLOCK_FILE);
+        return false;
+    }
+
+    $ok = fwrite($locktmp, $username . "\n") !== false;
+    fflush($locktmp);
+
+    flock($locktmp, LOCK_UN);
+    fclose($locktmp);
+
+    if(!$ok) {
+        @unlink(DBLOCK_FILE);
+    }
+
+    return $ok;
 }
 
 /**
@@ -62,12 +83,29 @@ function lockByName(string $username): bool {
  * @return bool
  */
 function unlockByName(string $username): bool {
-    if(isLockedBy($username)) {
-        if(is_file(DBLOCK_FILE)) {
-            return @unlink(DBLOCK_FILE);
-        }
+
+    $locktmp = @fopen(DBLOCK_FILE, 'rb');
+
+    if($locktmp === false) {
+        return false;
     }
-    return false;
+
+    if(!flock($locktmp, LOCK_EX)) {
+        fclose($locktmp);
+        return false;
+    }
+
+    $lockedBy = trim((string)stream_get_contents($locktmp));
+    $ok = false;
+
+    if($lockedBy === $username && is_file(DBLOCK_FILE)) {
+        $ok = @unlink(DBLOCK_FILE);
+    }
+
+    flock($locktmp, LOCK_UN);
+    fclose($locktmp);
+
+    return $ok;
 }
 
 if(isLockedBy($_SESSION['username'] ?? "dummy") && is_file(DBLOCK_FILE)) {
