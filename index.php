@@ -6,13 +6,53 @@ error_reporting(E_ALL);
 $serverName = $_SERVER['SERVER_NAME'] ?? 'localhost';
 $server_ip = gethostbyname($serverName . ".");
 
-if(!in_array($server_ip, ['127.0.0.1'])) {
+if(!in_array($server_ip, ['127.0.0.1'], true)) {
     ini_set('display_errors', '0');
     ini_set('display_startup_errors', '0');
     // error_reporting(0);
 
     ini_set('log_errors', '1');
     // ini_set('error_log', '/var/log/php_errors.log'); // укажи актуальный путь
+}
+
+
+
+function safeRequestUri(mixed $uri): string
+{
+
+    $fallback = "/";
+
+    if(!is_string($uri)) {
+        return $fallback;
+    }
+
+    if($uri === '' || $uri[0] !== '/') {
+        return $fallback;
+    }
+
+    // Не принимать protocol-relative вид: //evil.example/path
+    if(isset($uri[1]) && $uri[1] === '/') {
+        return $fallback;
+    }
+
+    // Защита от CRLF/header injection и прочих управляющих символов
+    if(preg_match('/[\x00-\x1F\x7F]/', $uri)) {
+        return $fallback;
+    }
+
+    // Лучше не пускать backslash: браузеры/серверы могут трактовать его странно
+    /*
+    if(str_contains($uri, '\\')) {
+        return $fallback;
+    }
+    */ 
+
+    // Защита от безумно длинных URI
+    if(strlen($uri) > 8192) {
+        return $fallback;
+    }
+
+    return $uri;
 }
 
 define('SECURE_ACCESS', true);
@@ -47,6 +87,8 @@ mb_internal_encoding("UTF-8");
 
 ob_start();
 
+
+
 $is_https = (
     (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ||
     (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https') ||
@@ -55,7 +97,7 @@ $is_https = (
 
 if(!$is_https) {
     $httpHost = $_SERVER['HTTP_HOST'] ?? $serverName;
-    $requestUri = $_SERVER['REQUEST_URI'] ?? '/';
+    $requestUri = safeRequestUri($_SERVER['REQUEST_URI'] ?? '/');
     header('Location: https://' . $httpHost . $requestUri, true, 301);
     exit;
 }

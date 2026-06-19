@@ -60,6 +60,24 @@ async function copyToClipboard(textToCopy) {
 
 
 
+function DlIncrement(id) {
+    const el = document.getElementById(id);
+
+    if(!el) {
+        return;
+    }
+
+    const count = parseInt(el.textContent, 10);
+
+    if(Number.isNaN(count)) {
+        el.textContent = "1";
+    } else {
+        el.textContent = String(count + 1);
+    }
+}
+
+
+
 
 
 

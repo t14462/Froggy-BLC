@@ -34,7 +34,7 @@ $url = sprintf(
     "%s://%s%s",
     isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] != 'off' ? 'https' : 'http',
     $_SERVER['SERVER_NAME'] ?? 'localhost',
-    explode("?", $_SERVER['REQUEST_URI'] ?? '/')[0]
+    explode("?", safeRequestUri($_SERVER['REQUEST_URI'] ?? '/'))[0]
 );
 
 if(isset($_SESSION["username"]) && isset($_SESSION["userhash"])) {
@@ -66,8 +66,10 @@ if(isset($_SESSION["username"]) && isset($_SESSION["userhash"])) {
 function touchMy(string $file, ?float $customTime = null): bool {
     $timeFile = $file . '.time';
     $timeToWrite = $customTime ?? microtime(true);
-    touch($file, (int)$timeToWrite);
-    return file_put_contents($timeFile, sprintf('%.4f', $timeToWrite), LOCK_EX) !== false;
+    $touched = touch($file, (int)$timeToWrite);
+    $written = file_put_contents($timeFile, sprintf('%.4f', $timeToWrite), LOCK_EX) !== false;
+
+    return $touched && $written;
 }
 
 /**
@@ -134,7 +136,7 @@ class SafeSplFileObject extends SplFileObject {
     }
 
     // ✅ безопасная обёртка, возвращает false на EOF
-    public function fgetsOrDie(string $context = 'unknown'): string|false {
+    public function fgetsOrDie(/* string $context = 'unknown' */): string|false {
 
         if($this->eof()) {
             return false;
@@ -587,18 +589,18 @@ $replacementDLCNT = static function ($m) {
         
         if(isset($inlineExt[$ext])) {
 
-            $dlTable .= "<a href=\"{$href}\" target='_blank'>Скачать <strong>{$safeName}</strong></a>";
+            $dlTable .= "<a href=\"{$href}\" onclick=\"DlIncrement('DLINC-$targetIframe')\" target='_blank'>Скачать <strong>{$safeName}</strong></a>";
 
         } else {
 
-            $dlTable .= "<a href=\"{$href}\" target='auxFrame-$targetIframe'>Скачать <strong>{$safeName}</strong></a>";
+            $dlTable .= "<a href=\"{$href}\" onclick=\"DlIncrement('DLINC-$targetIframe')\" target='auxFrame-$targetIframe'>Скачать <strong>{$safeName}</strong></a>";
         }
         
         $dlTable .= "</td></tr>
 
         <tr><td class='a3'>Размер на диске: </td><td class='a4'>{$dlSize} КиБ</td></tr>
 
-        <tr><td class='a3'>Всего загрузок: </td><td class='a4'>{$dlcntFmt}<iframe name='auxFrame-$targetIframe' width='15' height='15' style='background: transparent'></iframe></td></tr>
+        <tr><td class='a3'>Всего загрузок: </td><td class='a4'><span id='DLINC-$targetIframe'>{$dlcntFmt}</span><iframe name='auxFrame-$targetIframe' width='15' height='15' style='background: transparent'></iframe></td></tr>
 
         </tbody></table>";
 

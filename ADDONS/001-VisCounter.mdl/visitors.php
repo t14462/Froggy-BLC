@@ -5,6 +5,46 @@ define('SECURE_ACCESS', true);
 require_once "../GetRootStandalone.php";
 
 
+
+function safeRequestUri(mixed $uri): string
+{
+
+    $fallback = "/";
+
+    if(!is_string($uri)) {
+        return $fallback;
+    }
+
+    if($uri === '' || $uri[0] !== '/') {
+        return $fallback;
+    }
+
+    // Не принимать protocol-relative вид: //evil.example/path
+    if(isset($uri[1]) && $uri[1] === '/') {
+        return $fallback;
+    }
+
+    // Защита от CRLF/header injection и прочих управляющих символов
+    if(preg_match('/[\x00-\x1F\x7F]/', $uri)) {
+        return $fallback;
+    }
+
+    // Лучше не пускать backslash: браузеры/серверы могут трактовать его странно
+    /*
+    if(str_contains($uri, '\\')) {
+        return $fallback;
+    }
+    */ 
+
+    // Защита от безумно длинных URI
+    if(strlen($uri) > 8192) {
+        return $fallback;
+    }
+
+    return $uri;
+}
+
+
 if(function_exists('ignore_user_abort')) {
     ignore_user_abort(true); // Установить игнорирование разрыва соединения
 }
