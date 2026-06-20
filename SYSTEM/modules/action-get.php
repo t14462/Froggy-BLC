@@ -1325,22 +1325,25 @@ function logout() {
     // 1. Очищаем данные сессии
     $_SESSION = [];
 
-    // 2. Удаляем только сессионную cookie — строго с теми же параметрами, что были при создании
-    if(ini_get("session.use_cookies")) {
+    // 2. Удаляем только сессионную cookie
+    if(session_status() === PHP_SESSION_ACTIVE && ini_get("session.use_cookies")) {
+
         $params = session_get_cookie_params();
 
-        setcookie(
-            session_name(),
-            '', time() - 42000,
-            $params['path'] ?? '/',
-            $params['domain'] ?? '',
-            $params['secure'] ?? false,
-            $params['httponly'] ?? true
-        );
+        setcookie(session_name(), '', [
+            'expires'  => time() - 42000,
+            'path'     => $params['path'] ?? '/',
+            'domain'   => $params['domain'] ?? '',
+            'secure'   => $params['secure'] ?? false,
+            'httponly' => $params['httponly'] ?? true,
+            'samesite' => $params['samesite'] ?? 'Strict',
+        ]);
     }
 
     // 3. Уничтожаем саму сессию
-    session_destroy();
+    if(session_status() === PHP_SESSION_ACTIVE) {
+        session_destroy();
+    }
 
     refreshhandle(0, "?", false);
 }

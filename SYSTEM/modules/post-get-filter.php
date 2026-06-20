@@ -17,9 +17,20 @@ $methods = (string)($_SERVER['REQUEST_METHOD'] ?? '');
 $_REQUEST = [];
 $_ENV = [];
 
+function rejectInputArrays(array $input): void {
+    foreach($input as $key => $value) {
+        if(is_array($value)) {
+            die('<h1>ACCESS Exception :: array input blocked</h1>');
+        }
+    }
+}
+
 # $vars_dl = [];
 
 if(in_array($methods, ['POST', 'GET'], true)) {
+
+    rejectInputArrays($_GET);
+    rejectInputArrays($_POST);
 
     switch($methods) {
 

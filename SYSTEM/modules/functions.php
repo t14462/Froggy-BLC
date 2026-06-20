@@ -273,15 +273,15 @@ function fseekOrDie($handle, int $offset, int $whence = SEEK_SET): void {
     }
 }
 
-function set_cookie($name, $value, $expires){
-    $params = [
-        'expires' => $expires,
-        'path' => '/',
-        'secure' => true,
+function set_cookie(string $name, string $value, int $expires): bool
+{
+    return setcookie($name, $value, [
+        'expires'  => $expires,
+        'path'     => '/',
+        'secure'   => true,
         'httponly' => true,
-        'samesite' => 'Strict'
-    ];
-    setcookie($name, $value, $params);
+        'samesite' => 'Strict',
+    ]);
 }
 
 function mb_superTrim(string $text): string {

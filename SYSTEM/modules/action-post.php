@@ -1737,7 +1737,12 @@ function loginPost() {
 
     // require_once "SYSTEM/cred.php";
 
-    if(!filterUsername($safePost["username"])) {
+    if( !is_string($safePost["username"]) ||
+        !is_string($safePost["password"])) {
+
+        $errmsg = "<h1>ОШИБКА.</h1><p class='big'>Неверные данные формы.</p>";
+
+    } elseif(!filterUsername($safePost["username"])) {
 
         $errmsg = "<h1>ОШИБКА.</h1><p class='big'>Имя содержит недопустимые символы или пустое.</p>";
 
