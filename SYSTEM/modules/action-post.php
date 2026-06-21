@@ -1846,8 +1846,14 @@ function imageupload() {
 
             $target_file = $target_dir.$target_file;
 
+            // Check file size
+            if((int)($_FILES["fileToUpload"]["size"] ?? 0) > (3.5 * 1024 * 1024)) {
+                $errmsg .= "<li>Извините, ваш файл слишком большой. (&gt; 3.5 МиБ)</li>";
+                mylog("<em style='color:DarkOrange'>Извините, ваш файл слишком большой. (".$_SESSION["username"].").</em>");
+                $uploadOk = 0;
+
             // Check if image file is a actual image or fake image
-            if(isset($safePost["imgup"]) && is_uploaded_file($_FILES["fileToUpload"]["tmp_name"])) {
+            } elseif(isset($safePost["imgup"]) && is_uploaded_file($_FILES["fileToUpload"]["tmp_name"])) {
                 $check = getimagesize($_FILES["fileToUpload"]["tmp_name"]);
                 if($check !== false) {
                     $errmsg .= "<li>Файл является изображением - " . $check["mime"] . ".</li>";
@@ -1861,13 +1867,6 @@ function imageupload() {
 
             } else {
 
-                $uploadOk = 0;
-            }
-
-            // Check file size
-            if((int)($_FILES["fileToUpload"]["size"] ?? 0) > (3.5 * 1024 * 1024)) {
-                $errmsg .= "<li>Извините, ваш файл слишком большой. (&gt; 3.5 МиБ)</li>";
-                mylog("<em style='color:DarkOrange'>Извините, ваш файл слишком большой. (".$_SESSION["username"].").</em>");
                 $uploadOk = 0;
             }
 

@@ -20,7 +20,28 @@ $_ENV = [];
 function rejectInputArrays(array $input): void {
     foreach($input as $key => $value) {
         if(is_array($value)) {
+            http_response_code(400);
             die('<h1>ACCESS Exception :: array input blocked</h1>');
+        }
+    }
+}
+
+function rejectFileUploadArrays(array $files): void
+{
+    foreach($files as $field => $info) {
+
+        // В норме каждый file-field сам является массивом:
+        // name/tmp_name/type/error/size
+        if(!is_array($info)) {
+            http_response_code(400);
+            die('<h1>ACCESS Exception :: bad file upload structure</h1>');
+        }
+
+        foreach($info as $key => $value) {
+            if(is_array($value)) {
+                http_response_code(400);
+                die('<h1>ACCESS Exception :: array file upload blocked</h1>');
+            }
         }
     }
 }
@@ -31,6 +52,7 @@ if(in_array($methods, ['POST', 'GET'], true)) {
 
     rejectInputArrays($_GET);
     rejectInputArrays($_POST);
+    rejectFileUploadArrays($_FILES);
 
     switch($methods) {
 
