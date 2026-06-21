@@ -133,8 +133,10 @@ function CountVisitors() {
     return str_pad(count($data), 4, '0', STR_PAD_LEFT);
 }
 
-$userAgent = $_SERVER['HTTP_USER_AGENT'] ?? '';
+/*
+$userAgent = $_SERVER['HTTP_USER_AGENT'] ?? 'Unknown';
 $userAgent = substr($userAgent, 0, 512);
+*/
 $visitors_online = CountVisitors();
 ?><!DOCTYPE html>
 <html>
