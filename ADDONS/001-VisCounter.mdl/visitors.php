@@ -82,7 +82,7 @@ function getVisitorID() {
     $ip = explode(',', $ip)[0]; // Берём первый IP из цепочки
     $ip = mb_superTrim($ip);
 
-    return (filter_var($ip, FILTER_VALIDATE_IP) ? $ip : '0.0.0.0') . ' + ' . $userAgent;
+    return (filter_var($ip, FILTER_VALIDATE_IP) ? $ip : '0.0.0.0') . ' + ' . hash('sha512', $userAgent);
 }
 
 function CountVisitors() {
@@ -134,6 +134,7 @@ function CountVisitors() {
 }
 
 $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? '';
+$userAgent = substr($userAgent, 0, 512);
 $visitors_online = CountVisitors();
 ?><!DOCTYPE html>
 <html>
