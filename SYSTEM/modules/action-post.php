@@ -1239,7 +1239,9 @@ function commentReply() {
                 }
             }
 
-            $commdataline = str_replace("<$repcommid />", "<ul><li><$commid>$visitor2<d>$commpost</d><a href='?%QUERYSTRING%&amp;creply=<id>{$pgcommnum}-$commid#R'>rep.</a> <a href='?%QUERYSTRING%&amp;cmove=<id>{$pgcommnum}-$commid'>del.</a><$commid><$commid /></li></ul><$repcommid />", $commdataline);
+            $now = date('Y-m-d H:i:s');
+
+            $commdataline = str_replace("<$repcommid />", "<ul><li><$commid>$visitor2<d>$commpost</d><a href='?%QUERYSTRING%&amp;creply=<id>{$pgcommnum}-$commid#R'>rep.</a> <a href='?%QUERYSTRING%&amp;cmove=<id>{$pgcommnum}-$commid'>del.</a> $now<$commid><$commid /></li></ul><$repcommid />", $commdataline);
 
             
 
@@ -1681,7 +1683,9 @@ function postComment() {
 
             $commid = bin2hex(random_bytes(20)); // sha1(microtime().$ip.$userAgent);
 
-            $commpost = "<li><$commid>".$visitor2."<d>$commpost</d><a href='?%QUERYSTRING%&amp;creply=<id>{$lastLineNumber}-$commid#R'>rep.</a> <a href='?%QUERYSTRING%&amp;cmove=<id>{$lastLineNumber}-$commid'>del.</a><$commid><$commid /></li>";
+            $now = date('Y-m-d H:i:s');
+
+            $commpost = "<li><$commid>$visitor2<d>$commpost</d><a href='?%QUERYSTRING%&amp;creply=<id>{$lastLineNumber}-$commid#R'>rep.</a> <a href='?%QUERYSTRING%&amp;cmove=<id>{$lastLineNumber}-$commid'>del.</a> $now<$commid><$commid /></li>";
 
             $file = fopenOrDie("DATABASE/comments/".$commaddr.".new." . getmypid(), "ab");
             fwriteOrDie($file, $commpost."\n");
