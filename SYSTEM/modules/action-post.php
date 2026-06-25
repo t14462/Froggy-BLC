@@ -1851,14 +1851,32 @@ function imageupload() {
 
             $target_file = $target_dir.$target_file;
 
+        
+            // Allow certain file formats
+            if(
+                $imageFileType !== "webp" &&
+                $imageFileType !== "jpg"  &&
+                $imageFileType !== "jpeg" &&
+                $imageFileType !== "png"  &&
+                $imageFileType !== "gif"
+            ) {
+                $errmsg .= "<li>Извините, только WEBP, JPG, JPEG, PNG и GIF файлы разрешены.</li>";
+                mylog("<em style='color:DarkOrange'>Извините, только WEBP, JPG, JPEG, PNG и GIF файлы разрешены. (".$_SESSION["username"].").</em>");
+                $uploadOk = 0;
+
+            } elseif(is_file($target_file)) { // Check if file already exists
+                $errmsg .= "<li>Извините, файл уже существует.</li>";
+                mylog("<em style='color:DarkOrange'>Извините, файл уже существует. (".$_SESSION["username"].").</em>");
+                $uploadOk = 0;
+
             // Check file size
-            if((int)($_FILES["fileToUpload"]["size"] ?? 0) > (3.5 * 1024 * 1024)) {
+            } elseif((int)($_FILES["fileToUpload"]["size"] ?? 0) > (3.5 * 1024 * 1024)) {
                 $errmsg .= "<li>Извините, ваш файл слишком большой. (&gt; 3.5 МиБ)</li>";
                 mylog("<em style='color:DarkOrange'>Извините, ваш файл слишком большой. (".$_SESSION["username"].").</em>");
                 $uploadOk = 0;
 
             // Check if image file is a actual image or fake image
-            } elseif(isset($safePost["imgup"]) && is_uploaded_file($_FILES["fileToUpload"]["tmp_name"])) {
+            } elseif(is_uploaded_file($_FILES["fileToUpload"]["tmp_name"])) {
                 $check = getimagesize($_FILES["fileToUpload"]["tmp_name"]);
                 if($check !== false) {
                     $errmsg .= "<li>Файл является изображением - " . $check["mime"] . ".</li>";
@@ -1872,24 +1890,6 @@ function imageupload() {
 
             } else {
 
-                $uploadOk = 0;
-            }
-
-            // Allow certain file formats
-            if(
-                $imageFileType !== "webp" &&
-                $imageFileType !== "jpg" &&
-                $imageFileType !== "jpeg" &&
-                $imageFileType !== "png" &&
-                $imageFileType !== "gif"
-            ) {
-                $errmsg .= "<li>Извините, только WEBP, JPG, JPEG, PNG и GIF файлы разрешены.</li>";
-                mylog("<em style='color:DarkOrange'>Извините, только WEBP, JPG, JPEG, PNG и GIF файлы разрешены. (".$_SESSION["username"].").</em>");
-                $uploadOk = 0;
-
-            } elseif(is_file($target_file)) { // Check if file already exists
-                $errmsg .= "<li>Извините, файл уже существует.</li>";
-                mylog("<em style='color:DarkOrange'>Извините, файл уже существует. (".$_SESSION["username"].").</em>");
                 $uploadOk = 0;
             }
 
@@ -1989,7 +1989,7 @@ function fileDlUpload() {
 
         /// if($srcFileName == "") {
 
-        if($srcFileName === '') {
+        if(empty($srcFileName)) {
             $errmsg = 'Имя файла пустое!';
             mylog("<em style='color:DarkOrange'>Имя файла пустое! (".$_SESSION["username"].").</em>");
 
@@ -2002,11 +2002,17 @@ function fileDlUpload() {
             mylog("<strong style='color:DarkRed'>Неизвестная ошибка при загрузке файла. (".$_SESSION["username"].").</strong>");
 
         } else {
-            $fileSize = is_uploaded_file($file['tmp_name']) ? (int)filesize($file['tmp_name']) : 0;
+            $fileSize = (int)($file['size'] ?? 0);
+
+            /// $fileSize = is_uploaded_file($file['tmp_name']) ? (int)filesize($file['tmp_name']) : 0;
 
             if(is_file($newFilePath)) {
                 $errmsg = 'Файл с таким именем уже существует.';
                 mylog("<em style='color:DarkOrange'>Файл с таким именем уже существует. (".$_SESSION["username"].").</em>");
+
+            } elseif(!is_uploaded_file($file['tmp_name'])) {
+                $errmsg = 'Временный файл загрузки недоступен.';
+                mylog("<strong style='color:DarkRed'>Временный файл загрузки недоступен. (".$_SESSION["username"].").</strong>");
 
             } elseif($fileSize === 0) {
                 $errmsg = 'Файл пустой.';
@@ -2015,10 +2021,6 @@ function fileDlUpload() {
             } elseif($fileSize > (3.5 * 1024 * 1024)) {
                 $errmsg = 'Файл больше 3.5 МиБ.';
                 mylog("<em style='color:DarkMagenta'>Файл больше 3.5 МиБ. (".$_SESSION["username"].").</em>");
-
-            } elseif(!is_uploaded_file($file['tmp_name'])) {
-                $errmsg = 'Временный файл загрузки недоступен.';
-                mylog("<strong style='color:DarkRed'>Временный файл загрузки недоступен. (".$_SESSION["username"].").</strong>");
 
             } elseif(!move_uploaded_file($file['tmp_name'], $newFilePath)) {
                 $errmsg = 'Ошибка при перемещении файла.';
