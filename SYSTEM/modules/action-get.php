@@ -548,6 +548,7 @@ function pageload() {
 
                     $line = str_replace("<br!>", "\n", $line);
                     $line = str_replace("%QUERYSTRING%", $queryBase."&amp;commpage=".$commpage, $line);
+                    $line = str_replace("<QS>", $queryBase."&amp;commpage=".$commpage, $line);
 
                     /// $line = preg_replace('/&(?!\w+;|#\d+;|#x[0-9a-fA-F]+;)/', '&amp;', $line);
                     

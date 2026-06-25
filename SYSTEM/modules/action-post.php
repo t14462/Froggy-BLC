@@ -1241,7 +1241,7 @@ function commentReply() {
 
             $now = date('Y-m-d H:i');
 
-            $commdataline = str_replace("<$repcommid />", "<ul><li><$commid>$visitor2<d>$commpost<br!><br!>$now</d><a href='?%QUERYSTRING%&amp;creply=<id>{$pgcommnum}-$commid#R'>rep.</a> <a href='?%QUERYSTRING%&amp;cmove=<id>{$pgcommnum}-$commid'>del.</a><$commid><$commid /></li></ul><$repcommid />", $commdataline);
+            $commdataline = str_replace("<$repcommid />", "<ul><li><$commid>$visitor2<d>$commpost<br!><br!>$now</d><a href='?<QS>&amp;creply=<id>{$pgcommnum}-$commid#R'>rep.</a> <a href='?<QS>&amp;cmove=<id>{$pgcommnum}-$commid'>del.</a><$commid><$commid /></li></ul><$repcommid />", $commdataline);
 
             $commdataline = str_replace("</ul><ul>", "", $commdataline);
             
@@ -1686,7 +1686,7 @@ function postComment() {
 
             $now = date('Y-m-d H:i');
 
-            $commpost = "<li><$commid>$visitor2<d>$commpost<br!><br!>$now</d><a href='?%QUERYSTRING%&amp;creply=<id>{$lastLineNumber}-$commid#R'>rep.</a> <a href='?%QUERYSTRING%&amp;cmove=<id>{$lastLineNumber}-$commid'>del.</a><$commid><$commid /></li>";
+            $commpost = "<li><$commid>$visitor2<d>$commpost<br!><br!>$now</d><a href='?<QS>&amp;creply=<id>{$lastLineNumber}-$commid#R'>rep.</a> <a href='?<QS>&amp;cmove=<id>{$lastLineNumber}-$commid'>del.</a><$commid><$commid /></li>";
 
             $file = fopenOrDie("DATABASE/comments/".$commaddr.".new." . getmypid(), "ab");
             fwriteOrDie($file, $commpost."\n");
@@ -1832,6 +1832,17 @@ function imageupload() {
             refreshhandle(4, "?gallery=-1", false);
             return;
         }
+
+
+        if(($_FILES["fileToUpload"]['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
+            $errmsg .= "<li>Ошибка при загрузке файла.</li>";
+            mylog("<strong style='color:DarkRed'>Ошибка при загрузке файла. (".$_SESSION["username"].").</strong>");
+            $errmsg .= "</ol>";
+            $content = "";
+            refreshhandle(4, "?gallery=-1", false);
+            return;
+        }
+
 
         $target_dir = "DATABASE/gallery/";
         $target_file = filter_filename($_FILES["fileToUpload"]["name"]);
