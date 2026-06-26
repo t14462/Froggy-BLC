@@ -627,6 +627,18 @@ function savePage() {
 
                 $filedest->fwriteOrDie($pageid.$textedit."\n");
 
+
+
+                $PosMark = $filesource->ftell();
+
+                $filedest = null;
+                
+                $filesource = null;
+
+                concater("DATABASE/DB/data.html.new." . getmypid(), "DATABASE/DB/data.html.src." . getmypid(), $PosMark);
+
+
+                /*
                 while($line = $filesource->freadOrDie(256*1024)) {
 
                     $filedest->fwriteOrDie($line);
@@ -635,6 +647,7 @@ function savePage() {
                 $filedest = null;
                     
                 $filesource = null;
+                */
                 
 
                 if(!dbdone("DATABASE/DB/data.html", $textedit3)) return false;
@@ -1262,6 +1275,18 @@ function commentReply() {
 
             $filedest->fwriteOrDie($commdataline."\n");
 
+
+
+            $PosMark = $filesource->ftell();
+
+            $filedest = null;
+            
+            $filesource = null;
+
+            concater("DATABASE/comments/".$commaddr.".new." . getmypid(), "DATABASE/comments/".$commaddr . ".src." . getmypid(), $PosMark);
+
+
+            /*
             while($line = $filesource->freadOrDie(128*1024)) {
 
                 $filedest->fwriteOrDie($line);
@@ -1270,6 +1295,7 @@ function commentReply() {
             $filedest = null;
                 
             $filesource = null;
+            */
             
 
             if(!dbdone("DATABASE/comments/".$commaddr, $commpost2)) return false;

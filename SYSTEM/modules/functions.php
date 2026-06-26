@@ -3071,3 +3071,87 @@ function validateHex40(string $hex): void {
     }
 }
 
+
+
+
+
+
+
+
+
+
+function concater(string $fname1, string $fname2, int $pos): void
+{
+    if(!function_exists('exec')) {
+        die('<h1>CONCATER PANIC :: exec disabled</h1>');
+    }
+
+    $root = getcwd();
+
+    if($root === false) {
+        die('<h1>CONCATER PANIC :: getcwd failed</h1>');
+    }
+
+    $root = rtrim($root, '/');
+
+    $new    = $root . '/' . ltrim($fname1, '/') . '.tmp';
+    $fname1 = $root . '/' . ltrim($fname1, '/');
+    $fname2 = $root . '/' . ltrim($fname2, '/');
+
+    $cleanup = static function() use ($new): void {
+        @unlink($new);
+    };
+
+    $panic = static function(string $msg) use ($cleanup): never {
+        $cleanup();
+        die('<h1>CONCATER PANIC :: ' . htmlspecialchars($msg, ENT_QUOTES | ENT_HTML5, 'UTF-8') . '</h1>');
+    };
+
+    if($pos < 0) {
+        $panic('bad byte position');
+    }
+
+    if(!is_file($fname1) || !is_readable($fname1)) {
+        $panic('fname1 is not readable');
+    }
+
+    if(!is_file($fname2) || !is_readable($fname2)) {
+        $panic('fname2 is not readable');
+    }
+
+    if(!is_writable(dirname($fname1))) {
+        $panic('target directory is not writable');
+    }
+
+    if(is_file($new)) {
+        @unlink($new);
+    }
+
+    /*
+     * $pos — 0-based байтовая позиция.
+     *
+     * $pos = 0              => взять $fname2 с самого начала
+     * $pos = 100            => взять $fname2 со 101-го байта
+     * $pos >= filesize(...) => tail даст пустой хвост, и это нормально
+     *
+     * GNU tail -c +N считает с 1, поэтому +1.
+     */
+    $tailStart = $pos + 1;
+
+    $cmd =
+    '{ /usr/bin/cat -- ' . escapeshellarg($fname1) .
+    ' && /usr/bin/tail -c +' . (int)$tailStart . ' -- ' . escapeshellarg($fname2) .
+    '; } > ' . escapeshellarg($new);
+
+    $shellOutput = [];
+
+    exec($cmd, $shellOutput, $exitCode);
+
+    if($exitCode !== 0 || !is_file($new)) {
+        $panic('cat/tail failed');
+    }
+
+    if(!@rename($new, $fname1)) {
+        $panic('rename failed');
+    }
+}

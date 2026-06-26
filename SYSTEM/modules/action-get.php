@@ -694,6 +694,18 @@ function commentRemove() {
 
             $filedest->fwriteOrDie($commdataline."\n");
 
+
+
+            $PosMark = $filesource->ftell();
+
+            $filedest = null;
+            
+            $filesource = null;
+
+            concater("DATABASE/comments/".$commaddr.".new." . getmypid(), "DATABASE/comments/".$commaddr . ".src." . getmypid(), $PosMark);
+
+
+            /*
             while($line = $filesource->freadOrDie(256*1024)) {
 
                 $filedest->fwriteOrDie($line);
@@ -702,6 +714,7 @@ function commentRemove() {
             $filedest = null;
             
             $filesource = null;
+            */
             
 
             if(!dbdone("DATABASE/comments/".$commaddr, "")) return false;
@@ -1273,6 +1286,18 @@ function addPage() {
 
                 $filedest->fwriteOrDie($line);
 
+
+
+                $PosMark = $filesource->ftell();
+
+                $filedest = null;
+                
+                $filesource = null;
+
+                concater("DATABASE/DB/data.html.new." . getmypid(), "DATABASE/DB/data.html.src." . getmypid(), $PosMark);
+
+
+                /*
                 while($line = $filesource->freadOrDie(256*1024)) {
 
                     $filedest->fwriteOrDie($line);
@@ -1280,6 +1305,7 @@ function addPage() {
                 $filedest = null;
                     
                 $filesource = null;
+                */
                 
 
                 if(!dbdone("DATABASE/DB/data.html", "БАЗА ДАННЫХ БЫЛА ИЗМЕНЕНА ИЛИ ЗАБЛОКИРОВАНА ВНЕШНИМ ПРОЦЕССОМ")) return false;
@@ -1388,6 +1414,18 @@ function movePageDown() {
 
             $filedest->fwriteOrDie($nextline.$prevline);
 
+
+
+            $PosMark = $filesource->ftell();
+
+            $filedest = null;
+            
+            $filesource = null;
+
+            concater("DATABASE/DB/data.html.new." . getmypid(), "DATABASE/DB/data.html.src." . getmypid(), $PosMark);
+
+
+            /*
             while($line = $filesource->freadOrDie(256*1024)) {
 
                 $filedest->fwriteOrDie($line);
@@ -1395,6 +1433,7 @@ function movePageDown() {
             $filedest = null;
                 
             $filesource = null;
+            */
             
 
             if(!dbdone("DATABASE/DB/data.html", "БАЗА ДАННЫХ БЫЛА ИЗМЕНЕНА ИЛИ ЗАБЛОКИРОВАНА ВНЕШНИМ ПРОЦЕССОМ")) return false;
@@ -1453,6 +1492,18 @@ function movePageUp() {
 
             $filedest->fwriteOrDie($nextline.$prevline);
 
+
+
+            $PosMark = $filesource->ftell();
+
+            $filedest = null;
+            
+            $filesource = null;
+
+            concater("DATABASE/DB/data.html.new." . getmypid(), "DATABASE/DB/data.html.src." . getmypid(), $PosMark);
+
+
+            /*
             while($line = $filesource->freadOrDie(256*1024)) {
 
                 $filedest->fwriteOrDie($line);
@@ -1460,6 +1511,7 @@ function movePageUp() {
             $filedest = null;
                 
             $filesource = null;
+            */
             
 
             if(!dbdone("DATABASE/DB/data.html", "БАЗА ДАННЫХ БЫЛА ИЗМЕНЕНА ИЛИ ЗАБЛОКИРОВАНА ВНЕШНИМ ПРОЦЕССОМ")) return false;
@@ -1803,8 +1855,20 @@ function deletePage() {
 
                 $filesource->fgetsOrDie();
 
-                $filedest = openFileOrDie("DATABASE/DB/data.html.new." . getmypid(), 'ab');
+                /// $filedest = openFileOrDie("DATABASE/DB/data.html.new." . getmypid(), 'ab');
 
+
+
+                $PosMark = $filesource->ftell();
+
+                /// $filedest = null;
+                
+                $filesource = null;
+
+                concater("DATABASE/DB/data.html.new." . getmypid(), "DATABASE/DB/data.html.src." . getmypid(), $PosMark);
+
+
+                /*
                 while($line = $filesource->freadOrDie(256*1024)) {
 
                     $filedest->fwriteOrDie($line);
@@ -1813,6 +1877,7 @@ function deletePage() {
                 $filedest = null;
                     
                 $filesource = null;
+                */
                 
 
                 if(!dbdone("DATABASE/DB/data.html", "БАЗА ДАННЫХ БЫЛА ИЗМЕНЕНА ИЛИ ЗАБЛОКИРОВАНА ВНЕШНИМ ПРОЦЕССОМ")) return false;
