@@ -3082,8 +3082,8 @@ function validateHex40(string $hex): void {
 
 function concater(string $fname1, string $fname2, int $pos): void
 {
-    if(!function_exists('exec')) {
-        die('<h1>CONCATER PANIC :: exec disabled</h1>');
+    if(trim($fname1) === '' || trim($fname2) === '') {
+        die('<h1>CONCATER PANIC :: empty filename</h1>');
     }
 
     $root = getcwd();
@@ -3098,14 +3098,20 @@ function concater(string $fname1, string $fname2, int $pos): void
     $fname1 = $root . '/' . ltrim($fname1, '/');
     $fname2 = $root . '/' . ltrim($fname2, '/');
 
-    $cleanup = static function() use ($new): void {
-        @unlink($new);
+    $cleanup = static function() use ($new, $fname1, $fname2): void {
+        @unlink($new);    // промежуточный .tmp
+        @unlink($fname1); // временный файл-приёмник
+        @unlink($fname2); // временный файл-источник хвоста
     };
 
     $panic = static function(string $msg) use ($cleanup): never {
         $cleanup();
         die('<h1>CONCATER PANIC :: ' . htmlspecialchars($msg, ENT_QUOTES | ENT_HTML5, 'UTF-8') . '</h1>');
     };
+
+    if(!function_exists('exec')) {
+        $panic('exec disabled');
+    }
 
     if($pos < 0) {
         $panic('bad byte position');
