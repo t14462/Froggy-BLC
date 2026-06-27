@@ -25,7 +25,7 @@ function savePage() {
 
             $raw = function_exists('ini_get') ? ini_get('max_execution_time') : false;
 
-            $sleep = $raw === false ? 16 : (int)$raw;
+            $sleep = ($raw === false) ? 16 : (int)$raw;
 
             if ($sleep <= 0) {
                 $sleep = 16;

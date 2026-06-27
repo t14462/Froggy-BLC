@@ -679,6 +679,8 @@ function commentRemove() {
             $commdataline = str_replace("\n", "", $commdataline);
 
             $commdataline = str_replace("</li>DEL", "</li>", $commdataline);
+            
+            $commdataline = str_replace("</ul><ul>", "", $commdataline);
 
             $filesource->seekOrDie($pgcommnum);
 
