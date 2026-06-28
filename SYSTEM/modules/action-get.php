@@ -1864,6 +1864,7 @@ function deletePage() {
 
                 $filesource->fgetsOrDie();
 
+                /// Убрано отсюда
                 /// $filedest = openFileOrDie("DATABASE/DB/data.html.new." . getmypid(), 'ab');
 
 
