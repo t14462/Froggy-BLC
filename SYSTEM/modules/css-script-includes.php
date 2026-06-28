@@ -87,8 +87,8 @@ Web-Дизайнер: Артемев Лебедий.</em>
 if($checkpermission) {
 
     if(gnuCatTailAvailable()) {
-        $footer .= "<span>🟢</span>";
+        $footer .= "<span title='Exec Utils: ЕСТЬ.'>🟢</span>";
     } else {
-        $footer .= "<span>🔴</span>";
+        $footer .= "<span title='Exec Utils: НЕТУ.'>🔴</span>";
     }
 }
