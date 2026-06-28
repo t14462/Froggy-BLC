@@ -1512,7 +1512,7 @@ function checkMenuOrder($sanCheckTable) {
     global $errmsg;
 
 
-    if($sanCheckTable[0] !== "1") {
+    if((int)$sanCheckTable[0] !== 1) {
         $errmsg = "<h1>ОШИБКА.</h1><p class='big'><strong>Порядок уровней меню не был соблюдён.</strong></p>";
         mylog("<span style='color:DarkMagenta'>Порядок уровней меню не был соблюдён. ({$_SESSION["username"]}).</span>");
         return false;
