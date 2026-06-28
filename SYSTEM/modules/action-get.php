@@ -1880,7 +1880,7 @@ function deletePage() {
 
                 } else {
 
-                    /// Пермещено сюда
+                    /// Перемещено сюда
                     $filedest = openFileOrDie("DATABASE/DB/data.html.new." . getmypid(), 'ab');
 
                     while($line = $filesource->freadOrDie(256*1024)) {
