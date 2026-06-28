@@ -3109,9 +3109,11 @@ function concater(string $fname1, string $fname2, int $pos): void
         die('<h1>CONCATER PANIC :: ' . htmlspecialchars($msg, ENT_QUOTES | ENT_HTML5, 'UTF-8') . '</h1>');
     };
 
+    /*
     if(!function_exists('exec')) {
         $panic('exec disabled');
     }
+    */
 
     if($pos < 0) {
         $panic('bad byte position');
