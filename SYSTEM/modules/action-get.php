@@ -697,26 +697,27 @@ function commentRemove() {
             $filedest->fwriteOrDie($commdataline."\n");
 
 
+            if(gnuCatTailAvailable()) {
 
-            $PosMark = $filesource->ftell();
+                $PosMark = $filesource->ftell();
 
-            $filedest = null;
-            
-            $filesource = null;
+                $filedest = null;
+                
+                $filesource = null;
 
-            concater("DATABASE/comments/".$commaddr.".new." . getmypid(), "DATABASE/comments/".$commaddr . ".src." . getmypid(), $PosMark);
+                concater("DATABASE/comments/".$commaddr.".new." . getmypid(), "DATABASE/comments/".$commaddr . ".src." . getmypid(), $PosMark);
 
+            } else { 
+                
+                while($line = $filesource->freadOrDie(256*1024)) {
 
-            /*
-            while($line = $filesource->freadOrDie(256*1024)) {
+                    $filedest->fwriteOrDie($line);
+                }
 
-                $filedest->fwriteOrDie($line);
+                $filedest = null;
+                
+                $filesource = null;
             }
-
-            $filedest = null;
-            
-            $filesource = null;
-            */
             
 
             if(!dbdone("DATABASE/comments/".$commaddr, "")) return false;
@@ -1289,25 +1290,27 @@ function addPage() {
                 $filedest->fwriteOrDie($line);
 
 
+                if(gnuCatTailAvailable()) {
 
-                $PosMark = $filesource->ftell();
+                    $PosMark = $filesource->ftell();
 
-                $filedest = null;
-                
-                $filesource = null;
-
-                concater("DATABASE/DB/data.html.new." . getmypid(), "DATABASE/DB/data.html.src." . getmypid(), $PosMark);
-
-
-                /*
-                while($line = $filesource->freadOrDie(256*1024)) {
-
-                    $filedest->fwriteOrDie($line);
-                }
-                $filedest = null;
+                    $filedest = null;
                     
-                $filesource = null;
-                */
+                    $filesource = null;
+
+                    concater("DATABASE/DB/data.html.new." . getmypid(), "DATABASE/DB/data.html.src." . getmypid(), $PosMark);
+
+                } else { 
+
+                    while($line = $filesource->freadOrDie(256*1024)) {
+
+                        $filedest->fwriteOrDie($line);
+                    }
+
+                    $filedest = null;
+                        
+                    $filesource = null;
+                }
                 
 
                 if(!dbdone("DATABASE/DB/data.html", "БАЗА ДАННЫХ БЫЛА ИЗМЕНЕНА ИЛИ ЗАБЛОКИРОВАНА ВНЕШНИМ ПРОЦЕССОМ")) return false;
@@ -1417,25 +1420,27 @@ function movePageDown() {
             $filedest->fwriteOrDie($nextline.$prevline);
 
 
+            if(gnuCatTailAvailable()) {
 
-            $PosMark = $filesource->ftell();
+                $PosMark = $filesource->ftell();
 
-            $filedest = null;
-            
-            $filesource = null;
-
-            concater("DATABASE/DB/data.html.new." . getmypid(), "DATABASE/DB/data.html.src." . getmypid(), $PosMark);
-
-
-            /*
-            while($line = $filesource->freadOrDie(256*1024)) {
-
-                $filedest->fwriteOrDie($line);
-            }
-            $filedest = null;
+                $filedest = null;
                 
-            $filesource = null;
-            */
+                $filesource = null;
+
+                concater("DATABASE/DB/data.html.new." . getmypid(), "DATABASE/DB/data.html.src." . getmypid(), $PosMark);
+
+            } else { 
+                
+                while($line = $filesource->freadOrDie(256*1024)) {
+
+                    $filedest->fwriteOrDie($line);
+                }
+
+                $filedest = null;
+                    
+                $filesource = null;
+            }
             
 
             if(!dbdone("DATABASE/DB/data.html", "БАЗА ДАННЫХ БЫЛА ИЗМЕНЕНА ИЛИ ЗАБЛОКИРОВАНА ВНЕШНИМ ПРОЦЕССОМ")) return false;
@@ -1495,25 +1500,27 @@ function movePageUp() {
             $filedest->fwriteOrDie($nextline.$prevline);
 
 
+            if(gnuCatTailAvailable()) {
 
-            $PosMark = $filesource->ftell();
+                $PosMark = $filesource->ftell();
 
-            $filedest = null;
-            
-            $filesource = null;
-
-            concater("DATABASE/DB/data.html.new." . getmypid(), "DATABASE/DB/data.html.src." . getmypid(), $PosMark);
-
-
-            /*
-            while($line = $filesource->freadOrDie(256*1024)) {
-
-                $filedest->fwriteOrDie($line);
-            }
-            $filedest = null;
+                $filedest = null;
                 
-            $filesource = null;
-            */
+                $filesource = null;
+
+                concater("DATABASE/DB/data.html.new." . getmypid(), "DATABASE/DB/data.html.src." . getmypid(), $PosMark);
+
+            } else {
+
+                while($line = $filesource->freadOrDie(256*1024)) {
+
+                    $filedest->fwriteOrDie($line);
+                }
+
+                $filedest = null;
+                    
+                $filesource = null;
+            }
             
 
             if(!dbdone("DATABASE/DB/data.html", "БАЗА ДАННЫХ БЫЛА ИЗМЕНЕНА ИЛИ ЗАБЛОКИРОВАНА ВНЕШНИМ ПРОЦЕССОМ")) return false;
@@ -1860,26 +1867,30 @@ function deletePage() {
                 /// $filedest = openFileOrDie("DATABASE/DB/data.html.new." . getmypid(), 'ab');
 
 
+                if(gnuCatTailAvailable()) {
 
-                $PosMark = $filesource->ftell();
+                    $PosMark = $filesource->ftell();
 
-                /// $filedest = null;
-                
-                $filesource = null;
-
-                concater("DATABASE/DB/data.html.new." . getmypid(), "DATABASE/DB/data.html.src." . getmypid(), $PosMark);
-
-
-                /*
-                while($line = $filesource->freadOrDie(256*1024)) {
-
-                    $filedest->fwriteOrDie($line);
-                }
-
-                $filedest = null;
+                    /// $filedest = null;
                     
-                $filesource = null;
-                */
+                    $filesource = null;
+
+                    concater("DATABASE/DB/data.html.new." . getmypid(), "DATABASE/DB/data.html.src." . getmypid(), $PosMark);
+
+                } else {
+
+                    /// Пермещено сюда
+                    $filedest = openFileOrDie("DATABASE/DB/data.html.new." . getmypid(), 'ab');
+
+                    while($line = $filesource->freadOrDie(256*1024)) {
+
+                        $filedest->fwriteOrDie($line);
+                    }
+
+                    $filedest = null;
+                        
+                    $filesource = null;
+                }
                 
 
                 if(!dbdone("DATABASE/DB/data.html", "БАЗА ДАННЫХ БЫЛА ИЗМЕНЕНА ИЛИ ЗАБЛОКИРОВАНА ВНЕШНИМ ПРОЦЕССОМ")) return false;

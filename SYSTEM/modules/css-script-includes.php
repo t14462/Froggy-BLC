@@ -83,3 +83,12 @@ $footer = "\n<em>Автор: Тимофеев Святослав aka Paulter Gat
 Web-Дизайнер: Артемев Лебедий.</em>
 ".genTplForm()
 .' <a href="https://hostiq.ua/" target="_blank"><img src="https://hostiq.ua/images2019/design/logos/logo.svg" alt="HOSTiQ&nbsp;— найкращий хостинг в&nbsp;Україні" /></a>';
+
+if($checkpermission) {
+
+    if(gnuCatTailAvailable()) {
+        $footer .= "<span>🟢</span>";
+    } else {
+        $footer .= "<span>🔴</span>";
+    }
+}

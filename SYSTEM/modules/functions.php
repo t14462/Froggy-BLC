@@ -3161,3 +3161,47 @@ function concater(string $fname1, string $fname2, int $pos): void
         $panic('rename failed');
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function gnuCatTailAvailable(): bool
+{
+    static $cached = null;
+
+    if($cached !== null) {
+        return $cached;
+    }
+
+    if(!function_exists('exec')) {
+        return $cached = false;
+    }
+
+    if(PHP_OS_FAMILY === 'Windows') {
+        return $cached = false;
+    }
+
+    $shellOutput = [];
+    $exitCode = 1;
+
+    exec(
+        '/usr/bin/cat --version >/dev/null 2>&1 && /usr/bin/tail --version >/dev/null 2>&1',
+        $shellOutput,
+        $exitCode
+    );
+
+    return $cached = ($exitCode === 0);
+}
