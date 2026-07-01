@@ -115,6 +115,13 @@ $cntTmp = filter_filename($file . '.dlcnt');
 $cntFile = $COUNT_DIR . '/' . $cntTmp;
 
 if(is_dir($COUNT_DIR) && is_writable($COUNT_DIR)) {
+
+    if(is_file($cntFile)) {
+        if(!is_writable($cntFile)) {
+            die('counter file is not writable');
+        }
+    }
+
     $fp = @fopen($cntFile, 'c+b');
     if($fp) {
         if(flock($fp, LOCK_EX)) {
