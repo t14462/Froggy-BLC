@@ -2335,42 +2335,37 @@ function remove_entities(string $text): string {
     return $text;
 }
 
+function atomicCounterIncrement($path) {
 
-function atomicCounterIncrement(string $path): void
-{
-    $fp = fopenOrDie($path, 'c+b');
-
-    if(!flock($fp, LOCK_EX)) {
-        fclose($fp);
-        return;
+    if(is_file($path)) {
+        if(!is_writable($path)) {
+            die('counter file is not writable');
+        }
+    } else {
+        if(!is_writable(dirname($path))) {
+            die('counter directory is not writable');
+        }
     }
 
-    rewind($fp);
-
-    $data = trim((string)stream_get_contents($fp));
-    $val = ($data !== '' && ctype_digit($data)) ? (int)$data : 0;
-    $val++;
-
-    rewind($fp);
-
-    if(ftruncate($fp, 0) === false) {
+    $fp = fopenOrDie($path, 'c+b'); // создаст файл при отсутствии
+    
+    if(flock($fp, LOCK_EX)) {
+        $val  = 0;
+        rewind($fp);
+        $data = (string)stream_get_contents($fp);
+        $data = trim((string)$data);
+        if($data !== '' && ctype_digit($data)) {
+            $val = (int)$data;
+        }
+        $val++;
+        rewind($fp);
+        if(ftruncate($fp, 0) !== false && fwrite($fp, (string)$val) !== false) {
+            fflush($fp);
+        }
         flock($fp, LOCK_UN);
-        fclose($fp);
-        return;
     }
-
-    if(fwrite($fp, (string)$val) === false) {
-        flock($fp, LOCK_UN);
-        fclose($fp);
-        return;
-    }
-
-    fflush($fp);
-
-    flock($fp, LOCK_UN);
     fclose($fp);
 }
-
 
 // Небольшой генератор ASCII-токена (на случай старых PHP без random_bytes)
 function _typo_token($prefix)
