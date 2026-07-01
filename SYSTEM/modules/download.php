@@ -139,6 +139,10 @@ if(is_dir($COUNT_DIR) && is_writable($COUNT_DIR)) {
         }
         fclose($fp);
     }
+
+} else {
+
+    die('counter dir is not writable');
 }
 
 // ─── Редирект ──────────────────────────────────────────────────────
