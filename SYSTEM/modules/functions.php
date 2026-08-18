@@ -348,7 +348,7 @@ function mb_superTrim(string $text): string {
             "&NewLine;", "&#10;", "&#xA;",                      // LINE FEED (U+000A)
             "&#13;", "&#xD;",                                   // CARRIAGE RETURN (U+000D) — имени нет
         ],
-        " ",
+        "",
         $text
     );
 
@@ -363,7 +363,7 @@ function mb_superTrim(string $text): string {
         }
 
         // Остальное выкидываем
-        return ' ';
+        return '';
     }, $text);
 
     // 3. Удаляем Unicode-пробелы по краям
@@ -390,7 +390,7 @@ function mb_softTrim(string $text): string {
         }
 
         // Остальное выкидываем
-        return ' ';
+        return '';
     }, $text);
     
 
@@ -441,7 +441,7 @@ function mb_softTrim(string $text): string {
             // CARRIAGE RETURN (U+000D) — имени нет
             "&#13;", "&#xD;",
         ],
-        " ",
+        "",
         $text
     );
 

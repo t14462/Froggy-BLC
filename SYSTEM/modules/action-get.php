@@ -1006,6 +1006,8 @@ function pageEdit() {
                             'zephir': 'Zephir'
                         };
 
+
+                        
                         CKEDITOR.replace( 'textedit', {
                             removePlugins: 'forms,exportpdf,iframe',
                             disallowedContent: 'iframe; frame; frameset; object; embed',
