@@ -2305,9 +2305,11 @@ function normalize_entities_my(string $text): string {
     }, $text);
 
     // 3) Именованные → нижний регистр (канон для HTML)
+    /*
     $text = preg_replace_callback('/&[a-z][a-z0-9]*;/i', static function ($m) {
         return strtolower($m[0]);
     }, $text);
+    */
 
     // 4) Экранируем «голые» &
     $text = preg_replace('/&(?![a-z][a-z0-9]*;|#\d+;|#x[0-9a-f]+;)/i', '&amp;', $text);
