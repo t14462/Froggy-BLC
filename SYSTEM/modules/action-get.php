@@ -778,9 +778,9 @@ function pageEdit() {
                                 { name: 'about', groups: [ 'about' ] }
                             ];
 
-                            config.protectedSource.push(/&amp;[a-zA-Z][a-zA-Z0-9]*;/g);
+                            config.protectedSource.push(/&amp;[a-zA-Z][a-zA-Z0-9]*;/gi);
                             config.protectedSource.push(/&amp;#\d+;/g);
-                            config.protectedSource.push(/&amp;#x[0-9a-fA-F]+;/g);
+                            config.protectedSource.push(/&amp;#x[0-9a-fA-F]+;/gi);
 
                         };
 
