@@ -23,10 +23,6 @@ html {
     white-space: nowrap;
 }
 
-p {
-    margin: .75rem 0;
-}
-
 em {
     font-style: italic;
 }
@@ -150,10 +146,6 @@ th {
     padding-right: .25rem;
     vertical-align: .07rem;
     color: #C00;
-}
-
-p {
-    text-indent: .75rem;
 }
 
 img {
@@ -572,4 +564,9 @@ rich-paragraph {
     display: block;
     margin: .75rem 0;
     text-indent: .75rem;
+}
+
+rich-paragraph:has(img, .vid-wrapper) {
+
+    text-indent: 0;
 }

@@ -104,11 +104,6 @@ body {
     text-shadow: 3px 3px 3px rgba(127,127,127,0.5);
 }
 
-main p {
-    margin: 1.1rem 0;
-    /* font-size: 1.3rem; */
-}
-
 em {
     font-style: italic;
 }
@@ -772,6 +767,7 @@ select[name="h"] {
 
 main img {
 
+    float: none !important;
     clear: both;
     object-fit: contain;
     max-width: calc(100% - 1rem) !important;
@@ -779,11 +775,6 @@ main img {
     margin: .5rem;
     image-rendering: smooth;
     cursor: url('hover.cur.svg'), pointer;
-}
-
-main p:has(img) {
-
-    text-indent: 0;
 }
 
 
@@ -1365,9 +1356,6 @@ nav#TOC > ol {
     cursor: url('hover.cur.svg'), pointer;
 }
 
-article p {
-    text-indent: .75rem;
-}
 
 
 
@@ -1677,6 +1665,11 @@ main article *, #sitemenu a {
 
 rich-paragraph {
     display: block;
-    margin: 1em 0;
+    margin: 1.1rem 0;
     text-indent: .75rem;
+}
+
+rich-paragraph:has(img, .vid-wrapper) {
+
+    text-indent: 0;
 }
