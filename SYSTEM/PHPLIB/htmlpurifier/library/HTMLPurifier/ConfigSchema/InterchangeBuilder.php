@@ -174,12 +174,24 @@ class HTMLPurifier_ConfigSchema_InterchangeBuilder
     }
 
     /**
-     * Evaluates an array PHP code string without array() wrapper
+     * Parses an array PHP code string without array() wrapper
      * @param string $contents
      */
     protected function evalArray($contents)
     {
-        return eval('return array(' . $contents . ');');
+        $isAssoc = (strpos($contents, '=>') !== false);
+        $json = preg_replace_callback(
+            "/'([^']*)'/",
+            function ($m) { return json_encode($m[1]); },
+            $contents
+        );
+        if ($isAssoc) {
+            $json = preg_replace('/\s*=>\s*/', ': ', $json);
+            $result = json_decode('{' . $json . '}', true);
+        } else {
+            $result = json_decode('[' . $json . ']', true);
+        }
+        return $result !== null ? $result : array();
     }
 
     /**
