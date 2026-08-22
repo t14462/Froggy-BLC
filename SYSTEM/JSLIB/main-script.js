@@ -401,3 +401,289 @@ ready(function () {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*
+ * Проверка имени пользователя.
+ *
+ * Разрешаем любые нормальные печатные символы, включая пробелы.
+ * Запрещаем:
+ *   - пустое имя;
+ *   - управляющие символы;
+ *   - переводы строк.
+ *
+ * Дубликаты имён дополнительно проверяются evaluateUserList().
+ */
+function validateUsername(input) {
+
+    input.value = input.value.trim();
+
+    const value = input.value;
+
+    let valid = true;
+
+    if(value === '') {
+        valid = false;
+    }
+
+    if(/[\x00-\x1F\x7F]/.test(value)) {
+        valid = false;
+    }
+
+    input.classList.toggle('invalidField', !valid);
+
+    evaluateUserList();
+
+    return valid;
+}
+
+
+/*
+ * Проверка SHA-512 hash.
+ *
+ * 128 шестнадцатеричных символов.
+ */
+function validateUserHash(input) {
+
+    const value = input.value.trim();
+
+    const valid = /^[0-9a-f]{128}$/i.test(value);
+
+    input.classList.toggle('invalidField', !valid);
+
+    evaluateUserList();
+
+    return valid;
+}
+
+
+/*
+ * Аналог PHP:
+ *
+ * htmlspecialchars($value, ENT_QUOTES, 'UTF-8')
+ */
+function htmlspecialchars(value) {
+
+    return value
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+
+/*
+ * Проверка всего списка пользователей и генерация результата.
+ */
+function evaluateUserList() {
+
+    const forms = Array.from(document.querySelectorAll('.user-form'));
+    const output = document.getElementById('generatedUserArrayOutput');
+
+    const usernames = new Map();
+
+    /*
+     * Сначала проверяем каждое поле отдельно.
+     */
+    for(const form of forms) {
+
+        const nameInput = form.querySelector('.user-name');
+        const hashInput = form.querySelector('.user-hash');
+        const privilegesSelect = form.querySelector('.user-privileges');
+
+        const name = nameInput.value.trim();
+        const hash = hashInput.value.trim();
+        const privileges = privilegesSelect.value;
+
+        const nameValid =
+            name.trim() !== '' &&
+            !/[\x00-\x1F\x7F]/.test(name);
+
+        const hashValid =
+            /^[0-9a-f]{128}$/i.test(hash);
+
+        const privilegesValid =
+            /^[0-4]$/.test(privileges);
+
+        nameInput.classList.toggle('invalidField', !nameValid);
+        hashInput.classList.toggle('invalidField', !hashValid);
+        privilegesSelect.classList.toggle('invalidField', !privilegesValid);
+
+        /*
+         * Собираем имена, чтобы потом найти дубликаты.
+         */
+        if(nameValid) {
+
+            if(!usernames.has(name)) {
+                usernames.set(name, []);
+            }
+
+            usernames.get(name).push(nameInput);
+        }
+    }
+
+
+    /*
+     * Дублирующиеся имена пользователей недопустимы.
+     * Подсвечиваем ВСЕ экземпляры дубликата.
+     */
+    for(const inputs of usernames.values()) {
+
+        if(inputs.length > 1) {
+
+            for(const input of inputs) {
+                input.classList.add('invalidField');
+            }
+        }
+    }
+
+
+    /*
+     * Генерируем PHP-массив.
+     *
+     * Строка генерируется только для полностью корректной записи.
+     */
+    const lines = [];
+
+    for(const form of forms) {
+
+        const nameInput = form.querySelector('.user-name');
+        const hashInput = form.querySelector('.user-hash');
+        const privilegesSelect = form.querySelector('.user-privileges');
+
+        /*
+         * Если хотя бы одно поле ошибочно —
+         * эту запись в результат не включаем.
+         */
+        if(
+            nameInput.classList.contains('invalidField') ||
+            hashInput.classList.contains('invalidField') ||
+            privilegesSelect.classList.contains('invalidField')
+        ) {
+            continue;
+        }
+
+        const name = htmlspecialchars(nameInput.value.trim());
+        const privileges = privilegesSelect.value;
+        const hash = hashInput.value.trim();
+
+        lines.push(
+            `$cred['${name}'] = "${privileges}<!!!>${hash}";`
+        );
+    }
+
+
+    output.value = lines.join('\n');
+}
+
+
+/*
+ * Удаление конкретной формы пользователя.
+ */
+function removeThisUserForm(button) {
+
+    const confirmed = confirm('Вы действительно хотите удалить пользователя?');
+
+    if(!confirmed) {
+        return;
+    }
+
+    const form = button.closest('.user-form');
+
+    if(form) {
+        form.remove();
+    }
+
+    evaluateUserList();
+}
+
+
+/*
+ * Добавление нового пользователя.
+ *
+ * В текущей HTML-разметке кнопки добавления пока нет,
+ * но функция уже готова.
+ *
+ * Например:
+ *
+ * <button onclick="addUserForm()">Добавить пользователя</button>
+ */
+function addUserForm() {
+
+    const marker = document.getElementById('insertUserFormBefore');
+
+    const form = document.createElement('div');
+    form.className = 'user-form';
+
+    form.innerHTML = `
+<input type="text" class="user-name" value="" onchange="validateUsername(this)" />
+
+<select class="user-privileges" onchange="evaluateUserList()">
+<option selected="selected">0</option>
+<option>1</option>
+<option>2</option>
+<option>3</option>
+<option>4</option>
+</select>
+
+<input type="text" class="user-hash" value="" onchange="validateUserHash(this)" />
+
+<button type="button" onclick="removeThisUserForm(this)">🗑️</button>
+`;
+
+    marker.parentNode.insertBefore(form, marker);
+
+    /*
+     * Новые пустые поля сразу показываем как ошибочные.
+     */
+    evaluateUserList();
+
+    form.querySelector('.user-name').focus();
+}
+
+
+/*
+ * Инициализация после построения DOM.
+ *
+ * Дополнительно включаем живое обновление во время набора,
+ * а не только после onchange.
+ */
+document.addEventListener('DOMContentLoaded', function() {
+
+    document.addEventListener('input', function(event) {
+
+        if(
+            event.target.matches('.user-name') ||
+            event.target.matches('.user-hash')
+        ) {
+            evaluateUserList();
+        }
+    });
+
+    document.querySelector('.user-form')?.remove();
+
+    evaluateUserList();
+});

@@ -32,6 +32,8 @@ function detectaction() {
         // Логи и администрирование
         isset($safeGet['log']) ||
         isset($safeGet['purgelog']) ||
+        isset($safeGet['editusers']) ||
+        isset($safePost['saveusers']) ||
 
         // Удаление файлов
         isset($safeGet['delimg']) ||
@@ -114,6 +116,14 @@ if(!$checkpermission && detectaction()) {
 } elseif( /* $checkpermission && */ isset($safePost["pobyava"])) {
 
     pobyava();
+
+} elseif( /* $checkpermission && */ isset($safeGet["editusers"])) {
+
+    editUsers();
+
+} elseif( /* $checkpermission && */ isset($safePost["saveusers"])) {
+
+    saveUsers();
 
 ##################################################
 ################################################## 

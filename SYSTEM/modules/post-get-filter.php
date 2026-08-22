@@ -46,6 +46,19 @@ function rejectFileUploadArrays(array $files): void
     }
 }
 
+function htmlSpecialCharsField(array &$input, string $key): void {
+
+    if(isset($input[$key]) && is_string($input[$key])) {
+
+        $input[$key] = htmlspecialchars(
+            $input[$key],
+            ENT_QUOTES | ENT_HTML401 | ENT_SUBSTITUTE,
+            'UTF-8',
+            false
+        );
+    }
+}
+
 # $vars_dl = [];
 
 if(in_array($methods, ['POST', 'GET'], true)) {
@@ -71,12 +84,12 @@ if(in_array($methods, ['POST', 'GET'], true)) {
                 "commaddr"  => FILTER_SANITIZE_FULL_SPECIAL_CHARS,
                 "repcommid" => FILTER_SANITIZE_FULL_SPECIAL_CHARS,
                 # "email"     => FILTER_SANITIZE_EMAIL,
-                "visitor"   => FILTER_SANITIZE_FULL_SPECIAL_CHARS,
+                "visitor"   => FILTER_DEFAULT,
                 "captcha"   => FILTER_SANITIZE_FULL_SPECIAL_CHARS,
                 "commpage"  => FILTER_VALIDATE_INT,
 
                 "password"  => FILTER_DEFAULT,
-                "username"  => FILTER_SANITIZE_FULL_SPECIAL_CHARS,
+                "username"  => FILTER_DEFAULT,
 
                 "imgup" => FILTER_VALIDATE_INT,
 
@@ -85,7 +98,7 @@ if(in_array($methods, ['POST', 'GET'], true)) {
                 /* "fpgnum" => FILTER_VALIDATE_INT, */
 
                 "registerp" => FILTER_VALIDATE_INT,
-                "rusername" => FILTER_SANITIZE_FULL_SPECIAL_CHARS,
+                "rusername" => FILTER_DEFAULT,
                 "rpassword1" => FILTER_DEFAULT,
                 "rpassword2" => FILTER_DEFAULT,
 
@@ -97,7 +110,13 @@ if(in_array($methods, ['POST', 'GET'], true)) {
 
                 "pobyava"  => FILTER_DEFAULT,
 
+                "saveusers" => FILTER_DEFAULT,
+
             ]) ?? [];
+
+            htmlSpecialCharsField($safePost, 'username');
+            htmlSpecialCharsField($safePost, 'rusername');
+            htmlSpecialCharsField($safePost, 'visitor');
 
             break;
 

@@ -68,7 +68,7 @@ function savePage() {
 
         $pgtitle = mb_superTrim($pgtitle);
 
-        // $pgtitle = htmlspecialchars($pgtitle, ENT_QUOTES | ENT_HTML5 | ENT_SUBSTITUTE, 'UTF-8', false);
+        // $pgtitle = htmlspecialchars($pgtitle, ENT_QUOTES | ENT_HTML401 | ENT_SUBSTITUTE, 'UTF-8', false);
 
         // $pgtitle = preg_replace("/&amp;(#?\w+);/i", "&$1;", $pgtitle);
 
@@ -1214,7 +1214,7 @@ function commentReply() {
 
             } else {
                 
-                $commpost = htmlspecialchars($commpost, ENT_QUOTES | ENT_HTML5 | ENT_SUBSTITUTE, 'UTF-8', false);
+                $commpost = htmlspecialchars($commpost, ENT_QUOTES | ENT_HTML401 | ENT_SUBSTITUTE, 'UTF-8', false);
 
                 // $commpost = str_ireplace("\n", "<br />\n", $commpost);
             }
@@ -1678,7 +1678,7 @@ function postComment() {
                 
             } else {
                 
-                $commpost = htmlspecialchars($commpost, ENT_QUOTES | ENT_HTML5 | ENT_SUBSTITUTE, 'UTF-8', false);
+                $commpost = htmlspecialchars($commpost, ENT_QUOTES | ENT_HTML401 | ENT_SUBSTITUTE, 'UTF-8', false);
 
                 // $commpost = str_ireplace("\n", "<br />\n", $commpost);
             }
@@ -1943,8 +1943,8 @@ function imageupload() {
                     $errmsg .= "<li>Временный файл загрузки недоступен.</li>";
                     mylog("<em style='color:DarkRed'>Временный файл загрузки недоступен. (".$_SESSION["username"].").</em>");
                 } elseif(move_uploaded_file($_FILES["fileToUpload"]["tmp_name"], $target_file)) {
-                    $errmsg .= "<li>Файл ". htmlspecialchars( basename( $_FILES["fileToUpload"]["name"]), ENT_QUOTES | ENT_HTML5 | ENT_SUBSTITUTE, 'UTF-8', false). " был загружен.</li>";
-                    mylog("<em style='color:DarkGreen'>Файл ". htmlspecialchars( basename( $_FILES["fileToUpload"]["name"]), ENT_QUOTES | ENT_HTML5 | ENT_SUBSTITUTE, 'UTF-8', false). " был загружен. (".$_SESSION["username"].").</em>");
+                    $errmsg .= "<li>Файл ". htmlspecialchars( basename( $_FILES["fileToUpload"]["name"]), ENT_QUOTES | ENT_HTML401 | ENT_SUBSTITUTE, 'UTF-8', false). " был загружен.</li>";
+                    mylog("<em style='color:DarkGreen'>Файл ". htmlspecialchars( basename( $_FILES["fileToUpload"]["name"]), ENT_QUOTES | ENT_HTML401 | ENT_SUBSTITUTE, 'UTF-8', false). " был загружен. (".$_SESSION["username"].").</em>");
                 } else {
                     $errmsg .= "<li>Извините, произошла ошибка при загрузке файла.</li>";
                     mylog("<em style='color:DarkRed'>Извините, произошла ошибка при загрузке файла. (".$_SESSION["username"].").</em>");
@@ -2185,5 +2185,50 @@ function pobyava() {
         putFileOrDie("DATABASE/obyava.txt", $obstring);
 
         refreshhandle(0, "?", false);
+    }
+}
+
+
+function saveUsers() {
+
+    global $safePost, $checkpermission, $errmsg;
+
+    if($checkpermission < 4) {
+
+        $errmsg = pforbidden();
+
+    } else {
+
+        $users = $safePost['saveusers'];
+
+        $users = str_replace("\r", "", $users);
+
+        $users = "<?php
+
+if(!defined('SECURE_ACCESS')) { die('Direct access not permitted'); }
+
+################################################
+################################################
+################################################
+
+/*
+ * 0 dummy
+ * 1 visitor
+ * 2 moderator
+ * 3 corrector
+ * 4 admin
+ *
+ * UserName, как ключ массива, -- ДОЛЖЕН БЫТЬ В ОДИНАРНЫХ КАВЫЧКАХ!!!
+ */
+
+
+
+$users
+";
+
+
+        putFileOrDie("SYSTEM/cred.php", $users);
+
+        refreshhandle(0, "?editusers=1", false);
     }
 }

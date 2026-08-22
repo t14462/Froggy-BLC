@@ -125,7 +125,8 @@ function viewLog() {
 
         $content .= "</div>";
         $content .= $pager;
-        $content .= "<p><a href='?purgelog=1' onclick=\"return confirm('Вы уверены?');\">ОЧИСТИТЬ ЛОГ</a></p>";
+        $content .= "<p><a href='?purgelog=1' onclick=\"return confirm('Вы уверены?');\">❌ ОЧИСТИТЬ ЛОГ</a></p>";
+        $content .= "<p><a href='?editusers=1'>👥 РЕДАКТИРОВАТЬ ПОЛЬЗОВАТЕЛЕЙ</a></p>";
         $mainPageTitle = "Системный Лог";
     }
 }
@@ -241,7 +242,7 @@ function pageload() {
         }
 
         // ЭТО ДОЛЖНО ИДТИ ВПЕРЕДИ
-        // $ptitle[2] = htmlspecialchars($ptitle[2], ENT_QUOTES | ENT_HTML5 | ENT_SUBSTITUTE, 'UTF-8', false);
+        // $ptitle[2] = htmlspecialchars($ptitle[2], ENT_QUOTES | ENT_HTML401 | ENT_SUBSTITUTE, 'UTF-8', false);
 
         $mainPageTitle = $ptitle[2];
 
@@ -2020,3 +2021,73 @@ function gobyava() {
         </form>";
     }
 }
+
+
+function editUsers() {
+
+    global $cred, $content, $checkpermission, $errmsg;
+
+    if($checkpermission < 4) {
+
+        $errmsg = pforbidden();
+
+    } else {
+
+        $content = "";
+
+        foreach($cred as $username => $data) {
+
+            // Разделяем:
+            // 4<!!!>62c5...  ->  privilege = 4, hash = 62c5...
+            [$privilege, $hash] = explode('<!!!>', $data, 2);
+
+
+            $content .= '<div class="user-form">' . "\n";
+
+            $content .= '<input type="text" class="user-name" value="' . $username . '" onchange="validateUsername(this)" />' . "\n\n";
+
+            $content .= '<select class="user-privileges" onchange="evaluateUserList()">' . "\n";
+
+            for($i = 0; $i <= 4; $i++) {
+
+                $content .= '<option';
+
+                if((string)$i === (string)$privilege) {
+                    $content .= ' selected="selected"';
+                }
+
+                $content .= '>' . $i . '</option>' . "\n";
+            }
+
+            $content .= '</select>' . "\n\n";
+
+            $content .= '<input type="text" class="user-hash" value="' . $hash . '" onchange="validateUserHash(this)" />' . "\n\n";
+
+            $content .= '<button onclick="removeThisUserForm(this)">🗑️</button>' . "\n";
+
+            $content .= '</div>' . "\n\n\n";
+        }
+
+        $content .= '<hr id="insertUserFormBefore" /><div class="el-in-line"><button onclick="addUserForm()">➕</button>';
+
+
+        $text = '';
+
+        foreach($cred as $username => $value) {
+
+            $username = escape_amp_txtarea($username);
+
+            $text .= '$cred[\'' . $username . '\'] = "' . $value . "\";\n";
+        }
+
+        $content .= '<form method="post"><textarea name="saveusers" id="generatedUserArrayOutput" style="display: none;">'.$text.'</textarea><input type="submit" value="💾" onclick="return confirm(\'Вы уверены?\');" /></form></div>';
+
+        /// $content .= '<textarea>'.$text.'</textarea>';
+
+    }
+
+}
+
+
+
+

@@ -85,3 +85,24 @@ td.gallery-img > img, td.gallery-fill > span {
   white-space: nowrap;
   text-align: right;;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+.invalidField {
+    background-color: Orange !important;
+}
+

@@ -551,7 +551,7 @@ $replacementDLCNT = static function ($m) {
 
         $targetIframe = urlPrep2($file);
 
-        $safeName = htmlspecialchars($file, ENT_QUOTES | ENT_HTML5 | ENT_SUBSTITUTE, 'UTF-8');
+        $safeName = htmlspecialchars($file, ENT_QUOTES | ENT_HTML401 | ENT_SUBSTITUTE, 'UTF-8');
 
         $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
 
@@ -660,53 +660,40 @@ function array_insert_m(&$array, $position, $insert) {
     }
 }
 
-function filterUsername($username) {
+function filterUsername(string $username): bool {
 
-    // IGNOR THEM
-    $username = str_ireplace(["&#039;", "&apos;", " &amp; ", "&amp;", /* " &laquo;", "&raquo; ", */ "&laquo;", "&raquo;"], "", $username);
-
-    $filteredUsername = emojiToHtmlEntities($username);
-
-    $filteredUsername = remove_entities($filteredUsername);
-
-    // Убираем лишние пробелы
-    $filteredUsername = mb_superTrim($filteredUsername);
-
-    // Удаляем все символы, которые не являются:
-    // - буквами любых языков (\p{L})
-    // - цифрами (0-9)
-    // - пробелами
-    // - знаками пунктуации (\p{P})
-    // - символами (валюты, знаки) (\p{S})
-
-    $filteredUsername = preg_replace('/[^\p{L}0-9 \p{P}\p{S}]+/u', '', $filteredUsername);
-
-    // Запрещаем слэши
-    $filteredUsername = str_replace(['/', '\\'], '', $filteredUsername);
-
-    /// $filteredUsername = htmlspecialchars($filteredUsername, ENT_QUOTES | ENT_HTML5 | ENT_SUBSTITUTE, 'UTF-8', false);
-
-    /*
-    // Проверяем, не пустой ли результат
-    if(empty($username)) {
-        return false;
-    }
-    */
-
-    // Проверка длины имени пользователя
-    if(mb_strlen($filteredUsername) < 3 || mb_strlen($filteredUsername) > 25) {
+    // Невалидный UTF-8
+    if(!mb_check_encoding($username, 'UTF-8')) {
         return false;
     }
 
-    // Если имя пользователя не изменилось, возвращаем true
-    /* if($filteredUsername === $username) {
-        return true;
+    // Пустое имя или имя, состоящее только из пробельных символов
+    if($username === '' || preg_match('/^[\p{Z}\s]*$/u', $username)) {
+        return false;
     }
 
-    return false;
-    */
+    // Управляющие символы:
+    // NUL, TAB, CR, LF, DEL, C1 controls и т. д.
+    if(preg_match('/\p{Cc}/u', $username)) {
+        return false;
+    }
 
-    return ($filteredUsername === $username);
+    // Unicode-переводы строк, которые не входят в \p{Cc}
+    // U+2028 LINE SEPARATOR
+    // U+2029 PARAGRAPH SEPARATOR
+    if(preg_match('/[\x{2028}\x{2029}]/u', $username)) {
+        return false;
+    }
+
+    if(mb_strlen($username) < 3 || mb_strlen($username) > 25) {
+        return false;
+    }
+
+    $normalizedUsername = mb_superTrim($username);
+
+    return ($username === $normalizedUsername);
+
+    /// return true;
 }
 
 function repeatCaptcha($userInput) {
@@ -811,7 +798,7 @@ function refreshhandle($time, $link, $update = true) {
 
     $time = (int)$time;
 
-    $linkHtml = htmlspecialchars($link, ENT_QUOTES | ENT_HTML5 | ENT_SUBSTITUTE, 'UTF-8');
+    $linkHtml = htmlspecialchars($link, ENT_QUOTES | ENT_HTML401 | ENT_SUBSTITUTE, 'UTF-8');
     $linkJs   = json_encode($link, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT);
 
     if ($time > 0) {
@@ -1176,7 +1163,7 @@ function urlPrep(string $st): string
     }
 
     // 1) Декодировать сущности
-    $st = html_entity_decode($st, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    $st = html_entity_decode($st, ENT_QUOTES | ENT_HTML401, 'UTF-8');
 
     // 2) Супер-трим
     /// $st = mb_superTrim($st);
@@ -1409,7 +1396,7 @@ function urlPrep2(string $st): string
     } */
 
     // 1) Декодировать сущности
-    $st = html_entity_decode($st, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    $st = html_entity_decode($st, ENT_QUOTES | ENT_HTML401, 'UTF-8');
 
     // 2) Супер-трим
     /// $st = mb_superTrim($st);
@@ -1973,7 +1960,7 @@ function wrap_images_with_figure(simple_html_dom $html): simple_html_dom {
         $alt = mb_superTrim(normalize_entities_my($img->getAttribute('alt') ?? ''));
         if ($alt !== '' && rawurlencode($alt) !== $fname) {
             $imgHtml = $img->outertext;
-            // $altEscaped = mb_superTrim(htmlspecialchars(strip_tags($alt), ENT_QUOTES | ENT_HTML5 | ENT_SUBSTITUTE, 'UTF-8', false));
+            // $altEscaped = mb_superTrim(htmlspecialchars(strip_tags($alt), ENT_QUOTES | ENT_HTML401 | ENT_SUBSTITUTE, 'UTF-8', false));
             // $altEscaped = str_ireplace('&amp;@', '&', $altEscaped);
             // $figureHtml = '<figure class="fig-img clearfix">' . $imgHtml . '<figcaption>' . $altEscaped . '</figcaption></figure>';
             $figureHtml = '<figure class="fig-img clearfix">' . $imgHtml . '<figcaption>' . $alt . '</figcaption></figure>';
@@ -3120,7 +3107,7 @@ function concater(string $fname1, string $fname2, int $pos): void
 
     $panic = static function(string $msg) use ($cleanup): never {
         $cleanup();
-        die('<h1>CONCATER PANIC :: ' . htmlspecialchars($msg, ENT_QUOTES | ENT_HTML5, 'UTF-8') . '</h1>');
+        die('<h1>CONCATER PANIC :: ' . htmlspecialchars($msg, ENT_QUOTES | ENT_HTML401, 'UTF-8') . '</h1>');
     };
 
     /*
