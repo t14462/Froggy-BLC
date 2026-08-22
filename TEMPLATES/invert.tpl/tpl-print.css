@@ -159,11 +159,6 @@ img {
     image-rendering: smooth;
 }
 
-p:has(img) {
-
-    text-indent: 0;
-}
-
 
 pre {
 
@@ -578,7 +573,7 @@ rich-paragraph {
     text-indent: .75rem;
 }
 
-rich-paragraph:has(img, .vid-wrapper) {
+rich-paragraph:has(img, .vid-wrapper, .fig-img) {
 
     text-indent: 0;
 }
