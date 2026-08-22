@@ -2068,7 +2068,7 @@ function editUsers() {
             $content .= '</div>' . "\n\n\n";
         }
 
-        $content .= '<hr id="insertUserFormBefore" /><div class="el-in-line"><button onclick="addUserForm()">➕</button>';
+        $content .= '<hr id="insertUserFormBefore" /><div class="el-in-line"><input type="button" value="➕" onclick="addUserForm()" />';
 
 
         $text = '';
