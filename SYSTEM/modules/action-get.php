@@ -2080,7 +2080,7 @@ function editUsers() {
             $text .= '$cred[\'' . $username . '\'] = "' . $value . "\";\n";
         }
 
-        $content .= '<form method="post"><textarea name="saveusers" id="generatedUserArrayOutput" style="display: none;">'.$text.'</textarea><input type="submit" value="💾" onclick="return confirm(\'Вы уверены?\');" /></form></div>';
+        $content .= '<form method="post"><textarea name="saveusers" id="generatedUserArrayOutput" style="display: none;">'.$text.'</textarea><input type="submit" id="UserFormBaseSubmit" value="💾" onclick="return confirm(\'Вы уверены?\');" /></form></div>';
 
         /// $content .= '<textarea>'.$text.'</textarea>';
 

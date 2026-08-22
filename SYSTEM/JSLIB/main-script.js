@@ -607,6 +607,12 @@ function evaluateUserList() {
 
 
     output.value = lines.join('\n');
+
+    const submitButton = document.getElementById('UserFormBaseSubmit');
+
+    if(submitButton) {
+        submitButton.disabled = document.querySelector('.invalidField') !== null;
+    }
 }
 
 
@@ -615,17 +621,27 @@ function evaluateUserList() {
  */
 function removeThisUserForm(button) {
 
-    const confirmed = confirm('Вы действительно хотите удалить пользователя?');
+    const form = button.closest('.user-form');
 
-    if(!confirmed) {
+    if(!form) {
         return;
     }
 
-    const form = button.closest('.user-form');
+    const name = form.querySelector('.user-name').value.trim();
+    const hash = form.querySelector('.user-hash').value.trim();
 
-    if(form) {
+    // Пустую форму удаляем сразу, без вопроса.
+    if(name === '' && hash === '') {
         form.remove();
+        evaluateUserList();
+        return;
     }
+
+    if(!confirm('Вы действительно хотите удалить пользователя?')) {
+        return;
+    }
+
+    form.remove();
 
     evaluateUserList();
 }
