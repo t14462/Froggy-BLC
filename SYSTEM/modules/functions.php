@@ -685,6 +685,10 @@ function filterUsername(string $username): bool {
         return false;
     }
 
+    if(str_contains($username, '\\')) {
+        return false;
+    }
+
     if(mb_strlen($username) < 3 || mb_strlen($username) > 25) {
         return false;
     }

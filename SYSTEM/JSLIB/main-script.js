@@ -441,14 +441,21 @@ function validateUsername(input) {
     input.value = input.value.trim();
 
     const value = input.value;
+    const length = Array.from(value).length;
 
     let valid = true;
 
-    if(value === '') {
+    if(length < 3 || length > 25) {
         valid = false;
     }
 
-    if(/[\x00-\x1F\x7F]/.test(value)) {
+    /*
+    if(value === '') {
+        valid = false;
+    }
+    */
+
+    if(/[\x00-\x1F\x7F\\]/.test(value)) {
         valid = false;
     }
 
@@ -515,12 +522,15 @@ function evaluateUserList() {
         const privilegesSelect = form.querySelector('.user-privileges');
 
         const name = nameInput.value.trim();
+        const nameLength = Array.from(name).length;
         const hash = hashInput.value.trim();
         const privileges = privilegesSelect.value;
 
         const nameValid =
-            name.trim() !== '' &&
-            !/[\x00-\x1F\x7F]/.test(name);
+            // name.trim() !== '' &&
+            nameLength >= 3 &&
+            nameLength <= 25 &&
+            !/[\x00-\x1F\x7F\\]/.test(name);
 
         const hashValid =
             /^[0-9a-f]{128}$/i.test(hash);
