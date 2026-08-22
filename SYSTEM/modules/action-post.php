@@ -2227,7 +2227,7 @@ $users
 ";
 
 
-        putFileOrDie("SYSTEM/cred.php", $users);
+        putFileOrDie("SYSTEM/cred.php", $users, LOCK_EX);
 
         refreshhandle(0, "?editusers=1", false);
     }

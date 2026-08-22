@@ -2025,7 +2025,7 @@ function gobyava() {
 
 function editUsers() {
 
-    global $cred, $content, $checkpermission, $errmsg;
+    global $cred, $content, $checkpermission, $errmsg, $mainPageTitle;
 
     if($checkpermission < 4) {
 
@@ -2033,7 +2033,9 @@ function editUsers() {
 
     } else {
 
-        $content = "";
+        $mainPageTitle = "Редактор Базы Пользователей";
+
+        $content = "<aside class='ibox-red big'>Редактирование <strong>cred.php</strong> — ОПАСНАЯ ОПЕРАЦИЯ!<br /><em>Удостоверьтесь, что вы знаете, что делаете.</em></aside>\n<br /><br />\n";
 
         foreach($cred as $username => $data) {
 

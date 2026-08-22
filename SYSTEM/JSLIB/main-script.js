@@ -693,11 +693,19 @@ function addUserForm() {
 
 /*
  * Инициализация после построения DOM.
- *
- * Дополнительно включаем живое обновление во время набора,
- * а не только после onchange.
  */
 document.addEventListener('DOMContentLoaded', function() {
+
+    const firstUserForm = document.querySelector('.user-form');
+    const output = document.getElementById('generatedUserArrayOutput');
+
+    /*
+     * Если редактора базы пользователей на странице нет —
+     * ничего не делаем.
+     */
+    if(!firstUserForm || !output) {
+        return;
+    }
 
     document.addEventListener('input', function(event) {
 
@@ -709,7 +717,10 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    document.querySelector('.user-form')?.remove();
+    /*
+     * Удаляем первую (dummy) форму.
+     */
+    firstUserForm.remove();
 
     evaluateUserList();
 });
