@@ -475,13 +475,16 @@ $replacementYT = static function ($matches) {
 // Регулярное выражение для замены шаблона {{vimeo|ID|width}}
 $patternVimeo = '/\{\{vimeo\|([0-9]+)(?:\|(\d+))?\}\}/'; // ID в Vimeo всегда числовое
 $replacementVimeo = static function ($matches) {
+
+    global $sMobile;
+
     $videoId = $matches[1] ?? "";
 
     // Задаем ширину iframe, если она указана, иначе по умолчанию 100%
     $width = (int)($matches[2] ?? 0);
 
     // Если ширина задана
-    if($width > 32 && $width < 66) {
+    if($width > 32 && $width < 66 && $sMobile !== "-mobile") {
         return "<div class='vid-wrapper' style='width: {$width}%; float: right; clear: right;'><iframe src='https://player.vimeo.com/video/$videoId' class='vid-iframe' allowfullscreen='allowfullscreen' title='Видео. Возможно музыка или, например, конференция.' loading='lazy'></iframe></div>";
     } else {
         // Если ширина не в процентах, возвращаем адаптивный вариант
@@ -492,13 +495,16 @@ $replacementVimeo = static function ($matches) {
 // Регулярное выражение для замены шаблона {{dailymotion|ID|width}}
 $patternDM = '/\{\{dailymotion\|([a-zA-Z0-9]+)(?:\|(\d+))?\}\}/';
 $replacementDM = static function ($matches) {
+
+    global $sMobile;
+
     $videoId = $matches[1] ?? "";
 
     // Задаем ширину iframe, если она указана, иначе по умолчанию 100%
     $width = (int)($matches[2] ?? 0);
 
     // Если ширина задана
-    if($width > 32 && $width < 66) {
+    if($width > 32 && $width < 66 && $sMobile !== "-mobile") {
         return "<div class='vid-wrapper' style='width: {$width}%; float: right; clear: right;'><iframe src='https://www.dailymotion.com/embed/video/$videoId' class='vid-iframe' allowfullscreen='allowfullscreen' title='Видео. Возможно музыка или, например, конференция.' loading='lazy'></iframe></div>";
     } else {
         // Если ширина не в процентах, возвращаем адаптивный вариант
