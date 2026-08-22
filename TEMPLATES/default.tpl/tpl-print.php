@@ -38,6 +38,12 @@ if (!defined('SECURE_ACCESS')) { die('Direct access not permitted'); }
   window.addEventListener("beforeprint", () => {
     document.querySelectorAll("details").forEach((d) => d.open = true);
   });
+  
+  document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('img[loading="lazy"]').forEach(function (img) {
+        img.setAttribute('loading', 'eager');
+    });
+  });
 </script>
 </head>
 <body>

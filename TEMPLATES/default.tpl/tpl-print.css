@@ -159,11 +159,6 @@ img {
     image-rendering: smooth;
 }
 
-p:has(img) {
-
-    text-indent: 0;
-}
-
 
 pre {
 
@@ -478,23 +473,34 @@ figure.my-blockquote figcaption {
 
 figure.fig-img {
     clear: right;
-    display: table;
+    display: block;
+
+    float: right;
+
+    width: 47%;
+    max-width: 47%;
+
     margin: .66em;
     text-align: center;
-    max-width: 47%;
+
     border: 1px solid #ccc;
     padding: 0.5em;
+    box-sizing: border-box;
+
     background: #fafafa;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-    float: right;
 }
 
 figure.fig-img img {
     float: none !important;
+
+    width: auto;
     max-width: 100% !important;
     height: auto;
+
     display: block;
     margin: 0 auto;
+
     border-radius: 4px;
 }
 
