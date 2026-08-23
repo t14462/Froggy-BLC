@@ -1,8 +1,10 @@
+"use strict";
+
 function ready(fn) {
 
     if(document.readyState !== 'loading') {
 
-        fn();
+        fn.call(document);
 
     } else {
 
@@ -25,7 +27,7 @@ function countChars(obj) {
 
 //Refresh Captcha
 function refreshCaptcha() {
-    var img = document.images['captcha_image'];
+    const img = document.images['captcha_image'];
     img.src = img.src.substring(
         0,img.src.lastIndexOf("?")
         )+"?time="+Date.now();
@@ -34,7 +36,7 @@ function refreshCaptcha() {
 
 async function copyToClipboard(textToCopy) {
     // Navigator clipboard api needs a secure context (https)
-    if(navigator.clipboard && window.isSecureContext) {
+    if(navigator.clipboard && globalThis.isSecureContext) {
         await navigator.clipboard.writeText(textToCopy);
     } else {
         // Use the 'out of viewport hidden text area' trick
@@ -87,10 +89,10 @@ function DlIncrement(id) {
 ready(function () {
 
     
-    var s44noscripts = document.querySelectorAll(".not-js");
+    const s44noscripts = document.querySelectorAll(".not-js");
 
     if(s44noscripts.length > 0) {
-        for (var i = 0; i < s44noscripts.length; i++) {
+        for (let i = 0; i < s44noscripts.length; i++) {
             s44noscripts[i].style.display = "none";
         }
     }
@@ -98,8 +100,8 @@ ready(function () {
 
 
     
-    var s44links = document.querySelectorAll("a.active");
-    for (var i = 0; i < s44links.length; i++) {
+    const s44links = document.querySelectorAll("a.active");
+    for (let i = 0; i < s44links.length; i++) {
         s44links[i].addEventListener("click", function (e) {
             e.preventDefault();
         });
@@ -253,7 +255,7 @@ ready(function () {
         // ── Подсветка и утилиты ──────────────────────────────────────────────
         function highlightWithRegexes(raw, regs){
             if (!regs.length) return esc(raw);
-            let ranges = [];
+            const ranges = [];
             for (const re of regs){
                 re.lastIndex = 0;
                 let m;
@@ -319,11 +321,11 @@ ready(function () {
 
 
 
-    var links = document.querySelectorAll('#obyava a[href], article a[href], #comm-section a[href]');
-    var currentHost = location.hostname.replace(/^www\./i, '').toLowerCase();
+    const links = document.querySelectorAll('#obyava a[href], article a[href], #comm-section a[href]');
+    const currentHost = location.hostname.replace(/^www\./i, '').toLowerCase();
 
     links.forEach(function (link) {
-        var href = link.getAttribute('href');
+        let href = link.getAttribute('href');
 
         if (!href) {
             return;
@@ -339,12 +341,12 @@ ready(function () {
             return;
         }
 
-        var url;
+        let url;
 
         try {
             // Автоматически превращает относительные ссылки в абсолютные
             url = new URL(href, location.href);
-        } catch (e) {
+        } catch {
             return;
         }
 
@@ -353,7 +355,7 @@ ready(function () {
             return;
         }
 
-        var linkHost = url.hostname.replace(/^www\./i, '').toLowerCase();
+        const linkHost = url.hostname.replace(/^www\./i, '').toLowerCase();
 
         // Пропускаем текущий сайт:
         // /page
@@ -368,8 +370,8 @@ ready(function () {
         link.setAttribute('target', '_blank');
 
         // Безопасность для target="_blank"
-        var rel = link.getAttribute('rel') || '';
-        var relParts = rel.toLowerCase().split(/\s+/);
+        let rel = link.getAttribute('rel') || '';
+        const relParts = rel.toLowerCase().split(/\s+/);
 
         if (relParts.indexOf('noopener') === -1) {
             rel += ' noopener';
@@ -611,7 +613,9 @@ function evaluateUserList() {
     const submitButton = document.getElementById('UserFormBaseSubmit');
 
     if(submitButton) {
-        submitButton.disabled = document.querySelector('.invalidField') !== null;
+        submitButton.disabled =
+            forms.length === 0 ||
+            document.querySelector('.invalidField') !== null;
     }
 }
 
@@ -696,14 +700,10 @@ function addUserForm() {
  */
 document.addEventListener('DOMContentLoaded', function() {
 
-    const firstUserForm = document.querySelector('.user-form');
     const output = document.getElementById('generatedUserArrayOutput');
 
-    /*
-     * Если редактора базы пользователей на странице нет —
-     * ничего не делаем.
-     */
-    if(!firstUserForm || !output) {
+    // Редактора пользователей на этой странице вообще нет.
+    if(!output) {
         return;
     }
 
@@ -718,9 +718,9 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     /*
-     * Удаляем первую (dummy) форму.
+     * Удаляем первую (dummy) форму, если она существует.
      */
-    firstUserForm.remove();
+    document.querySelector('.user-form')?.remove();
 
     evaluateUserList();
 });

@@ -353,8 +353,8 @@ function mb_superTrim(string $text): string {
     );
 
     
-    // 2. Удаляем прочие невидимые символы, но оставляем ZWJ
-    $text = preg_replace_callback('/\p{C}/u', static function ($m) {
+    // 2. Удаляем управляющие и форматирующие символы, но оставляем ZWJ
+    $text = preg_replace_callback('/[\p{Cc}\p{Cf}]/u', static function ($m) {
         $ch = $m[0];
 
         // ZWJ (U+200D) и другие — нужны для эмоджи типа 👩‍💻
@@ -375,8 +375,8 @@ function mb_superTrim(string $text): string {
 
 function mb_softTrim(string $text): string {
     
-    // Удаляем прочие невидимые символы, но оставляем \n + ZWJ
-    $text = preg_replace_callback('/\p{C}/u', static function ($m) {
+    // Удаляем управляющие и форматирующие символы, но оставляем \n + ZWJ
+    $text = preg_replace_callback('/[\p{Cc}\p{Cf}]/u', static function ($m) {
         $ch = $m[0];
 
         // \n оставляем
