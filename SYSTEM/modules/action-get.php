@@ -2090,12 +2090,57 @@ function editUsers() {
             $text .= '$cred[\'' . $username . '\'] = "' . $value . "\";\n";
         }
 
-        $content .= '<form method="post"><textarea name="saveusers" id="generatedUserArrayOutput" style="display: none;">'.$text.'</textarea><input type="submit" id="UserFormBaseSubmit" value="💾" onclick="return confirm(\'Вы уверены?\');" /></form></div>';
+        $content .= '<form method="post"><textarea name="saveusers" id="generatedUserArrayOutput" style="display: none;">'.$text.'</textarea><input type="submit" id="UserFormBaseSubmit" value="💾" onclick="return confirm(\'Вы уверены?\');" /></form></div>
+        <br /><br /><br />
+        <iframe src="?uhcalc=1" style="width: 100%; height: 50vh; border: none;">Калькулятор Хэша Пользователя</iframe>';
 
         /// $content .= '<textarea>'.$text.'</textarea>';
 
     }
 
+}
+
+function userHashCalcg() {
+
+    $content = "<!DOCTYPE html>
+    <html lang='ru'>
+    <head>
+        <meta charset='UTF-8' />
+        <meta name='viewport' content='width=device-width, initial-scale=1.0' />
+        <title>Калькулятор Юзер-Хэша</title>
+        <style>
+            html {
+                font-family: monospace;
+            }
+
+            * {
+                font-size: 1.1rem;
+                padding: .2rem;
+            }
+
+            input {
+                border: .25rem solid #BBB;
+                background-color: #EEE;
+                margin-bottom: .75rem;
+            }
+
+        </style>
+    </head>
+    
+    <body>
+    <form method='post'><fieldset>
+
+    <legend><strong>Калькулятор Пользовательского Хэша.</strong> Данные входа:</legend><input type='text' name='uhusername' id='rusername' value='' /><label for='rusername'>Имя пользователя</label><br />
+    <input type='password' name='uhpassword1' id='rpassword1' value='' /><label for='rpassword1'>Пароль</label><br />
+    <input type='password' name='uhpassword2' id='rpassword2' value='' /><label for='rpassword2'>Проверка</label><br />
+    <input type='submit' value='⚛️ Вычислить' /></fieldset></form>
+    
+    </body>
+    </html>
+    ";
+
+    http_response_code(200);
+    exit((string)$content);
 }
 
 

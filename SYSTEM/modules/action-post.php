@@ -2232,3 +2232,74 @@ $users
         refreshhandle(0, "?editusers=1", false);
     }
 }
+
+
+function userHashCalcp() {
+
+    global $safePost, $mySalt, $checkpermission;
+
+    // require_once "SYSTEM/salt.php";
+    // require_once "SYSTEM/cred.php";
+
+    if($checkpermission < 4) {
+
+        http_response_code(403);
+        exit();
+
+    } else {
+
+        $username  = $safePost['uhusername'];
+        $password1 = $safePost['uhpassword1'];
+        $password2 = $safePost['uhpassword2'];
+
+        $content = "<!DOCTYPE html>
+        <html lang='ru'>
+        <head>
+            <meta charset='UTF-8' />
+            <meta name='viewport' content='width=device-width, initial-scale=1.0' />
+            <title>Калькулятор Юзер-Хэша</title>
+            <style>
+
+                .big {
+                    font-size: large;
+                }
+
+            </style>
+        </head>
+        
+        <body>";
+        $errmsg = "";
+        $result = "";
+
+        // Validate password strength
+        $uppercase    = preg_match('@[A-Z]@', $password1);
+        $lowercase    = preg_match('@[a-z]@', $password1);
+        $number       = preg_match('@[0-9]@', $password1);
+        $specialChars = preg_match('@[^\w]@', $password1);
+
+        if(!filterUsername($username)) {
+            $errmsg = "<h1>ОШИБКА.</h1><p class='big'><strong>Имя содержит недопустимые символы или пустое.</strong></p>";
+        } elseif($password1 !== $password2) {
+            $errmsg = "<h1>ОШИБКА.</h1><p class='big'><strong>Пароль и проверка не совпадают!</strong></p>";
+        } elseif($password1 === $username) {
+            $errmsg = "<h1>ОШИБКА.</h1><p class='big'><strong>Имя и пароль не должны совпадать!</strong></p>";
+        } elseif(!$uppercase || !$lowercase || !$number || !$specialChars || strlen($password1) < 8 || strlen($password1) > 40) {
+            $errmsg = '<h1>ОШИБКА.</h1><p class="big"><strong>Пароль должен содержать 8-40 символов, включая заглавную букву, цифру и специальный символ.</strong></p>';
+        } else {
+
+            // Генерация безопасного хэша пароля
+
+            $userhash = hash('sha512', $username."@".$password1."@".generateSalt($username, $password1).$mySalt);
+
+            /// $username = str_replace("&", "&amp;", $username);
+
+            $result .= "
+            <p><code style='display: inline-block; width: 100%; padding: .75rem; font-size: 1.4rem; text-wrap: nowrap; overflow-x: scroll;'>$userhash</code></p>";
+        }
+
+        $content .= $errmsg.$result."<p><a href='?uhcalc=1'>🔙 НАЗАД К ФОРМЕ.</a></p></body></html>\n";
+
+        http_response_code(200);
+        exit((string)$content);
+    }
+}

@@ -23,6 +23,7 @@ function detectaction() {
         isset($safeGet['gobyava']) ||
         isset($safePost['pobyava']) ||
         /* isset($safePost['title'], $safePost['h'], $safePost['textedit']) || */
+        isset($safePost['uhusername'], $safePost['uhpassword1'], $safePost['uhpassword2']) ||
         
         // Управление страницами
         isset($safeGet['pagedel']) ||
@@ -125,8 +126,16 @@ if(!$checkpermission && detectaction()) {
 
     saveUsers();
 
+} elseif( /* $checkpermission && */ isset($safeGet["uhcalc"])) {
+
+    userHashCalcg();
+
+} elseif( /* $checkpermission && */ isset($safePost['uhusername'], $safePost['uhpassword1'], $safePost['uhpassword2'])) {
+
+    userHashCalcp();
+
 ##################################################
-################################################## 
+##################################################
 ##################################################
 ##################################################
 

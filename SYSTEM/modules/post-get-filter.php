@@ -102,6 +102,10 @@ if(in_array($methods, ['POST', 'GET'], true)) {
                 "rpassword1" => FILTER_DEFAULT,
                 "rpassword2" => FILTER_DEFAULT,
 
+                "uhusername" => FILTER_DEFAULT,
+                "uhpassword1" => FILTER_DEFAULT,
+                "uhpassword2" => FILTER_DEFAULT,
+
                 "selected_template"     => FILTER_SANITIZE_FULL_SPECIAL_CHARS,
 
                 "permalink" => FILTER_VALIDATE_INT,
@@ -116,6 +120,7 @@ if(in_array($methods, ['POST', 'GET'], true)) {
 
             htmlSpecialCharsField($safePost, 'username');
             htmlSpecialCharsField($safePost, 'rusername');
+            htmlSpecialCharsField($safePost, 'uhusername');
             htmlSpecialCharsField($safePost, 'visitor');
 
             break;
