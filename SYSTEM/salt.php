@@ -7,8 +7,6 @@ if(!defined('SECURE_ACCESS')) { die('Direct access not permitted'); }
 ################################################
 
 
-// DO NOT DELETE
-$mySalt = 0;
 
 
 

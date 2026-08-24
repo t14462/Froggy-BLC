@@ -637,8 +637,10 @@ function emojiToHtmlEntities(string $string): string {
 function generateSalt($username, $password) {
     // Генерируем битовую маску соли на основе хэша имени пользователя
     $saltMask = hex2bin(hash('sha256', $username));
+    $saltMask = shuffleString($saltMask, sha512FoldXor($password));
     // Генерируем исходный хэш пароля
     $passwordHash = hex2bin(hash('sha512', $password));
+    $passwordHash = shuffleString($passwordHash, sha512FoldXor($password));
     // Искажаем хэш пароля с помощью XOR и соли
     $result = '';
     for ($i = 0; $i < strlen($passwordHash); $i++) {
@@ -3218,3 +3220,60 @@ function gnuCatTailAvailable(): bool
 
     return $cached = ($exitCode === 0);
 }
+
+
+
+
+
+
+
+function sha512FoldXor(string $text): string
+{
+    // SHA-512: 128 шестнадцатеричных символов
+    $hash = hash('sha512', $text);
+    
+    // Две половины по 64 символа — по 256 бит
+    $firstPart  = substr($hash, 0, 64);
+    $secondPart = substr($hash, 64, 64);
+    
+    // Переворачиваем вторую половину как строку
+    $secondPart = strrev($secondPart);
+    
+    // Переводим обе половины в бинарный вид и выполняем XOR
+    $result = hex2bin($firstPart) ^ hex2bin($secondPart);
+    
+    // Бинарный результат преобразуем обратно в hex
+    $result = bin2hex($result);
+
+    // Возвращаем 256-битный результат как 78 dec-символа
+    return str_pad(
+        gmp_strval(gmp_init($result, 16), 10),
+                   78,
+                   '0',
+                   STR_PAD_LEFT
+    );
+}
+
+
+
+
+
+
+
+function shuffleString(string $text, string $seed): string
+{
+    require_once 'SYSTEM/PHPLIB/fisher-yates-seeded-shuffle/seeded.shuffle.class.php';
+    
+    if($seed === '' || preg_match('/\A[0-9]+\z/', $seed) !== 1) {
+        throw new InvalidArgumentException(
+            'Seed должен быть непустой строкой из цифр.'
+        );
+    }
+    
+    if($text === '') {
+        return '';
+    }
+    
+    return seeded_shuffle::shuffle($text, $seed);
+}
+
