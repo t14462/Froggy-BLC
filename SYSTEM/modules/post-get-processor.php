@@ -23,7 +23,7 @@ function detectaction() {
         isset($safeGet['gobyava']) ||
         isset($safePost['pobyava']) ||
         /* isset($safePost['title'], $safePost['h'], $safePost['textedit']) || */
-        isset($safePost['uhusername'], $safePost['uhpassword1'], $safePost['uhpassword2']) ||
+        /* isset($safePost['uhusername'], $safePost['uhpassword1'], $safePost['uhpassword2']) || */
         
         // Управление страницами
         isset($safeGet['pagedel']) ||
@@ -130,14 +130,14 @@ if(!$checkpermission && detectaction()) {
 
     userHashCalcg();
 
-} elseif( /* $checkpermission && */ isset($safePost['uhusername'], $safePost['uhpassword1'], $safePost['uhpassword2'])) {
+##################################################
+##################################################
+##################################################
+##################################################
+
+} elseif(isset($safePost['uhusername'], $safePost['uhpassword1'], $safePost['uhpassword2'])) {
 
     userHashCalcp();
-
-##################################################
-##################################################
-##################################################
-##################################################
 
 } elseif(isset($safeGet["permalink"])) {
 
