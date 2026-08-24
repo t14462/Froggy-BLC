@@ -2036,7 +2036,7 @@ function editUsers() {
         $mainPageTitle = "Редактор Базы Пользователей";
 
         $content = "<aside class='ibox-red big'>Редактирование <strong>cred.php</strong> — ОПАСНАЯ ОПЕРАЦИЯ!<br /><em>Удостоверьтесь, что вы знаете, что делаете.</em></aside>
-        <p>Структура: Имя Пользователя, Уровень Доступа, Хэш.<br />(Хэш генерируется на Странице Регистрации).</p>
+        <p>Структура: Имя Пользователя, Уровень Доступа, Хэш.<br />(Хэш генерируется в Форме ниже).</p>
         <ul>
             <li><strong>0</strong> = <em>Болванка/Dummy, отключённые пользователи. Не могут ничего.</em></li>
             <li><strong>1</strong> = <em>Обычные пользователи. Могут оставлять комментарии с HTML и не вводить капчу.</em></li>
@@ -2122,6 +2122,10 @@ function userHashCalcg() {
                 border: .25rem solid #BBB;
                 background-color: #EEE;
                 margin-bottom: .75rem;
+            }
+
+            fieldset {
+                padding: .75rem;
             }
 
         </style>
