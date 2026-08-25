@@ -788,7 +788,7 @@ function PseudoAJAX(iframe, targetID)
 
     } catch(error) {
         console.error(
-            'PseudoAJAX: невозможно прочитать iframe',
+            'PseudoAJAX: невозможно прочитать iframe ',
             error
         );
     }
