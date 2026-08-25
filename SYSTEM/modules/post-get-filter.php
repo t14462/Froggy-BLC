@@ -97,7 +97,6 @@ if(in_array($methods, ['POST', 'GET'], true)) {
 
                 /* "fpgnum" => FILTER_VALIDATE_INT, */
 
-                "registerp" => FILTER_VALIDATE_INT,
                 "rusername" => FILTER_DEFAULT,
                 "rpassword1" => FILTER_DEFAULT,
                 "rpassword2" => FILTER_DEFAULT,

@@ -1181,7 +1181,6 @@ function registerg() {
     <legend>Данные входа:</legend><input type='text' name='rusername' id='rusername' value='' /><label for='rusername'>Имя пользователя</label><br />
     <input type='password' name='rpassword1' id='rpassword1' value='' /><label for='rpassword1'>Пароль</label><br />
     <input type='password' name='rpassword2' id='rpassword2' value='' /><label for='rpassword2'>Проверка</label><br />
-    <input type='hidden' name='registerp' value='1' />
     <input type='submit' value='☑️ Регистрация' /></fieldset></form>";
 
     $mainPageTitle = "Страница регистрации";
