@@ -2297,7 +2297,7 @@ function userHashCalcp() {
             <p><code style='display: inline-block; width: 100%; padding: .75rem; font-size: 1.4rem; text-wrap: nowrap; overflow-x: scroll;'>$userhash</code></p>";
         }
 
-        $content .= $errmsg.$result."<p><a href='?uhcalc=1'>🔙 НАЗАД К ФОРМЕ.</a></p></body></html>\n";
+        $content .= $errmsg.$result."<p><a href='?uhcalc=1' class='big'>🔙 НАЗАД К ФОРМЕ.</a></p></body></html>\n";
 
         http_response_code(200);
         exit((string)$content);

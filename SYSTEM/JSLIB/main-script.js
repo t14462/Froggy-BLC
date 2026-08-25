@@ -724,3 +724,72 @@ document.addEventListener('DOMContentLoaded', function() {
 
     evaluateUserList();
 });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function PseudoAJAX(iframe, targetID)
+{
+    const target = document.getElementById(targetID);
+
+    if(!target) {
+        console.error('PseudoAJAX: элемент #' + targetID + ' не найден');
+        return;
+    }
+
+    const iframeName = 'iframe-' + targetID;
+
+    /*
+     * Присваиваем iframe уникальное имя, чтобы ссылки и формы
+     * могли отправлять результаты именно в него.
+     */
+    if(iframe.name !== iframeName) {
+        iframe.name = iframeName;
+    }
+
+    try {
+        const iframeDocument = iframe.contentDocument
+            || iframe.contentWindow?.document;
+
+        if(!iframeDocument?.body) {
+            console.error('PseudoAJAX: в iframe отсутствует <body>');
+            return;
+        }
+
+        /*
+         * Переносим содержимое загруженной страницы
+         * в целевой элемент.
+         */
+        target.innerHTML = iframeDocument.body.innerHTML;
+
+        /*
+         * Все ссылки и формы из перенесённого содержимого
+         * направляем обратно в этот iframe.
+         */
+        target.querySelectorAll('a, form').forEach(function(element) {
+            element.target = iframeName;
+        });
+
+    } catch(error) {
+        console.error(
+            'PseudoAJAX: невозможно прочитать iframe',
+            error
+        );
+    }
+}
