@@ -2101,7 +2101,7 @@ function registerp() {
     $specialChars = preg_match('@[^\w]@', $password1);
 
     if(!filterUsername($username)) {
-        $errmsg = "<h1>ОШИБКА.</h1><p class='big'><strong>Имя содержит недопустимые символы или пустое.</strong></p>";
+        $errmsg = "<h1>ОШИБКА.</h1><p class='big'><strong>Имя содержит недопустимые символы или пустое.</strong></p><p class='big'><strong>Минимальная Длина Имени = 3<br />Максимальная Длина Имени = 25</strong></p>";
     } elseif(array_key_exists($username, $cred)) {
         $errmsg = "<h1>ОШИБКА.</h1><p class='big'><strong>Такой пользователь уже существует!</strong></p>";
     } elseif($password1 !== $password2) {
@@ -2278,7 +2278,7 @@ function userHashCalcp() {
         $specialChars = preg_match('@[^\w]@', $password1);
 
         if(!filterUsername($username)) {
-            $errmsg = "<h1>ОШИБКА.</h1><p class='big'><strong>Имя содержит недопустимые символы или пустое.</strong></p>";
+            $errmsg = "<h1>ОШИБКА.</h1><p class='big'><strong>Имя содержит недопустимые символы или пустое.</strong></p><p class='big'><strong>Минимальная Длина Имени = 3<br />Максимальная Длина Имени = 25</strong></p>";
         } elseif($password1 !== $password2) {
             $errmsg = "<h1>ОШИБКА.</h1><p class='big'><strong>Пароль и проверка не совпадают!</strong></p>";
         } elseif($password1 === $username) {
