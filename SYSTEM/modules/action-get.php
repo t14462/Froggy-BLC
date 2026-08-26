@@ -2091,7 +2091,7 @@ function editUsers() {
 
         $content .= '<form method="post"><textarea name="saveusers" id="generatedUserArrayOutput" style="display: none;">'.$text.'</textarea><input type="submit" id="UserFormBaseSubmit" value="💾" onclick="return confirm(\'Вы уверены?\');" /></form></div>
         <br /><br /><br />
-        <iframe src="?uhcalc=1" style="width: 5px; height: 5px; border: none; overflow: none;" onload="PseudoAJAX(this, \'admUserHashCalculator\')">Калькулятор Хэша Пользователя</iframe>
+        <iframe src="?uhcalc=1" style="width: 100%; height: 50vh; border: none;" onload="PseudoAJAX(this, \'admUserHashCalculator\')">Калькулятор Хэша Пользователя</iframe>
         <div id="admUserHashCalculator"></div>';
         
         /// $content .= '<textarea>'.$text.'</textarea>';

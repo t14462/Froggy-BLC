@@ -761,6 +761,7 @@ function PseudoAJAX(iframe, targetID)
      */
     if(iframe.name !== iframeName) {
         iframe.name = iframeName;
+        iframe.style.display = 'none';
     }
 
     try {
