@@ -64,7 +64,7 @@ function delfile() {
 }
 
 function viewLog() {
-    global $safeGet, $content, $mainPageTitle, $checkpermission, $errmsg;
+    global $safeGet, $content, $mainPageTitle, $checkpermission, $errmsg, $csrf;
 
     if($checkpermission < 2) {
         $errmsg = pforbidden();
@@ -97,7 +97,7 @@ function viewLog() {
             if($logpg == $i) {
                 $pager .= " <strong>".$i."</strong> ";
             } else {
-                $pager .= " <a rel='nofollow' href='?log=$i'>".$i."</a> ";
+                $pager .= " <a rel='nofollow' href='?log=$i&amp;csrf=$csrf'>".$i."</a> ";
             }
         }
         $pager .= "</nav>";
@@ -125,8 +125,8 @@ function viewLog() {
 
         $content .= "</div>";
         $content .= $pager;
-        $content .= "<p><a href='?purgelog=1' onclick=\"return confirm('Вы уверены?');\">❌ ОЧИСТИТЬ ЛОГ</a></p>";
-        $content .= "<p><a href='?editusers=1'>👥 РЕДАКТИРОВАТЬ ПОЛЬЗОВАТЕЛЕЙ</a></p>";
+        $content .= "<p><a href='?purgelog=1&amp;csrf=$csrf' onclick=\"return confirm('Вы уверены?');\">❌ ОЧИСТИТЬ ЛОГ</a></p>";
+        $content .= "<p><a href='?editusers=1&amp;csrf=$csrf'>👥 РЕДАКТИРОВАТЬ ПОЛЬЗОВАТЕЛЕЙ</a></p>";
         $mainPageTitle = "Системный Лог";
     }
 }
@@ -155,7 +155,7 @@ function purgelog() {
 
 function pageload() {
 
-    global $safeGet, $safePost, $content, $query, $txtnamebuf, $errmsg, $commmsg, $txtpath, $tplcomments, $mainPageTitle, $ispageexist, $checkpermission, $patternYT, $replacementYT, $patternVimeo, $replacementVimeo, $patternDM, $replacementDM, $commRecov, $metaDescription, $url, $idcache, $head, $patternDLCNT, $replacementDLCNT;
+    global $safeGet, $safePost, $content, $query, $txtnamebuf, $errmsg, $commmsg, $txtpath, $tplcomments, $mainPageTitle, $ispageexist, $checkpermission, $patternYT, $replacementYT, $patternVimeo, $replacementVimeo, $patternDM, $replacementDM, $commRecov, $metaDescription, $url, $idcache, $head, $patternDLCNT, $replacementDLCNT, $csrf;
 
     // require_once "SYSTEM/cred.php";
 
@@ -512,7 +512,7 @@ function pageload() {
             $queryString = $_SERVER['QUERY_STRING'] ?? '';
             $queryBase = explode("&", $queryString)[0];
 
-            $pager = "<nav class='pager'><a href='?" . $queryString . "&commpgcntrecalc=1' rel='nofollow' title='Пересчитать Количество Страниц!!!' onclick=\"return confirm('Это тяжёлая операция. Продолжить?');\">🪄</a>";
+            $pager = "<nav class='pager'><a href='?" . $queryString . "&amp;commpgcntrecalc=1&amp;csrf=$csrf' rel='nofollow' title='Пересчитать Количество Страниц!!!' onclick=\"return confirm('Это тяжёлая операция. Продолжить?');\">🪄</a>";
             for($i = 0; $i <= $total_commpages; $i++) {
 
                 if($commpage === $i) {
@@ -521,7 +521,7 @@ function pageload() {
 
                 } else {
 
-                    $pgNumLink = " <a rel='nofollow' href='?".$queryBase."&commpage=$i#comm-section'>$i</a> ";
+                    $pgNumLink = " <a rel='nofollow' href='?".$queryBase."&amp;commpage=$i#comm-section'>$i</a> ";
 
                 }
 
@@ -548,8 +548,8 @@ function pageload() {
                     $line = preg_replace("/<[0-9a-f]{40} \/>/", "", $line);
 
                     $line = str_replace("<br!>", "\n", $line);
-                    $line = str_replace("%QUERYSTRING%", $queryBase."&amp;commpage=".$commpage, $line);
-                    $line = str_replace("<QS>", $queryBase."&amp;commpage=".$commpage, $line);
+                    $line = str_replace("%QUERYSTRING%", $queryBase."&amp;csrf=$csrf&amp;commpage=".$commpage, $line);
+                    $line = str_replace("<QS>", $queryBase."&amp;csrf=$csrf&amp;commpage=".$commpage, $line);
 
                     /// $line = preg_replace('/&(?!\w+;|#\d+;|#x[0-9a-fA-F]+;)/', '&amp;', $line);
                     
@@ -738,7 +738,7 @@ function commentRemove() {
 
 function pageEdit() {
 
-    global $content, $query, $errmsg, $head, $body, /* $apiKeyTinyMCE,*/ $mainPageTitle, $url, $checkpermission, $ispageexist;
+    global $content, $query, $errmsg, $head, $body, /* $apiKeyTinyMCE,*/ $mainPageTitle, $url, $checkpermission, $ispageexist, $csrf;
 
     if( $checkpermission < 3 ) {
 
@@ -1082,6 +1082,8 @@ function pageEdit() {
         $content .= "<form method='post'>
         
         <input type='hidden' name='dbtimestamp' value='$dbMtime' />
+
+        <input type='hidden' name='csrf' value='$csrf' />
         
         <fieldset><legend>Редактирование страницы:</legend>
         <p>Для включения <em>Содержания</em> используйте <em>Директиву</em> <strong>__TOC__</strong> вначале кода, на первой строке.</p>
@@ -1145,7 +1147,7 @@ function pageEdit() {
         $content .= "<div class='el-in-line'><input type='submit' value='💾 Отправить' />
 
             <a href='?".$queryBase."&amp;leaveedit=1'>Отменить ⬅️</a>
-            <a href='?".$queryBase."&amp;pagedel=1' id='pagedelbutton'>❌ Удалить страницу</a>
+            <a href='?".$queryBase."&amp;pagedel=1&amp;csrf=$csrf' id='pagedelbutton'>❌ Удалить страницу</a>
 
             </div></fieldset></form>";
 
@@ -1544,7 +1546,7 @@ function movePageUp() {
 
 function gallery() {
 
-    global $content, $safeGet, $mainPageTitle, $sMobile, $head;
+    global $content, $safeGet, $mainPageTitle, $sMobile, $head, $csrf;
 
     $limit = 12;
 
@@ -1568,6 +1570,8 @@ function gallery() {
     }
 
     $content .= '<form method="post" enctype="multipart/form-data">
+
+    <input type="hidden" name="csrf" value="'.$csrf.'" />
     
     <!-- <input type="hidden" name="fpgnum" value="-1" /> -->
     <input type="hidden" name="imgup" value="1" />
@@ -1641,7 +1645,7 @@ function gallery() {
             $i++;
             $delimg = basename(str_replace('\\', '/', $file));
 
-            $content .= "<td class='gallery-img'><img loading='lazy' src=\"".$file."\" alt='Картинка из галереи' title='$delimg' /><button onclick='copyToClipboard(\"".$file."\");'>🔗".$delimg."</button> <a rel='nofollow' href='?delimg=$delimg' class='imgdellink' onclick=\"return confirm('Вы уверены?');\">Уд.</a></td>";
+            $content .= "<td class='gallery-img'><img loading='lazy' src=\"".$file."\" alt='Картинка из галереи' title='$delimg' /><button onclick='copyToClipboard(\"".$file."\");'>🔗".$delimg."</button> <a rel='nofollow' href='?delimg=$delimg&amp;csrf=$csrf' class='imgdellink' onclick=\"return confirm('Вы уверены?');\">Уд.</a></td>";
 
             // открывать новую строку только если это НЕ последний элемент
             if ($i % $cols === 0 && $i < $total) {
@@ -1670,7 +1674,7 @@ function gallery() {
 
 function dlFiles() {
 
-    global $content, $safeGet, $mainPageTitle;
+    global $content, $safeGet, $mainPageTitle, $csrf;
 
     $limit = 25;
 
@@ -1727,6 +1731,8 @@ function dlFiles() {
     }
 
     $content .= '<form method="post" enctype="multipart/form-data">
+
+        <input type="hidden" name="csrf" value="'.$csrf.'" />
         
         <input type="hidden" name="fuptrigger" value="1" />
         <!-- <input type="hidden" name="fpgnum" value="-1" /> -->
@@ -1761,7 +1767,7 @@ function dlFiles() {
 
     foreach($selectedfile as $file) {
         $delfile = explode("/", $file)[2];
-        $content .= "<p class='gallery-img'>".$file." <button onclick='copyToClipboard(\"".$file."\");'>🔗</button> <a rel='nofollow' href='?delfile=$delfile' class='imgdellink' onclick=\"return confirm('Вы уверены?');\">УДАЛИТЬ</a></p><hr />";
+        $content .= "<p class='gallery-img'>".$file." <button onclick='copyToClipboard(\"".$file."\");'>🔗</button> <a rel='nofollow' href='?delfile=$delfile&amp;csrf=$csrf' class='imgdellink' onclick=\"return confirm('Вы уверены?');\">УДАЛИТЬ</a></p><hr />";
     }
 
     $mainPageTitle = "Список файлов";
@@ -1998,7 +2004,7 @@ function commPgCntRecalc() {
 
 function gobyava() {
 
-    global $content, $checkpermission, $errmsg;
+    global $content, $checkpermission, $errmsg, $csrf;
 
     if($checkpermission < 3) {
 
@@ -2015,6 +2021,9 @@ function gobyava() {
         $text = escape_amp_txtarea($text);
 
         $content = "<form method='post'>
+
+        <input type='hidden' name='csrf' value='$csrf' />
+
         <textarea name='pobyava' rows='15' maxlength='3000'>$text</textarea>
         <input type='submit' value='Сохранить' />
         </form>";
@@ -2024,7 +2033,7 @@ function gobyava() {
 
 function editUsers() {
 
-    global $cred, $content, $checkpermission, $errmsg, $mainPageTitle;
+    global $cred, $content, $checkpermission, $errmsg, $mainPageTitle, $csrf;
 
     if($checkpermission < 4) {
 
@@ -2089,7 +2098,11 @@ function editUsers() {
             $text .= '$cred[\'' . $username . '\'] = "' . $value . "\";\n";
         }
 
-        $content .= '<form method="post"><textarea name="saveusers" id="generatedUserArrayOutput" style="display: none;">'.$text.'</textarea><input type="submit" id="UserFormBaseSubmit" value="💾" onclick="return confirm(\'Вы уверены?\');" /></form></div>
+        $content .= '<form method="post"><textarea name="saveusers" id="generatedUserArrayOutput" style="display: none;">'.$text.'</textarea>
+
+        <input type="hidden" name="csrf" value="'.$csrf.'" />
+
+        <input type="submit" id="UserFormBaseSubmit" value="💾" onclick="return confirm(\'Вы уверены?\');" /></form></div>
         <br /><br /><br />
         <iframe src="?uhcalc=1" style="width: 100%; height: 50vh; border: none;" onload="PseudoAJAX(this, \'admUserHashCalculator\')">Калькулятор Хэша Пользователя</iframe>
         <div id="admUserHashCalculator"></div>';

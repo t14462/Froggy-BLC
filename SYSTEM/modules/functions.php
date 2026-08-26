@@ -810,7 +810,7 @@ function refreshhandle($time, $link, $update = true) {
 
     $time = (int)$time;
 
-    $linkHtml = htmlspecialchars($link, ENT_QUOTES | ENT_HTML401 | ENT_SUBSTITUTE, 'UTF-8');
+    $linkHtml = htmlspecialchars($link, ENT_QUOTES | ENT_HTML401 | ENT_SUBSTITUTE, 'UTF-8', false);
     $linkJs   = json_encode($link, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT);
 
     if ($time > 0) {
@@ -2934,7 +2934,7 @@ function tpl_nobr(string $text): string
 
 function obyava() {
 
-    global $checkpermission;
+    global $checkpermission, $csrf;
 
     $obfile = "DATABASE/obyava.txt";
 
@@ -3011,7 +3011,7 @@ function obyava() {
 
     if ($checkpermission > 2) {
 
-        $obstring .= "<div id='obyavadiv'><a href='?gobyava=1'>редактировать объявление</a></div>";
+        $obstring .= "<div id='obyavadiv'><a href='?gobyava=1&amp;csrf=$csrf'>редактировать объявление</a></div>";
 
         // $obstring .= ($br ? "" : "<br /><br />");
 

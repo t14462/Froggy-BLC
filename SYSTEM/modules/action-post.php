@@ -8,7 +8,7 @@ if(!defined('SECURE_ACCESS')) { die('Direct access not permitted'); }
 
 function savePage() {
 
-    global $safePost, $numcache, $head, $body, $content, $errmsg, /* $apiKeyTinyMCE, */ $mainPageTitle, $checkpermission, $ispageexist, $url, $chTimeDB;
+    global $safePost, $numcache, $head, $body, $content, $errmsg, /* $apiKeyTinyMCE, */ $mainPageTitle, $checkpermission, $ispageexist, $url, $chTimeDB, $csrf;
 
     /*
     if( $checkpermission < 3 ) {
@@ -560,6 +560,8 @@ function savePage() {
 
             <input type='hidden' name='dbtimestamp' value='$dbMtime' />
 
+            <input type='hidden' name='csrf' value='$csrf' />
+
             <fieldset><legend>Редактирование страницы:</legend>
             <p>Для включения <em>Содержания</em> используйте <em>Директиву</em> <strong>__TOC__</strong> вначале кода, на первой строке.</p>
             <p>Для Вставки <em>ВИДЕО YouTube</em> используйте шаблон <strong>{{youtube|VIDID|Ширина}}</strong> ; (Ширина является необязательным аттрибутом, и указывается в Процентах, без указания <strong>%</strong>).<br />Также поддерживаются <strong>{{dailymotion|VIDID|Ширина}}</strong> и <strong>{{vimeo|VIDID|Ширина}}</strong>.</p><p>Для вставки <em>Спойлера</em>, <em>Цитаты</em> или <em>Инфобокса</em> используйте шаблон из меню редактора <strong>\"Стили\"</strong>.</p>
@@ -573,7 +575,7 @@ function savePage() {
             .$textedit2."</textarea><div class='el-in-line'> <input type='submit' value='💾 Отправить' />
 
             <a href='?".$queryBase."&amp;leaveedit=1'>Отменить ⬅️</a>
-            <a href='?".$queryBase."&amp;pagedel=1' id='pagedelbutton'>❌ Удалить страницу</a>
+            <a href='?".$queryBase."&amp;pagedel=1&amp;csrf=$csrf' id='pagedelbutton'>❌ Удалить страницу</a>
 
             </div></fieldset></form>";
 
@@ -1818,6 +1820,7 @@ function loginPost() {
 
             $_SESSION["username"] = $username;
             $_SESSION["userhash"] = hash('sha512', $userhash.$ip.$userAgent);
+            $_SESSION['csrf'] = random_int(0, 0xFFFFFFFF);
 
             mylog("<strong style='color:DarkGreen'>Вход в систему (".$_SESSION["username"].").</strong>");
 

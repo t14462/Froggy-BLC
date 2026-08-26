@@ -115,6 +115,8 @@ if(in_array($methods, ['POST', 'GET'], true)) {
 
                 "saveusers" => FILTER_DEFAULT,
 
+                "csrf" => FILTER_VALIDATE_INT,
+
             ]) ?? [];
 
             htmlSpecialCharsField($safePost, 'username');

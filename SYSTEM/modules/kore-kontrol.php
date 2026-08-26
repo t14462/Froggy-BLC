@@ -213,17 +213,17 @@ if(    is_file("DATABASE/DB/DB-TOC-Cache.txt")
 
                 if($checkpermission) {
 
-                    $addpageafter = "<a href='$addr&addpage=$count-$num' title='Создать текущ. уровень'>+</a> ";
+                    $addpageafter = "<a href='$addr&amp;addpage=$count-$num&amp;csrf=$csrf' title='Создать текущ. уровень'>+</a> ";
 
                     /// if($num < 6) {$addpageafter .= "<a href='$addr&addpage=$count-".($num+1)."&newlevel=1' title='Создать след. уровень'>N</a> ";}
 
-                    if($num < 6) {$addpageafter .= "<a href='$addr&addpage=$count-".($num+1)."' title='Создать след. уровень'>N</a> ";}
+                    if($num < 6) {$addpageafter .= "<a href='$addr&amp;addpage=$count-".($num+1)."&amp;csrf=$csrf' title='Создать след. уровень'>N</a> ";}
 
-                    $pagemover = "<a href='?pgmovedown=$count' title='Переместить вниз'>D</a> <a href='?pgmoveup=$count' title='Переместить вверх'>U</a> ";
+                    $pagemover = "<a href='?pgmovedown=$count&amp;csrf=$csrf' title='Переместить вниз'>D</a> <a href='?pgmoveup=$count&amp;csrf=$csrf' title='Переместить вверх'>U</a> ";
 
                     $admpgctl = "<span class='admpgctl'>".$pagemover.$addpageafter."</span>";
 
-                    $addlasth1 = " <a class='menu-icon big addpglast' style='clear: both' href='$addr&addpage=last' title='Добавить раздел'>+</a>";
+                    $addlasth1 = " <a class='menu-icon big addpglast' style='clear: both' href='$addr&amp;addpage=last&amp;csrf=$csrf' title='Добавить раздел'>+</a>";
                 }
 
                 $gCC = getCommCount($iddump);
@@ -254,17 +254,17 @@ if(    is_file("DATABASE/DB/DB-TOC-Cache.txt")
 
                 if($checkpermission) {
 
-                    $addpageafter = "<a href='$addr&addpage=$count-$num' title='Создать текущ. уровень'>+</a> ";
+                    $addpageafter = "<a href='$addr&amp;addpage=$count-$num&amp;csrf=$csrf' title='Создать текущ. уровень'>+</a> ";
 
                     /// if($num < 6) {$addpageafter .= "<a href='$addr&addpage=$count-".($num+1)."&newlevel=1' title='Создать след. уровень'>N</a> ";}
 
-                    if($num < 6) {$addpageafter .= "<a href='$addr&addpage=$count-".($num+1)."' title='Создать след. уровень'>N</a> ";}
+                    if($num < 6) {$addpageafter .= "<a href='$addr&amp;addpage=$count-".($num+1)."&amp;csrf=$csrf' title='Создать след. уровень'>N</a> ";}
 
-                    $pagemover = "<a href='?pgmovedown=$count' title='Переместить вниз'>D</a> <a href='?pgmoveup=$count' title='Переместить вверх'>U</a> ";
+                    $pagemover = "<a href='?pgmovedown=$count&amp;csrf=$csrf' title='Переместить вниз'>D</a> <a href='?pgmoveup=$count&amp;csrf=$csrf' title='Переместить вверх'>U</a> ";
 
                     $admpgctl = "<span class='admpgctl'>".$pagemover. $addpageafter."</span>";
 
-                    $addlasth1 = " <a class='menu-icon big addpglast' style='clear: both' href='$addr&addpage=last' title='Добавить раздел'>+</a>";
+                    $addlasth1 = " <a class='menu-icon big addpglast' style='clear: both' href='$addr&amp;addpage=last&amp;csrf=$csrf' title='Добавить раздел'>+</a>";
                 }
 
                 switch ($i) {

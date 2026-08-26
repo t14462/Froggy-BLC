@@ -118,6 +118,10 @@ session_set_cookie_params([
 ]);
 session_start();
 
+
+$csrf = $_SESSION['csrf'] ?? 0;
+
+
 # if( !defined( __DIR__ ) ) define( __DIR__, dirname(__FILE__) );
 
 require_once "SYSTEM/cred.php";

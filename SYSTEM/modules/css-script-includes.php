@@ -67,7 +67,7 @@ $body .= "
 
 $queryString = $_SERVER['QUERY_STRING'] ?? '';
 $queryBase = explode("&", $queryString)[0];
-$stoolbox = "<div id='system-links'><a target='_blank' href='?".$queryBase."&amp;print=1' rel='nofollow' title='Версия для печати'>🖨️</a> <a target='_blank' href='?gallery=-1' title='Галерея'>🖼️</a> <a target='_blank' href='?dlfiles=-1' title='Файлы'>💾</a> ".logInOutLink('🔐', '🔚')." <a href='?".$queryBase."&amp;edit=1' rel='nofollow' title='Редактировать эту страницу' style='margin-left: .75em;'>✏️</a> <a target='_blank' href='?log=-1' rel='nofollow' title='Бортовой Журнал'>📄</a></div>".obyava();
+$stoolbox = "<div id='system-links'><a target='_blank' href='?".$queryBase."&amp;print=1' rel='nofollow' title='Версия для печати'>🖨️</a> <a target='_blank' href='?gallery=-1' title='Галерея'>🖼️</a> <a target='_blank' href='?dlfiles=-1' title='Файлы'>💾</a> ".logInOutLink('🔐', '🔚')." <a href='?".$queryBase."&amp;edit=1&amp;csrf=$csrf' rel='nofollow' title='Редактировать эту страницу' style='margin-left: .75em;'>✏️</a> <a target='_blank' href='?log=-1&amp;csrf=$csrf' rel='nofollow' title='Бортовой Журнал'>📄</a></div>".obyava();
 
 $menubar = '
 
