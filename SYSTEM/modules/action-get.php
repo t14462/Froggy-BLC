@@ -1659,7 +1659,7 @@ function gallery() {
             $i++;
             $delimg = basename(str_replace('\\', '/', $file));
 
-            $content .= "<td class='gallery-img'><img loading='lazy' src=\"".$file."\" alt='Картинка из галереи' title='$delimg' /><button onclick='copyToClipboard(\"".$file."\");'>🔗".$delimg."</button> <a rel='nofollow' href='?delimg=$delimg&amp;csrf=$csrf' class='imgdellink' onclick=\"return confirm('Вы уверены?');\">Уд.</a></td>";
+            $content .= "<td class='gallery-img'><img loading='lazy' src=\"".$file."\" alt='Картинка из галереи' title='$delimg' /><button onclick='copyToClipboard(\"".$file."\");' title='Копировать Адрес'>🔗".$delimg."</button> <a rel='nofollow' href='?delimg=$delimg&amp;csrf=$csrf' class='imgdellink' onclick=\"return confirm('Вы уверены?');\">Уд.</a></td>";
 
             // открывать новую строку только если это НЕ последний элемент
             if ($i % $cols === 0 && $i < $total) {
@@ -1781,7 +1781,7 @@ function dlFiles() {
 
     foreach($selectedfile as $file) {
         $delfile = explode("/", $file)[2];
-        $content .= "<p class='gallery-img'>".$file." <button onclick='copyToClipboard(\"".$file."\");'>🔗</button> <a rel='nofollow' href='?delfile=$delfile&amp;csrf=$csrf' class='imgdellink' onclick=\"return confirm('Вы уверены?');\">УДАЛИТЬ</a></p><hr />";
+        $content .= "<p class='gallery-img'>".$file." <button onclick='copyToClipboard(\"".$file."\");' title='Копировать Адрес'>🔗</button> <a rel='nofollow' href='?delfile=$delfile&amp;csrf=$csrf' class='imgdellink' onclick=\"return confirm('Вы уверены?');\">УДАЛИТЬ</a></p><hr />";
     }
 
     $mainPageTitle = "Список файлов";
