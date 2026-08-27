@@ -124,26 +124,30 @@ if($last_executed3 && $diff3 > 5400) { // 1.5 hours
     }
 }
 
-if(isset($_SESSION['username'], $cred[$_SESSION['username']]) && (
-    isset($_POST['title'], $_POST['h'], $_POST['textedit'], $_POST['dbtimestamp']) ||
+if( (int)($_GET['csrf'] ?? 0) === $csrf || (int)($_POST['csrf'] ?? 0) === $csrf ) {
 
-    isset($_GET['edit'])     ||
+    if(isset($_SESSION['username'], $cred[$_SESSION['username']]) && (
+        isset($_POST['title'], $_POST['h'], $_POST['textedit'], $_POST['dbtimestamp']) ||
 
-    isset($_GET['addpage'])  ||
-    isset($_GET['pagedel'])  ||
-    isset($_GET['pgmoveup']) ||
-    isset($_GET['pgmovedown'])
-    )
-) {
-    $lockPermission = $cred[$_SESSION['username']];
-    $lockPermission = (int)explode("<!!!>", $lockPermission, 2)[0];
+        isset($_GET['edit'])     ||
 
-    if(!isDbLocked() && $lockPermission > 2) {
-        lockByName($_SESSION['username']);
+        isset($_GET['addpage'])  ||
+        isset($_GET['pagedel'])  ||
+        isset($_GET['pgmoveup']) ||
+        isset($_GET['pgmovedown'])
+        )
+    ) {
+        $lockPermission = $cred[$_SESSION['username']];
+        $lockPermission = (int)explode("<!!!>", $lockPermission, 2)[0];
+
+        if(!isDbLocked() && $lockPermission > 2) {
+            lockByName($_SESSION['username']);
+        }
+
+    } elseif(isset($_GET['leaveedit'])) {
+
+        unlockByName($_SESSION['username'] ?? "dummy");
     }
-} elseif(isset($_GET['leaveedit'])) {
-
-    unlockByName($_SESSION['username'] ?? "dummy");
 }
 
 function plocked() {
@@ -155,4 +159,31 @@ function plocked() {
     $mainPageTitle = "403. БД была заблокирована.";
 
     return "<h1>403.</h1><p class='big'><strong>БД была заблокирована. (Редактируется другим пользователем).</strong></p>";
+}
+
+
+
+
+
+
+function readDBLock(): string|false
+{
+    $file = @fopen(DBLOCK_FILE, 'rb');
+
+    if($file === false) {
+        return false;
+    }
+
+    try {
+        if(!flock($file, LOCK_SH)) {
+            return false;
+        }
+
+        // Читаем целиком, без обрезки пробелов и переводов строк.
+        return stream_get_contents($file);
+
+    } finally {
+        // Закрываем файл и одновременно снимаем блокировку.
+        fclose($file);
+    }
 }

@@ -91,4 +91,6 @@ if($checkpermission) {
     } else {
         $footer .= "<span title='Exec + Utils: НЕТУ.'>🔴</span>";
     }
+
+    $footer .= "<strong title='Блокирующий Пользователь'>".readDBLock()."</strong>";
 }

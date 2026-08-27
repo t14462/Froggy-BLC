@@ -1015,35 +1015,49 @@ function pageEdit() {
                             format_tags: 'p;h2;h3;h4;h5;h6;pre;address;div'
                         } );
 
+
+
+
                         document.querySelectorAll('#sitemenu a, #prevnextslider a, header a, a.addpglast').forEach(function(link) {
 
-                            let href = link.getAttribute('href');
+                            let href = link.getAttribute('href')?.trim();
 
-                            // пропускаем якоря и пустые ссылки
-                            if (link.getAttribute('href').startsWith('#')) return;
+                            // Пропускаем пустые ссылки и якоря.
+                            if(!href || href.startsWith('#')) return;
 
-                            if (href.includes('?')) {
-                                href += '&leaveedit=1';
-                            } else {
-                                href += '?leaveedit=1';
+                            // URL используем только для проверки, без пересборки ссылки.
+                            try {
+                                const url = new URL(href, document.baseURI);
+
+                                if(url.origin !== window.location.origin || !/^https?:$/.test(url.protocol)) return;
+                            } catch {
+                                return;
                             }
 
-                            link.setAttribute('href', href);
+                            // Временно отделяем якорь.
+                            const hashIndex = href.indexOf('#');
+                            const hash = hashIndex === -1 ? '' : href.slice(hashIndex);
 
-                            /*
-                            link.addEventListener('click', event => {
-                                // показываем диалог
-                                if (!confirm('Вы действительно хотите покинуть редактор? Несохранённые данные БУДУТ УТЕРЯНЫ!')) {
-                                // если 'Нет' → блокируем переход
-                                event.preventDefault();
-                                }
-                                // если 'Да' → переход произойдет автоматически
+                            if(hashIndex !== -1) href = href.slice(0, hashIndex);
+
+                            // Разделяем адрес и содержимое после первого «?».
+                            const queryIndex = href.indexOf('?');
+                            const path = queryIndex === -1 ? href : href.slice(0, queryIndex);
+                            const query = queryIndex === -1 ? '' : href.slice(queryIndex + 1);
+
+                            // Удаляем старые csrf и leaveedit, не перекодируя остальное.
+                            const parts = query.split('&').filter(function(part) {
+                                return part !== '' && !/^(?:csrf|leaveedit)=/.test(part);
                             });
-                            */
+
+                            parts.push('leaveedit=1', 'csrf=$csrf');
+
+                            link.setAttribute('href', path + '?' + parts.join('&') + hash);
 
                         });
 
                         
+
 
                         let editorDirty = true; // изначально считаем, что есть изменения
 
@@ -1146,7 +1160,7 @@ function pageEdit() {
 
         $content .= "<div class='el-in-line'><input type='submit' value='💾 Отправить' />
 
-            <a href='?".$queryBase."&amp;leaveedit=1'>Отменить ⬅️</a>
+            <a href='?".$queryBase."&amp;leaveedit=1&amp;csrf=$csrf'>Отменить ⬅️</a>
             <a href='?".$queryBase."&amp;pagedel=1&amp;csrf=$csrf' id='pagedelbutton'>❌ Удалить страницу</a>
 
             </div></fieldset></form>";

@@ -543,7 +543,7 @@ function prevnextslider() {
 ##############################################################
 
 $queryString = $_SERVER['QUERY_STRING'] ?? '';
-if(explode("&", $queryString)[0] == "" || $queryString == "leaveedit=1") {
+if(explode("&", $queryString)[0] == "" || $queryString == "leaveedit=1&csrf=$csrf") {
     $mainlink = $sitemaptxt[0];
 
     header("Location: ".$mainlink,true,301);
