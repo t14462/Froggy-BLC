@@ -132,7 +132,7 @@ function viewLog() {
 }
 
 function purgelog() {
-    global $errmsg, $checkpermission;
+    global $errmsg, $checkpermission, $csrf;
 
     if($checkpermission < 4) {
         $errmsg = pforbidden();
@@ -149,7 +149,7 @@ function purgelog() {
 
         $errmsg = "<h1>Лог был очищен.</h1><p class='big'><strong>Подождите момент.</strong></p>";
 
-        refreshhandle(3, "?log=-1", false);
+        refreshhandle(3, "?log=-1&csrf=$csrf", false);
     }
 }
 

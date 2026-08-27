@@ -2210,7 +2210,7 @@ function pobyava() {
 
 function saveUsers() {
 
-    global $safePost, $checkpermission, $errmsg;
+    global $safePost, $checkpermission, $errmsg, $csrf;
 
     if($checkpermission < 4) {
 
@@ -2248,7 +2248,7 @@ $users
 
         putFileOrDie("SYSTEM/cred.php", $users, LOCK_EX);
 
-        refreshhandle(0, "?editusers=1", false);
+        refreshhandle(0, "?editusers=1&csrf=$csrf", false);
     }
 }
 
