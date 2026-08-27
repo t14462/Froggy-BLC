@@ -119,7 +119,7 @@ session_set_cookie_params([
 session_start();
 
 
-$csrf = $_SESSION['csrf'] ?? 0;
+$csrf = $_SESSION['csrf'] ?? random_int(0, 0xFFFFFFFF);
 
 
 # if( !defined( __DIR__ ) ) define( __DIR__, dirname(__FILE__) );

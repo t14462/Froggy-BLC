@@ -8,6 +8,18 @@ if(!defined('SECURE_ACCESS')) { die('Direct access not permitted'); }
 
 define('DBLOCK_FILE', 'DATABASE/DB/DBLOCK');
 
+
+function rawCsrfEquals(mixed $token): bool {
+    global $csrf;
+
+    if(!is_int($token) && !is_string($token)) {
+        return false;
+    }
+
+    return hash_equals((string)$csrf, (string)$token);
+}
+
+
 /**
  * Проверяет, заблокирована ли база кем-либо
  * @return bool
@@ -124,7 +136,10 @@ if($last_executed3 && $diff3 > 5400) { // 1.5 hours
     }
 }
 
-if( (int)($_GET['csrf'] ?? 0) === $csrf || (int)($_POST['csrf'] ?? 0) === $csrf ) {
+
+
+
+if(rawCsrfEquals($_GET['csrf'] ?? null) || rawCsrfEquals($_POST['csrf'] ?? null)) {
 
     if(isset($_SESSION['username'], $cred[$_SESSION['username']]) && (
         isset($_POST['title'], $_POST['h'], $_POST['textedit'], $_POST['dbtimestamp']) ||

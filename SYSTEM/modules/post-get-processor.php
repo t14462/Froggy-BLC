@@ -50,7 +50,7 @@ function detectaction() {
     return false;
 }
 
-if(detectaction() && (!$checkpermission || ((int)($safeGet["csrf"] ?? 0) !== $csrf && (int)($safePost["csrf"] ?? 0) !== $csrf))) {
+if(detectaction() && (!$checkpermission || ( !hash_equals((string)$csrf, (string)($safeGet["csrf"] ?? "")) && !hash_equals((string)$csrf, (string)($safePost["csrf"] ?? ""))))) {
 
     $errmsg = pforbidden();
 
