@@ -512,7 +512,7 @@ function pageload() {
             $queryString = $_SERVER['QUERY_STRING'] ?? '';
             $queryBase = explode("&", $queryString)[0];
 
-            $pager = "<nav class='pager'><a href='?" . $queryString . "&amp;commpgcntrecalc=1&amp;csrf=$csrf' rel='nofollow' title='Пересчитать Количество Страниц!!!' onclick=\"return confirm('Это тяжёлая операция. Продолжить?');\">🪄</a>";
+            $pager = "<nav class='pager'><a href='?" . $queryBase . "&amp;commpgcntrecalc=1&amp;csrf=$csrf' rel='nofollow' title='Пересчитать Количество Страниц!!!' onclick=\"return confirm('Это тяжёлая операция. Продолжить?');\">🪄</a>";
             for($i = 0; $i <= $total_commpages; $i++) {
 
                 if($commpage === $i) {
