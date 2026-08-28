@@ -1900,7 +1900,7 @@ function imageupload() {
         $uploadOk = 1;
 
         /// $imageFileType = strtolower(pathinfo($target_file,PATHINFO_EXTENSION));
-        $imageFileType = pathinfo($target_file,PATHINFO_EXTENSION);
+        $imageFileType = pathinfo($target_file, PATHINFO_EXTENSION);
 
         /// if($target_file == "") {
 
