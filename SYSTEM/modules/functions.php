@@ -879,11 +879,17 @@ function filterUsername(string $username): bool {
         return false;
     }
 
-    if(mb_strlen($username) < 3 || mb_strlen($username) > 25) {
+    $normalizedUsername = mb_superTrim($username);
+
+    $usernameDec = html_entity_decode($normalizedUsername, ENT_QUOTES | ENT_HTML401, 'UTF-8');
+
+    if(preg_match('/[\p{L}\p{N}\p{P}\p{S}]/u', $usernameDec) !== 1) {
         return false;
     }
 
-    $normalizedUsername = mb_superTrim($username);
+    if(mb_strlen($usernameDec) < 3 || mb_strlen($usernameDec) > 25) {
+        return false;
+    }
 
     return ($username === $normalizedUsername);
 
