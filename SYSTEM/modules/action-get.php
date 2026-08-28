@@ -111,7 +111,7 @@ function viewLog() {
         flock($file, LOCK_SH);
         fseekOrDie($file, $offset);
         $logTxt = freadOrDie($file, $limit * 1024).fgetsOrDie($file);
-        flock($file, LOCK_UN);
+        /// flock($file, LOCK_UN);
         fclose($file);
 
         ensure_html_purifier_loaded();
@@ -2026,7 +2026,18 @@ function gobyava() {
 
     } else {
 
-        $text = (string)@file_get_contents("DATABASE/obyava.txt");
+        $text = '';
+
+        $fp = @fopen('DATABASE/obyava.txt', 'rb');
+
+        if($fp !== false) {
+
+            if(@flock($fp, LOCK_SH)) {
+                $text = (string)@stream_get_contents($fp);
+            }
+
+            fclose($fp); // Также снимает блокировку
+        }
 
         $text = str_ireplace("<textarea", "&lt;textarea", $text);
         $text = str_ireplace("</textarea", "&lt;/textarea", $text);

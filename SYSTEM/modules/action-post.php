@@ -1813,11 +1813,14 @@ function loginPost() {
         /// $lasttime = (int)getFileOrDie("DATABASE/lock/".$hashh);
 
         $locktmp = fopenOrDie("DATABASE/lock/".$hashh, 'rb');
-        flock($locktmp, LOCK_SH);
+
+        if(!flock($locktmp, LOCK_SH)) {
+            fclose($locktmp);
+            die('Не удалось получить блокировку файла.');
+        }
 
         $lasttime = (int)(string)stream_get_contents($locktmp);
 
-        flock($locktmp, LOCK_UN);
         fclose($locktmp);
 
         // require_once "SYSTEM/salt.php";
@@ -2201,7 +2204,9 @@ function pobyava() {
         $purifier = new HTMLPurifier($config);
         $obstring = $purifier->purify($obstring);
 
-        putFileOrDie("DATABASE/obyava.txt", $obstring);
+        putFileOrDie("DATABASE/obyava.txt", $obstring, LOCK_EX);
+
+        mylog("<strong style='color:DarkRed'>Объявление изменено. (".$_SESSION["username"].").</strong>");
 
         refreshhandle(0, "?", false);
     }
@@ -2247,6 +2252,8 @@ $users
 
 
         putFileOrDie("SYSTEM/cred.php", $users, LOCK_EX);
+
+        mylog("<strong style='color:DarkRed'>Cred.php изменён. (".$_SESSION["username"].").</strong>");
 
         refreshhandle(0, "?editusers=1&csrf=$csrf", false);
     }

@@ -46,7 +46,7 @@ function isLockedBy(string $username): bool {
 
     $lockedBy = trim((string)stream_get_contents($locktmp));
 
-    flock($locktmp, LOCK_UN);
+    /// flock($locktmp, LOCK_UN);
     fclose($locktmp);
 
     /// $lockedBy = trim(@file_get_contents(DBLOCK_FILE));
@@ -79,7 +79,7 @@ function lockByName(string $username): bool {
     $ok = fwrite($locktmp, $username . "\n") !== false;
     fflush($locktmp);
 
-    flock($locktmp, LOCK_UN);
+    /// flock($locktmp, LOCK_UN);
     fclose($locktmp);
 
     if(!$ok) {
@@ -114,7 +114,7 @@ function unlockByName(string $username): bool {
         $ok = @unlink(DBLOCK_FILE);
     }
 
-    flock($locktmp, LOCK_UN);
+    /// flock($locktmp, LOCK_UN);
     fclose($locktmp);
 
     return $ok;

@@ -135,7 +135,7 @@ if(is_dir($COUNT_DIR) && is_writable($COUNT_DIR)) {
             if(ftruncate($fp, 0) !== false && fwrite($fp, (string)$val) !== false) {
                 fflush($fp);
             }
-            flock($fp, LOCK_UN);
+            /// flock($fp, LOCK_UN);
         }
         fclose($fp);
     }

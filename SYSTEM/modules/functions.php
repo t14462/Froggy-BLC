@@ -89,7 +89,7 @@ function filemtimeMy(string $file): float {
 
         /// $contents = file_get_contents($timeFile);
 
-        flock($locktmp, LOCK_UN);
+        /// flock($locktmp, LOCK_UN);
         fclose($locktmp);
 
         return (float)sprintf('%.4f', $contents);
@@ -544,7 +544,7 @@ $replacementDLCNT = static function ($m) {
 
             $dlcnt = (int)(string)stream_get_contents($ftmp);
 
-            flock($ftmp, LOCK_UN);
+            /// flock($ftmp, LOCK_UN);
             fclose($ftmp);
 
             /*
@@ -729,7 +729,7 @@ function repeatCaptcha($userInput) {
 
         $sessionData = json_decode((string)stream_get_contents($locktmp), true);
 
-        flock($locktmp, LOCK_UN);
+        /// flock($locktmp, LOCK_UN);
         fclose($locktmp);
 
         /// $sessionData = json_decode(getFileOrDie($sessionFile), true);
@@ -775,7 +775,7 @@ function canProceed($datip) {
 
         $lockData = json_decode((string)stream_get_contents($locktmp), true);
 
-        flock($locktmp, LOCK_UN);
+        /// flock($locktmp, LOCK_UN);
         fclose($locktmp);
 
         /// $lockData = json_decode(getFileOrDie($lockFile), true);
@@ -916,7 +916,7 @@ function dbdone($filename, $recovery) {
 
     $lockvar = (int)(string)stream_get_contents($locktmp);
 
-    flock($locktmp, LOCK_UN);
+    /// flock($locktmp, LOCK_UN);
     fclose($locktmp);
 
     if(is_file($filename.".src." . getmypid())) {
@@ -1692,7 +1692,7 @@ function calcTotPages(string $commaddr, int $limit, bool $update = false): int
         if ($fh) {
             @flock($fh, LOCK_SH);
             $raw = (int)(string)stream_get_contents($fh);
-            @flock($fh, LOCK_UN);
+            /// @flock($fh, LOCK_UN);
             fclose($fh);
 
             return $raw;
@@ -1769,7 +1769,7 @@ function calcTotPages2(int $commcount, string $commaddr, int $limit, bool $updat
         if ($fh) {
             @flock($fh, LOCK_SH);
             $raw = (int)(string)stream_get_contents($fh);
-            @flock($fh, LOCK_UN);
+            /// @flock($fh, LOCK_UN);
             fclose($fh);
 
             return $raw;
@@ -2189,7 +2189,7 @@ function getCommCount($commaddr) {
         $locktmp = fopenOrDie("DATABASE/comments/".$commaddr.".count", 'rb');
         flock($locktmp, LOCK_SH);
         $contents = (string)stream_get_contents($locktmp);
-        flock($locktmp, LOCK_UN);
+        /// flock($locktmp, LOCK_UN);
         fclose($locktmp);
 
         return "<span class='pgCommCnt' title='Комментарии'>&nbsp;(".(int)$contents.")</span>";
@@ -2366,7 +2366,7 @@ function atomicCounterIncrement($path) {
         if(ftruncate($fp, 0) !== false && fwrite($fp, (string)$val) !== false) {
             fflush($fp);
         }
-        flock($fp, LOCK_UN);
+        /// flock($fp, LOCK_UN);
     }
     fclose($fp);
 }
