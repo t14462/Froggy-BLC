@@ -850,12 +850,12 @@ function array_insert_m(&$array, $position, $insert) {
 
 function filterUsername(string $username): bool {
 
-    $username = normalize_entities_my($username);
-
     // Невалидный UTF-8
     if(!mb_check_encoding($username, 'UTF-8')) {
         return false;
     }
+
+    $username = normalize_entities_my($username);
 
     // Пустое имя или имя, состоящее только из пробельных символов
     if($username === '' || preg_match('/^[\p{Z}\s]*$/u', $username)) {
