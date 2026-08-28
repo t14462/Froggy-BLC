@@ -25,7 +25,7 @@ function remove_entities(string $text): string {
 }
 
 function mb_superTrimLocal(string $text): string {
-    $text = preg_replace('/[\p{C}]/u', ' ', $text);
+    $text = preg_replace('/[\p{Cc}\p{Cf}]/u', ' ', $text);
     $text = preg_replace('/^[\p{Z}]+|[\p{Z}]+$/u', '', $text);
     return preg_replace('/[\p{Z}]+/u', ' ', $text);
 }
@@ -49,7 +49,7 @@ function filter_filename(string $filename): string {
         [\x7F\xA0\xAD]      |  # DEL, NBSP, SHY
         [#\[\]@!$&\'()+,;=] |  # URI reserved
         [{}^\~`]               # URL-unsafe
-    ~x', '-', $filename);
+    ~xu', '-', $filename);
 
     $filename = str_replace(' ', '_', $filename);
     $filename = preg_replace(['/-{2,}/', '/\.{2,}/', '/_{2,}/'], ['-', '.', '_'], $filename);
@@ -62,6 +62,8 @@ function filter_filename(string $filename): string {
 
     $limit = ($ext !== '') ? max(1, 255 - (strlen($ext) + 1)) : 255;
     $base  = mb_strcut($base, 0, $limit, 'UTF-8');
+
+    if($base === '') die();
 
     return ($ext !== '') ? ($base . '.' . $ext) : $base;
 }
