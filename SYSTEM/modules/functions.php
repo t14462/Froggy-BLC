@@ -284,75 +284,157 @@ function set_cookie(string $name, string $value, int $expires): bool
     ]);
 }
 
+
+
+
+/*
+ * Вызывать после normalize_entities_my().
+ * Заменён только шаг 1 исходной mb_superTrim(). Шаги 2–4 сохранены.
+ *
+ * Явный WhiteList печатных именованных сущностей HTML 4.01.
+ * Источник: https://www.w3.org/TR/html401/sgml/entities.html
+ * Из 252 имён исключены 8 пробельных/форматирующих:
+ * nbsp, shy, ensp, emsp, thinsp, zwnj, lrm, rlm.
+ *
+ * Числовые записи: только кодовые точки разрешённых HTML4-знаков
+ * и печатный ASCII (33–126), перечисленные в массиве буквально.
+ * Прочие записи, включая сущности смайликов, удаляются.
+ * HTML5-имена не разрешены: например, &heartsuit; и &apos;.
+ * Апостроф допустим как &#39; или как настоящий символ Unicode/ASCII.
+ * Настоящие Unicode-эмодзи обрабатываются исходными шагами 2–4.
+ */
 function mb_superTrim(string $text): string {
 
-    // 1. Все пробельные сущности
-    $text = str_ireplace(
-        [
-            // --------------------
-            // Категория Zs (Separator, Space)
-            // --------------------
-            "&nbsp;", "&NonBreakingSpace;", "&#160;", "&#xA0;",   // NO-BREAK SPACE (U+00A0)
-            "&#32;", "&#x20;",                                  // SPACE (U+0020) — именованной нет
-            "&ensp;", "&#8194;", "&#x2002;",                    // EN SPACE (U+2002)
-            "&emsp;", "&#8195;", "&#x2003;",                    // EM SPACE (U+2003)
-            "&thinsp;", "&ThinSpace;", "&#8201;", "&#x2009;",   // THIN SPACE (U+2009)
-            "&hairsp;", "&VeryThinSpace;", "&#8202;", "&#x200A;", // HAIR SPACE (U+200A)
-            "&emsp13;", "&#8196;", "&#x2004;",                  // THREE-PER-EM SPACE (U+2004)
-            "&emsp14;", "&#8197;", "&#x2005;",                  // FOUR-PER-EM SPACE (U+2005)
-            "&#8198;", "&#x2006;",                              // SIX-PER-EM SPACE (U+2006) — имени нет
-            "&numsp;", "&#8199;", "&#x2007;",                   // FIGURE SPACE (U+2007)
-            "&puncsp;", "&#8200;", "&#x2008;",                  // PUNCTUATION SPACE (U+2008)
-            // NBSP узкий: имени в HTML нет; &nbspn; ниже — несуществующая сущность, оставлена как у тебя
-            "&nbspn;", "&#8239;", "&#x202F;",                   // NARROW NO-BREAK SPACE (U+202F) — имени нет
-            "&MediumSpace;", "&#8287;", "&#x205F;",             // MEDIUM MATHEMATICAL SPACE (U+205F)
-            "&ThickSpace;",                                     // THICK SPACE ≈ U+205F + U+200A (MMSP + HAIR) — алиас
-            "&#12288;", "&#x3000;",                             // IDEOGRAPHIC SPACE (U+3000) — имени нет
+    // 1. WhiteList: разрешено только то, что явно перечислено.
+    static $whiteList = [
 
-            // --------------------
-            // Категория Zl (Line Separator) и Zp (Paragraph Separator)
-            // --------------------
-            "&#8232;", "&#x2028;",                              // LINE SEPARATOR (U+2028)
-            "&#8233;", "&#x2029;",                              // PARAGRAPH SEPARATOR (U+2029)
+        // Печатные именованные сущности HTML 4.01. Регистр значим.
+        '&Aacute;' => true, '&aacute;' => true, '&Acirc;' => true, '&acirc;' => true, '&acute;' => true,
+        '&AElig;' => true, '&aelig;' => true, '&Agrave;' => true, '&agrave;' => true, '&alefsym;' => true,
+        '&Alpha;' => true, '&alpha;' => true, '&amp;' => true, '&and;' => true, '&ang;' => true,
+        '&Aring;' => true, '&aring;' => true, '&asymp;' => true, '&Atilde;' => true, '&atilde;' => true,
+        '&Auml;' => true, '&auml;' => true, '&bdquo;' => true, '&Beta;' => true, '&beta;' => true,
+        '&brvbar;' => true, '&bull;' => true, '&cap;' => true, '&Ccedil;' => true, '&ccedil;' => true,
+        '&cedil;' => true, '&cent;' => true, '&Chi;' => true, '&chi;' => true, '&circ;' => true,
+        '&clubs;' => true, '&cong;' => true, '&copy;' => true, '&crarr;' => true, '&cup;' => true,
+        '&curren;' => true, '&Dagger;' => true, '&dagger;' => true, '&dArr;' => true, '&darr;' => true,
+        '&deg;' => true, '&Delta;' => true, '&delta;' => true, '&diams;' => true, '&divide;' => true,
+        '&Eacute;' => true, '&eacute;' => true, '&Ecirc;' => true, '&ecirc;' => true, '&Egrave;' => true,
+        '&egrave;' => true, '&empty;' => true, '&Epsilon;' => true, '&epsilon;' => true, '&equiv;' => true,
+        '&Eta;' => true, '&eta;' => true, '&ETH;' => true, '&eth;' => true, '&Euml;' => true, '&euml;' => true,
+        '&euro;' => true, '&exist;' => true, '&fnof;' => true, '&forall;' => true, '&frac12;' => true,
+        '&frac14;' => true, '&frac34;' => true, '&frasl;' => true, '&Gamma;' => true, '&gamma;' => true,
+        '&ge;' => true, '&gt;' => true, '&hArr;' => true, '&harr;' => true, '&hearts;' => true,
+        '&hellip;' => true, '&Iacute;' => true, '&iacute;' => true, '&Icirc;' => true, '&icirc;' => true,
+        '&iexcl;' => true, '&Igrave;' => true, '&igrave;' => true, '&image;' => true, '&infin;' => true,
+        '&int;' => true, '&Iota;' => true, '&iota;' => true, '&iquest;' => true, '&isin;' => true,
+        '&Iuml;' => true, '&iuml;' => true, '&Kappa;' => true, '&kappa;' => true, '&Lambda;' => true,
+        '&lambda;' => true, '&lang;' => true, '&laquo;' => true, '&lArr;' => true, '&larr;' => true,
+        '&lceil;' => true, '&ldquo;' => true, '&le;' => true, '&lfloor;' => true, '&lowast;' => true,
+        '&loz;' => true, '&lsaquo;' => true, '&lsquo;' => true, '&lt;' => true, '&macr;' => true,
+        '&mdash;' => true, '&micro;' => true, '&middot;' => true, '&minus;' => true, '&Mu;' => true,
+        '&mu;' => true, '&nabla;' => true, '&ndash;' => true, '&ne;' => true, '&ni;' => true, '&not;' => true,
+        '&notin;' => true, '&nsub;' => true, '&Ntilde;' => true, '&ntilde;' => true, '&Nu;' => true,
+        '&nu;' => true, '&Oacute;' => true, '&oacute;' => true, '&Ocirc;' => true, '&ocirc;' => true,
+        '&OElig;' => true, '&oelig;' => true, '&Ograve;' => true, '&ograve;' => true, '&oline;' => true,
+        '&Omega;' => true, '&omega;' => true, '&Omicron;' => true, '&omicron;' => true, '&oplus;' => true,
+        '&or;' => true, '&ordf;' => true, '&ordm;' => true, '&Oslash;' => true, '&oslash;' => true,
+        '&Otilde;' => true, '&otilde;' => true, '&otimes;' => true, '&Ouml;' => true, '&ouml;' => true,
+        '&para;' => true, '&part;' => true, '&permil;' => true, '&perp;' => true, '&Phi;' => true,
+        '&phi;' => true, '&Pi;' => true, '&pi;' => true, '&piv;' => true, '&plusmn;' => true,
+        '&pound;' => true, '&Prime;' => true, '&prime;' => true, '&prod;' => true, '&prop;' => true,
+        '&Psi;' => true, '&psi;' => true, '&quot;' => true, '&radic;' => true, '&rang;' => true,
+        '&raquo;' => true, '&rArr;' => true, '&rarr;' => true, '&rceil;' => true, '&rdquo;' => true,
+        '&real;' => true, '&reg;' => true, '&rfloor;' => true, '&Rho;' => true, '&rho;' => true,
+        '&rsaquo;' => true, '&rsquo;' => true, '&sbquo;' => true, '&Scaron;' => true, '&scaron;' => true,
+        '&sdot;' => true, '&sect;' => true, '&Sigma;' => true, '&sigma;' => true, '&sigmaf;' => true,
+        '&sim;' => true, '&spades;' => true, '&sub;' => true, '&sube;' => true, '&sum;' => true,
+        '&sup1;' => true, '&sup2;' => true, '&sup3;' => true, '&sup;' => true, '&supe;' => true,
+        '&szlig;' => true, '&Tau;' => true, '&tau;' => true, '&there4;' => true, '&Theta;' => true,
+        '&theta;' => true, '&thetasym;' => true, '&THORN;' => true, '&thorn;' => true, '&tilde;' => true,
+        '&times;' => true, '&trade;' => true, '&Uacute;' => true, '&uacute;' => true, '&uArr;' => true,
+        '&uarr;' => true, '&Ucirc;' => true, '&ucirc;' => true, '&Ugrave;' => true, '&ugrave;' => true,
+        '&uml;' => true, '&upsih;' => true, '&Upsilon;' => true, '&upsilon;' => true, '&Uuml;' => true,
+        '&uuml;' => true, '&weierp;' => true, '&Xi;' => true, '&xi;' => true, '&Yacute;' => true,
+        '&yacute;' => true, '&yen;' => true, '&Yuml;' => true, '&yuml;' => true, '&Zeta;' => true,
+        '&zeta;' => true, '&zwj;' => true,
 
-            // --------------------
-            // Категория Cf (Format)
-            // --------------------
-            "&#65279;", "&#xFEFF;",                             // BOM / ZWNBSP (U+FEFF) — имени нет
-            "&ZeroWidthSpace;", "&#8203;", "&#x200B;",          // ZERO WIDTH SPACE (U+200B)
-            // «Негативные» пробелы — HTML сводит к ZWSP:
-            "&NegativeVeryThinSpace;",                          // → U+200B (ZWSP)
-            "&NegativeThinSpace;",                              // → U+200B (ZWSP)
-            "&NegativeMediumSpace;",                            // → U+200B (ZWSP)
-            "&NegativeThickSpace;",                             // → U+200B (ZWSP)
+        // Десятичные записи этих же символов и печатного ASCII.
+        '&#33;' => true, '&#34;' => true, '&#35;' => true, '&#36;' => true, '&#37;' => true, '&#38;' => true,
+        '&#39;' => true, '&#40;' => true, '&#41;' => true, '&#42;' => true, '&#43;' => true, '&#44;' => true,
+        '&#45;' => true, '&#46;' => true, '&#47;' => true, '&#48;' => true, '&#49;' => true, '&#50;' => true,
+        '&#51;' => true, '&#52;' => true, '&#53;' => true, '&#54;' => true, '&#55;' => true, '&#56;' => true,
+        '&#57;' => true, '&#58;' => true, '&#59;' => true, '&#60;' => true, '&#61;' => true, '&#62;' => true,
+        '&#63;' => true, '&#64;' => true, '&#65;' => true, '&#66;' => true, '&#67;' => true, '&#68;' => true,
+        '&#69;' => true, '&#70;' => true, '&#71;' => true, '&#72;' => true, '&#73;' => true, '&#74;' => true,
+        '&#75;' => true, '&#76;' => true, '&#77;' => true, '&#78;' => true, '&#79;' => true, '&#80;' => true,
+        '&#81;' => true, '&#82;' => true, '&#83;' => true, '&#84;' => true, '&#85;' => true, '&#86;' => true,
+        '&#87;' => true, '&#88;' => true, '&#89;' => true, '&#90;' => true, '&#91;' => true, '&#92;' => true,
+        '&#93;' => true, '&#94;' => true, '&#95;' => true, '&#96;' => true, '&#97;' => true, '&#98;' => true,
+        '&#99;' => true, '&#100;' => true, '&#101;' => true, '&#102;' => true, '&#103;' => true,
+        '&#104;' => true, '&#105;' => true, '&#106;' => true, '&#107;' => true, '&#108;' => true,
+        '&#109;' => true, '&#110;' => true, '&#111;' => true, '&#112;' => true, '&#113;' => true,
+        '&#114;' => true, '&#115;' => true, '&#116;' => true, '&#117;' => true, '&#118;' => true,
+        '&#119;' => true, '&#120;' => true, '&#121;' => true, '&#122;' => true, '&#123;' => true,
+        '&#124;' => true, '&#125;' => true, '&#126;' => true, '&#161;' => true, '&#162;' => true,
+        '&#163;' => true, '&#164;' => true, '&#165;' => true, '&#166;' => true, '&#167;' => true,
+        '&#168;' => true, '&#169;' => true, '&#170;' => true, '&#171;' => true, '&#172;' => true,
+        '&#174;' => true, '&#175;' => true, '&#176;' => true, '&#177;' => true, '&#178;' => true,
+        '&#179;' => true, '&#180;' => true, '&#181;' => true, '&#182;' => true, '&#183;' => true,
+        '&#184;' => true, '&#185;' => true, '&#186;' => true, '&#187;' => true, '&#188;' => true,
+        '&#189;' => true, '&#190;' => true, '&#191;' => true, '&#192;' => true, '&#193;' => true,
+        '&#194;' => true, '&#195;' => true, '&#196;' => true, '&#197;' => true, '&#198;' => true,
+        '&#199;' => true, '&#200;' => true, '&#201;' => true, '&#202;' => true, '&#203;' => true,
+        '&#204;' => true, '&#205;' => true, '&#206;' => true, '&#207;' => true, '&#208;' => true,
+        '&#209;' => true, '&#210;' => true, '&#211;' => true, '&#212;' => true, '&#213;' => true,
+        '&#214;' => true, '&#215;' => true, '&#216;' => true, '&#217;' => true, '&#218;' => true,
+        '&#219;' => true, '&#220;' => true, '&#221;' => true, '&#222;' => true, '&#223;' => true,
+        '&#224;' => true, '&#225;' => true, '&#226;' => true, '&#227;' => true, '&#228;' => true,
+        '&#229;' => true, '&#230;' => true, '&#231;' => true, '&#232;' => true, '&#233;' => true,
+        '&#234;' => true, '&#235;' => true, '&#236;' => true, '&#237;' => true, '&#238;' => true,
+        '&#239;' => true, '&#240;' => true, '&#241;' => true, '&#242;' => true, '&#243;' => true,
+        '&#244;' => true, '&#245;' => true, '&#246;' => true, '&#247;' => true, '&#248;' => true,
+        '&#249;' => true, '&#250;' => true, '&#251;' => true, '&#252;' => true, '&#253;' => true,
+        '&#254;' => true, '&#255;' => true, '&#338;' => true, '&#339;' => true, '&#352;' => true,
+        '&#353;' => true, '&#376;' => true, '&#402;' => true, '&#710;' => true, '&#732;' => true,
+        '&#913;' => true, '&#914;' => true, '&#915;' => true, '&#916;' => true, '&#917;' => true,
+        '&#918;' => true, '&#919;' => true, '&#920;' => true, '&#921;' => true, '&#922;' => true,
+        '&#923;' => true, '&#924;' => true, '&#925;' => true, '&#926;' => true, '&#927;' => true,
+        '&#928;' => true, '&#929;' => true, '&#931;' => true, '&#932;' => true, '&#933;' => true,
+        '&#934;' => true, '&#935;' => true, '&#936;' => true, '&#937;' => true, '&#945;' => true,
+        '&#946;' => true, '&#947;' => true, '&#948;' => true, '&#949;' => true, '&#950;' => true,
+        '&#951;' => true, '&#952;' => true, '&#953;' => true, '&#954;' => true, '&#955;' => true,
+        '&#956;' => true, '&#957;' => true, '&#958;' => true, '&#959;' => true, '&#960;' => true,
+        '&#961;' => true, '&#962;' => true, '&#963;' => true, '&#964;' => true, '&#965;' => true,
+        '&#966;' => true, '&#967;' => true, '&#968;' => true, '&#969;' => true, '&#977;' => true,
+        '&#978;' => true, '&#982;' => true, '&#8211;' => true, '&#8212;' => true, '&#8216;' => true,
+        '&#8217;' => true, '&#8218;' => true, '&#8220;' => true, '&#8221;' => true, '&#8222;' => true,
+        '&#8224;' => true, '&#8225;' => true, '&#8226;' => true, '&#8230;' => true, '&#8240;' => true,
+        '&#8242;' => true, '&#8243;' => true, '&#8249;' => true, '&#8250;' => true, '&#8254;' => true,
+        '&#8260;' => true, '&#8364;' => true, '&#8465;' => true, '&#8472;' => true, '&#8476;' => true,
+        '&#8482;' => true, '&#8501;' => true, '&#8592;' => true, '&#8593;' => true, '&#8594;' => true,
+        '&#8595;' => true, '&#8596;' => true, '&#8629;' => true, '&#8656;' => true, '&#8657;' => true,
+        '&#8658;' => true, '&#8659;' => true, '&#8660;' => true, '&#8704;' => true, '&#8706;' => true,
+        '&#8707;' => true, '&#8709;' => true, '&#8711;' => true, '&#8712;' => true, '&#8713;' => true,
+        '&#8715;' => true, '&#8719;' => true, '&#8721;' => true, '&#8722;' => true, '&#8727;' => true,
+        '&#8730;' => true, '&#8733;' => true, '&#8734;' => true, '&#8736;' => true, '&#8743;' => true,
+        '&#8744;' => true, '&#8745;' => true, '&#8746;' => true, '&#8747;' => true, '&#8756;' => true,
+        '&#8764;' => true, '&#8773;' => true, '&#8776;' => true, '&#8800;' => true, '&#8801;' => true,
+        '&#8804;' => true, '&#8805;' => true, '&#8834;' => true, '&#8835;' => true, '&#8836;' => true,
+        '&#8838;' => true, '&#8839;' => true, '&#8853;' => true, '&#8855;' => true, '&#8869;' => true,
+        '&#8901;' => true, '&#8968;' => true, '&#8969;' => true, '&#8970;' => true, '&#8971;' => true,
+        '&#9001;' => true, '&#9002;' => true, '&#9674;' => true, '&#9824;' => true, '&#9827;' => true,
+        '&#9829;' => true, '&#9830;' => true, '&#8205;' => true,
+    ];
 
-            "&NoBreak;", "&#8288;", "&#x2060;",                 // WORD JOINER (U+2060)
-            "&#6158;", "&#x180E;",                              // MONGOLIAN VOWEL SEPARATOR (U+180E, deprecated) — имени нет
-            "&zwnj;", "&ZeroWidthNonJoiner;", "&#8204;", "&#x200C;", // ZWNJ (U+200C)
-            /// "&zwj;",  "&ZeroWidthJoiner;",  "&#8205;", "&#x200D;",   // ZWJ (U+200D)
-            "&lrm;", "&LeftToRightMark;", "&#8206;", "&#x200E;",     // LRM (U+200E)
-            "&rlm;", "&RightToLeftMark;", "&#8207;", "&#x200F;",     // RLM (U+200F)
-
-            // Управляющие bidi/шейпинга (Cf), устаревшие; именованных нет:
-            "&#8294;", "&#x206A;",  // INHIBIT SYMMETRIC SWAPPING (U+206A)
-            "&#8295;", "&#x206B;",  // ACTIVATE SYMMETRIC SWAPPING (U+206B)
-            "&#8296;", "&#x206C;",  // INHIBIT ARABIC FORM SHAPING (U+206C)
-            "&#8297;", "&#x206D;",  // ACTIVATE ARABIC FORM SHAPING (U+206D)
-            "&#8298;", "&#x206E;",  // NATIONAL DIGIT SHAPES (U+206E)
-            "&#8299;", "&#x206F;",  // NOMINAL DIGIT SHAPES (U+206F)
-
-            // --------------------
-            // Управляющие ASCII (Cc)
-            // --------------------
-            "&Tab;", "&#9;",  "&#x9;",                          // CHARACTER TABULATION (U+0009)
-            "&NewLine;", "&#10;", "&#xA;",                      // LINE FEED (U+000A)
-            "&#13;", "&#xD;",                                   // CARRIAGE RETURN (U+000D) — имени нет
-        ],
-        "",
+    $text = preg_replace_callback(
+        '/&(?:[a-z][a-z0-9]*|#[0-9]+|#x[0-9a-f]+);/i',
+        static function ($m) use ($whiteList) {
+            return isset($whiteList[$m[0]]) ? $m[0] : '';
+        },
         $text
     );
 
-    
     // 2. Удаляем управляющие и форматирующие символы, но оставляем ZWJ
     $text = preg_replace_callback('/[\p{Cc}\p{Cf}]/u', static function ($m) {
         $ch = $m[0];
@@ -373,6 +455,25 @@ function mb_superTrim(string $text): string {
     return preg_replace('/[\p{Z}]+/u', ' ', $text);
 }
 
+
+
+
+/*
+ * Вызывать после normalize_entities_my().
+ * Заменён только шаг 1 исходной mb_superTrim(). Шаги 2–4 сохранены.
+ *
+ * Явный WhiteList печатных именованных сущностей HTML 4.01.
+ * Источник: https://www.w3.org/TR/html401/sgml/entities.html
+ * Из 252 имён исключены 7 пробельных/форматирующих:
+ * shy, ensp, emsp, thinsp, zwnj, lrm, rlm.
+ *
+ * Числовые записи: только кодовые точки разрешённых HTML4-знаков
+ * и печатный ASCII (33–126), перечисленные в массиве буквально.
+ * Прочие записи, включая сущности смайликов, удаляются.
+ * HTML5-имена не разрешены: например, &heartsuit; и &apos;.
+ * Апостроф допустим как &#39; или как настоящий символ Unicode/ASCII.
+ * Настоящие Unicode-эмодзи обрабатываются исходными шагами 2–4.
+ */
 function mb_softTrim(string $text): string {
     
     // Удаляем управляющие и форматирующие символы, но оставляем \n + ZWJ
@@ -394,54 +495,133 @@ function mb_softTrim(string $text): string {
     }, $text);
     
 
-    $text = str_ireplace(
-        [
-            // --------------------
-            // Категория Cf (Format, входит в \p{C})
-            // --------------------
-            // BOM (U+FEFF) — имени нет
-            "&#65279;", "&#xFEFF;",
+    // WhiteList: разрешено только то, что явно перечислено.
+    static $whiteList = [
 
-            // ZERO WIDTH SPACE (U+200B)
-            "&ZeroWidthSpace;", "&#8203;", "&#x200B;",
+        // Печатные именованные сущности HTML 4.01. Регистр значим.
+        '&Aacute;' => true, '&aacute;' => true, '&Acirc;' => true, '&acirc;' => true, '&acute;' => true,
+        '&AElig;' => true, '&aelig;' => true, '&Agrave;' => true, '&agrave;' => true, '&alefsym;' => true,
+        '&Alpha;' => true, '&alpha;' => true, '&amp;' => true, '&and;' => true, '&ang;' => true,
+        '&Aring;' => true, '&aring;' => true, '&asymp;' => true, '&Atilde;' => true, '&atilde;' => true,
+        '&Auml;' => true, '&auml;' => true, '&bdquo;' => true, '&Beta;' => true, '&beta;' => true,
+        '&brvbar;' => true, '&bull;' => true, '&cap;' => true, '&Ccedil;' => true, '&ccedil;' => true,
+        '&cedil;' => true, '&cent;' => true, '&Chi;' => true, '&chi;' => true, '&circ;' => true,
+        '&clubs;' => true, '&cong;' => true, '&copy;' => true, '&crarr;' => true, '&cup;' => true,
+        '&curren;' => true, '&Dagger;' => true, '&dagger;' => true, '&dArr;' => true, '&darr;' => true,
+        '&deg;' => true, '&Delta;' => true, '&delta;' => true, '&diams;' => true, '&divide;' => true,
+        '&Eacute;' => true, '&eacute;' => true, '&Ecirc;' => true, '&ecirc;' => true, '&Egrave;' => true,
+        '&egrave;' => true, '&empty;' => true, '&Epsilon;' => true, '&epsilon;' => true, '&equiv;' => true,
+        '&Eta;' => true, '&eta;' => true, '&ETH;' => true, '&eth;' => true, '&Euml;' => true, '&euml;' => true,
+        '&euro;' => true, '&exist;' => true, '&fnof;' => true, '&forall;' => true, '&frac12;' => true,
+        '&frac14;' => true, '&frac34;' => true, '&frasl;' => true, '&Gamma;' => true, '&gamma;' => true,
+        '&ge;' => true, '&gt;' => true, '&hArr;' => true, '&harr;' => true, '&hearts;' => true,
+        '&hellip;' => true, '&Iacute;' => true, '&iacute;' => true, '&Icirc;' => true, '&icirc;' => true,
+        '&iexcl;' => true, '&Igrave;' => true, '&igrave;' => true, '&image;' => true, '&infin;' => true,
+        '&int;' => true, '&Iota;' => true, '&iota;' => true, '&iquest;' => true, '&isin;' => true,
+        '&Iuml;' => true, '&iuml;' => true, '&Kappa;' => true, '&kappa;' => true, '&Lambda;' => true,
+        '&lambda;' => true, '&lang;' => true, '&laquo;' => true, '&lArr;' => true, '&larr;' => true,
+        '&lceil;' => true, '&ldquo;' => true, '&le;' => true, '&lfloor;' => true, '&lowast;' => true,
+        '&loz;' => true, '&lsaquo;' => true, '&lsquo;' => true, '&lt;' => true, '&macr;' => true,
+        '&mdash;' => true, '&micro;' => true, '&middot;' => true, '&minus;' => true, '&Mu;' => true,
+        '&mu;' => true, '&nabla;' => true, '&ndash;' => true, '&ne;' => true, '&ni;' => true, '&not;' => true,
+        '&notin;' => true, '&nsub;' => true, '&Ntilde;' => true, '&ntilde;' => true, '&Nu;' => true,
+        '&nu;' => true, '&Oacute;' => true, '&oacute;' => true, '&Ocirc;' => true, '&ocirc;' => true,
+        '&OElig;' => true, '&oelig;' => true, '&Ograve;' => true, '&ograve;' => true, '&oline;' => true,
+        '&Omega;' => true, '&omega;' => true, '&Omicron;' => true, '&omicron;' => true, '&oplus;' => true,
+        '&or;' => true, '&ordf;' => true, '&ordm;' => true, '&Oslash;' => true, '&oslash;' => true,
+        '&Otilde;' => true, '&otilde;' => true, '&otimes;' => true, '&Ouml;' => true, '&ouml;' => true,
+        '&para;' => true, '&part;' => true, '&permil;' => true, '&perp;' => true, '&Phi;' => true,
+        '&phi;' => true, '&Pi;' => true, '&pi;' => true, '&piv;' => true, '&plusmn;' => true,
+        '&pound;' => true, '&Prime;' => true, '&prime;' => true, '&prod;' => true, '&prop;' => true,
+        '&Psi;' => true, '&psi;' => true, '&quot;' => true, '&radic;' => true, '&rang;' => true,
+        '&raquo;' => true, '&rArr;' => true, '&rarr;' => true, '&rceil;' => true, '&rdquo;' => true,
+        '&real;' => true, '&reg;' => true, '&rfloor;' => true, '&Rho;' => true, '&rho;' => true,
+        '&rsaquo;' => true, '&rsquo;' => true, '&sbquo;' => true, '&Scaron;' => true, '&scaron;' => true,
+        '&sdot;' => true, '&sect;' => true, '&Sigma;' => true, '&sigma;' => true, '&sigmaf;' => true,
+        '&sim;' => true, '&spades;' => true, '&sub;' => true, '&sube;' => true, '&sum;' => true,
+        '&sup1;' => true, '&sup2;' => true, '&sup3;' => true, '&sup;' => true, '&supe;' => true,
+        '&szlig;' => true, '&Tau;' => true, '&tau;' => true, '&there4;' => true, '&Theta;' => true,
+        '&theta;' => true, '&thetasym;' => true, '&THORN;' => true, '&thorn;' => true, '&tilde;' => true,
+        '&times;' => true, '&trade;' => true, '&Uacute;' => true, '&uacute;' => true, '&uArr;' => true,
+        '&uarr;' => true, '&Ucirc;' => true, '&ucirc;' => true, '&Ugrave;' => true, '&ugrave;' => true,
+        '&uml;' => true, '&upsih;' => true, '&Upsilon;' => true, '&upsilon;' => true, '&Uuml;' => true,
+        '&uuml;' => true, '&weierp;' => true, '&Xi;' => true, '&xi;' => true, '&Yacute;' => true,
+        '&yacute;' => true, '&yen;' => true, '&Yuml;' => true, '&yuml;' => true, '&Zeta;' => true,
+        '&zeta;' => true, '&nbsp;' => true, '&zwj;' => true,
 
-            // WORD JOINER (U+2060)
-            "&NoBreak;", "&#8288;", "&#x2060;",
+        // Десятичные записи этих же символов и печатного ASCII.
+        '&#33;' => true, '&#34;' => true, '&#35;' => true, '&#36;' => true, '&#37;' => true, '&#38;' => true,
+        '&#39;' => true, '&#40;' => true, '&#41;' => true, '&#42;' => true, '&#43;' => true, '&#44;' => true,
+        '&#45;' => true, '&#46;' => true, '&#47;' => true, '&#48;' => true, '&#49;' => true, '&#50;' => true,
+        '&#51;' => true, '&#52;' => true, '&#53;' => true, '&#54;' => true, '&#55;' => true, '&#56;' => true,
+        '&#57;' => true, '&#58;' => true, '&#59;' => true, '&#60;' => true, '&#61;' => true, '&#62;' => true,
+        '&#63;' => true, '&#64;' => true, '&#65;' => true, '&#66;' => true, '&#67;' => true, '&#68;' => true,
+        '&#69;' => true, '&#70;' => true, '&#71;' => true, '&#72;' => true, '&#73;' => true, '&#74;' => true,
+        '&#75;' => true, '&#76;' => true, '&#77;' => true, '&#78;' => true, '&#79;' => true, '&#80;' => true,
+        '&#81;' => true, '&#82;' => true, '&#83;' => true, '&#84;' => true, '&#85;' => true, '&#86;' => true,
+        '&#87;' => true, '&#88;' => true, '&#89;' => true, '&#90;' => true, '&#91;' => true, '&#92;' => true,
+        '&#93;' => true, '&#94;' => true, '&#95;' => true, '&#96;' => true, '&#97;' => true, '&#98;' => true,
+        '&#99;' => true, '&#100;' => true, '&#101;' => true, '&#102;' => true, '&#103;' => true,
+        '&#104;' => true, '&#105;' => true, '&#106;' => true, '&#107;' => true, '&#108;' => true,
+        '&#109;' => true, '&#110;' => true, '&#111;' => true, '&#112;' => true, '&#113;' => true,
+        '&#114;' => true, '&#115;' => true, '&#116;' => true, '&#117;' => true, '&#118;' => true,
+        '&#119;' => true, '&#120;' => true, '&#121;' => true, '&#122;' => true, '&#123;' => true,
+        '&#124;' => true, '&#125;' => true, '&#126;' => true, '&#161;' => true, '&#162;' => true,
+        '&#163;' => true, '&#164;' => true, '&#165;' => true, '&#166;' => true, '&#167;' => true,
+        '&#168;' => true, '&#169;' => true, '&#170;' => true, '&#171;' => true, '&#172;' => true,
+        '&#174;' => true, '&#175;' => true, '&#176;' => true, '&#177;' => true, '&#178;' => true,
+        '&#179;' => true, '&#180;' => true, '&#181;' => true, '&#182;' => true, '&#183;' => true,
+        '&#184;' => true, '&#185;' => true, '&#186;' => true, '&#187;' => true, '&#188;' => true,
+        '&#189;' => true, '&#190;' => true, '&#191;' => true, '&#192;' => true, '&#193;' => true,
+        '&#194;' => true, '&#195;' => true, '&#196;' => true, '&#197;' => true, '&#198;' => true,
+        '&#199;' => true, '&#200;' => true, '&#201;' => true, '&#202;' => true, '&#203;' => true,
+        '&#204;' => true, '&#205;' => true, '&#206;' => true, '&#207;' => true, '&#208;' => true,
+        '&#209;' => true, '&#210;' => true, '&#211;' => true, '&#212;' => true, '&#213;' => true,
+        '&#214;' => true, '&#215;' => true, '&#216;' => true, '&#217;' => true, '&#218;' => true,
+        '&#219;' => true, '&#220;' => true, '&#221;' => true, '&#222;' => true, '&#223;' => true,
+        '&#224;' => true, '&#225;' => true, '&#226;' => true, '&#227;' => true, '&#228;' => true,
+        '&#229;' => true, '&#230;' => true, '&#231;' => true, '&#232;' => true, '&#233;' => true,
+        '&#234;' => true, '&#235;' => true, '&#236;' => true, '&#237;' => true, '&#238;' => true,
+        '&#239;' => true, '&#240;' => true, '&#241;' => true, '&#242;' => true, '&#243;' => true,
+        '&#244;' => true, '&#245;' => true, '&#246;' => true, '&#247;' => true, '&#248;' => true,
+        '&#249;' => true, '&#250;' => true, '&#251;' => true, '&#252;' => true, '&#253;' => true,
+        '&#254;' => true, '&#255;' => true, '&#338;' => true, '&#339;' => true, '&#352;' => true,
+        '&#353;' => true, '&#376;' => true, '&#402;' => true, '&#710;' => true, '&#732;' => true,
+        '&#913;' => true, '&#914;' => true, '&#915;' => true, '&#916;' => true, '&#917;' => true,
+        '&#918;' => true, '&#919;' => true, '&#920;' => true, '&#921;' => true, '&#922;' => true,
+        '&#923;' => true, '&#924;' => true, '&#925;' => true, '&#926;' => true, '&#927;' => true,
+        '&#928;' => true, '&#929;' => true, '&#931;' => true, '&#932;' => true, '&#933;' => true,
+        '&#934;' => true, '&#935;' => true, '&#936;' => true, '&#937;' => true, '&#945;' => true,
+        '&#946;' => true, '&#947;' => true, '&#948;' => true, '&#949;' => true, '&#950;' => true,
+        '&#951;' => true, '&#952;' => true, '&#953;' => true, '&#954;' => true, '&#955;' => true,
+        '&#956;' => true, '&#957;' => true, '&#958;' => true, '&#959;' => true, '&#960;' => true,
+        '&#961;' => true, '&#962;' => true, '&#963;' => true, '&#964;' => true, '&#965;' => true,
+        '&#966;' => true, '&#967;' => true, '&#968;' => true, '&#969;' => true, '&#977;' => true,
+        '&#978;' => true, '&#982;' => true, '&#8211;' => true, '&#8212;' => true, '&#8216;' => true,
+        '&#8217;' => true, '&#8218;' => true, '&#8220;' => true, '&#8221;' => true, '&#8222;' => true,
+        '&#8224;' => true, '&#8225;' => true, '&#8226;' => true, '&#8230;' => true, '&#8240;' => true,
+        '&#8242;' => true, '&#8243;' => true, '&#8249;' => true, '&#8250;' => true, '&#8254;' => true,
+        '&#8260;' => true, '&#8364;' => true, '&#8465;' => true, '&#8472;' => true, '&#8476;' => true,
+        '&#8482;' => true, '&#8501;' => true, '&#8592;' => true, '&#8593;' => true, '&#8594;' => true,
+        '&#8595;' => true, '&#8596;' => true, '&#8629;' => true, '&#8656;' => true, '&#8657;' => true,
+        '&#8658;' => true, '&#8659;' => true, '&#8660;' => true, '&#8704;' => true, '&#8706;' => true,
+        '&#8707;' => true, '&#8709;' => true, '&#8711;' => true, '&#8712;' => true, '&#8713;' => true,
+        '&#8715;' => true, '&#8719;' => true, '&#8721;' => true, '&#8722;' => true, '&#8727;' => true,
+        '&#8730;' => true, '&#8733;' => true, '&#8734;' => true, '&#8736;' => true, '&#8743;' => true,
+        '&#8744;' => true, '&#8745;' => true, '&#8746;' => true, '&#8747;' => true, '&#8756;' => true,
+        '&#8764;' => true, '&#8773;' => true, '&#8776;' => true, '&#8800;' => true, '&#8801;' => true,
+        '&#8804;' => true, '&#8805;' => true, '&#8834;' => true, '&#8835;' => true, '&#8836;' => true,
+        '&#8838;' => true, '&#8839;' => true, '&#8853;' => true, '&#8855;' => true, '&#8869;' => true,
+        '&#8901;' => true, '&#8968;' => true, '&#8969;' => true, '&#8970;' => true, '&#8971;' => true,
+        '&#9001;' => true, '&#9002;' => true, '&#9674;' => true, '&#9824;' => true, '&#9827;' => true,
+        '&#9829;' => true, '&#9830;' => true, '&#160;' => true, '&#8205;' => true,
+    ];
 
-            // MONGOLIAN VOWEL SEPARATOR (U+180E) — имени нет
-            "&#6158;", "&#x180E;",
-
-            // ZERO WIDTH NON-JOINER (U+200C)
-            "&zwnj;", "&ZeroWidthNonJoiner;", "&#8204;", "&#x200C;",
-
-            // ZERO WIDTH JOINER (U+200D)
-            /// "&zwj;", "&ZeroWidthJoiner;", "&#8205;", "&#x200D;",
-
-            // LEFT-TO-RIGHT MARK (U+200E)
-            "&lrm;", "&LeftToRightMark;", "&#8206;", "&#x200E;",
-
-            // RIGHT-TO-LEFT MARK (U+200F)
-            "&rlm;", "&RightToLeftMark;", "&#8207;", "&#x200F;",
-
-            // 206A–206F — имён нет
-            "&#8294;", "&#x206A;",  // INHIBIT SYMMETRIC SWAPPING
-            "&#8295;", "&#x206B;",  // ACTIVATE SYMMETRIC SWAPPING
-            "&#8296;", "&#x206C;",  // INHIBIT ARABIC FORM SHAPING
-            "&#8297;", "&#x206D;",  // ACTIVATE ARABIC FORM SHAPING
-            "&#8298;", "&#x206E;",  // NATIONAL DIGIT SHAPES
-            "&#8299;", "&#x206F;",  // NOMINAL DIGIT SHAPES
-
-            // --------------------
-            // Управляющие ASCII (Cc) как сущности
-            // --------------------
-            // CHARACTER TABULATION (U+0009)
-            "&Tab;", "&#9;", "&#x9;",
-            // LINE FEED (U+000A)
-            "&NewLine;", "&#10;", "&#xA;",
-            // CARRIAGE RETURN (U+000D) — имени нет
-            "&#13;", "&#xD;",
-        ],
-        "",
+    $text = preg_replace_callback(
+        '/&(?:[a-z][a-z0-9]*|#[0-9]+|#x[0-9a-f]+);/i',
+        static function ($m) use ($whiteList) {
+            return isset($whiteList[$m[0]]) ? $m[0] : '';
+        },
         $text
     );
 
@@ -669,6 +849,8 @@ function array_insert_m(&$array, $position, $insert) {
 }
 
 function filterUsername(string $username): bool {
+
+    $username = normalize_entities_my($username);
 
     // Невалидный UTF-8
     if(!mb_check_encoding($username, 'UTF-8')) {
