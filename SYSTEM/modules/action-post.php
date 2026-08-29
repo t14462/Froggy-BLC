@@ -591,7 +591,7 @@ function savePage() {
             .$textedit2."</textarea><div class='el-in-line'> <input type='submit' value='💾 Отправить' />
 
             <a href='?".$queryBase."&amp;leaveedit=1&amp;csrf=$csrf'>Отменить ⬅️</a>
-            <a href='?".$queryBase."&amp;pagedel=1&amp;csrf=$csrf' id='pagedelbutton'>❌ Удалить страницу</a>
+            <a href='?".$queryBase."&amp;pagedel=1&amp;leaveedit=1&amp;csrf=$csrf' id='pagedelbutton'>❌ Удалить страницу</a>
 
             </div></fieldset></form>";
 
