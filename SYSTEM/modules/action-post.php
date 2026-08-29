@@ -2117,8 +2117,8 @@ function registerp() {
     $errmsg = "";
 
     // Validate password strength
-    $uppercase    = preg_match('@[A-Z]@', $password1);
-    $lowercase    = preg_match('@[a-z]@', $password1);
+    $uppercase    = preg_match('@\p{Lu}@u', $password1);
+    $lowercase    = preg_match('@\p{Ll}@u', $password1);
     $number       = preg_match('@[0-9]@', $password1);
     $specialChars = preg_match('@[^\w]@', $password1);
 
@@ -2299,8 +2299,8 @@ function userHashCalcp() {
         $result = "";
 
         // Validate password strength
-        $uppercase    = preg_match('@[A-Z]@', $password1);
-        $lowercase    = preg_match('@[a-z]@', $password1);
+        $uppercase    = preg_match('@\p{Lu}@u', $password1);
+        $lowercase    = preg_match('@\p{Ll}@u', $password1);
         $number       = preg_match('@[0-9]@', $password1);
         $specialChars = preg_match('@[^\w]@', $password1);
 
