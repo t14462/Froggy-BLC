@@ -86,7 +86,7 @@ Web-Дизайнер: Артемев Лебедий.</em>
 
 if($checkpermission) {
 
-    $errmsg .= "<aside class='big infobox'><strong><u>Никому</u> не давайте свой <em>секретный CSRF-Токен!</em><br />И <u>не публикуйте Ссылку Адреса</u>, находясь в <em>Админ-Панели!</em></strong></aside>";
+    $errmsg .= "<aside class='big infobox'><strong><u>Никому</u> не давайте свой <em>секретный CSRF-Токен!</em><br /><u>Не публикуйте Ссылку Адреса</u>, находясь в <em>Админ-Панели!</em></strong></aside>";
 
     if(gnuCatTailAvailable()) {
         $footer .= "<span title='Exec + Utils: ЕСТЬ.'>🟢</span>";
