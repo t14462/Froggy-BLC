@@ -489,14 +489,18 @@ function validateUserHash(input) {
 
 
 /*
- * Аналог PHP:
+ * Практический аналог PHP:
  *
- * htmlspecialchars($value, ENT_QUOTES, 'UTF-8')
+ * htmlspecialchars($value, ENT_QUOTES, 'UTF-8', false)
  */
 function htmlspecialchars(value) {
 
     return value
-        .replace(/&/g, '&amp;')
+        // Экранируем только &, не являющийся началом готовой сущности
+        .replace(
+            /&(?!(?:[A-Za-z][A-Za-z0-9]*|#\d+|#[xX][0-9A-Fa-f]+);)/g,
+            '&amp;'
+        )
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')

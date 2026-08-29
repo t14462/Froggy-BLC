@@ -2123,7 +2123,7 @@ function registerp() {
     $specialChars = preg_match('@[^\w]@', $password1);
 
     if(!filterUsername($username)) {
-        $errmsg = "<h1>ОШИБКА.</h1><p class='big'><strong>Имя содержит недопустимые символы или пустое.</strong></p><p class='big'><strong>Минимальная Длина Имени = 3<br />Максимальная Длина Имени = 25</strong></p>";
+        $errmsg = "<h1>ОШИБКА.</h1><p class='big'><strong>Имя содержит недопустимые символы или пустое.</strong></p><p class='big'><strong>Минимальная Длина Имени = 3<br />Максимальная Длина Имени = 50</strong></p>";
     } elseif(array_key_exists($username, $cred)) {
         $errmsg = "<h1>ОШИБКА.</h1><p class='big'><strong>Такой пользователь уже существует!</strong></p>";
     } elseif($password1 !== $password2) {
@@ -2150,7 +2150,7 @@ function registerp() {
             <li><strong>3</strong> = <em>Редакторы - не могут сбрасывать лог и тереть комменты. (Редактируют статьи и перемещают). Могут оставлять комментарии с HTML и не вводить капчу.</em></li>
             <li><strong>4</strong> = <em>Администраторы - могут всё.</em></li>
         </ul>
-        <p class='big'>ЭТО СЕКРЕТНАЯ СТРОКА! ДЛЯ ЕЁ ДОБАВЛЕНИЯ СВЯЖИТЕСЬ С АДМИНОМ, И БОЛЬШЕ НИКОМУ ЕЁ НЕ ДАВАЙТЕ!</p>
+        <p class='big'>ЭТО СЕКРЕТНАЯ СТРОКА! ДЛЯ ЕЁ ДОБАВЛЕНИЯ СВЯЖИТЕСЬ С АДМИНОМ,<br />И БОЛЬШЕ НИКОМУ ЕЁ НЕ ДАВАЙТЕ!</p>
         ";
     }
 
@@ -2305,7 +2305,7 @@ function userHashCalcp() {
         $specialChars = preg_match('@[^\w]@', $password1);
 
         if(!filterUsername($username)) {
-            $errmsg = "<h1>ОШИБКА.</h1><p class='big'><strong>Имя содержит недопустимые символы или пустое.</strong></p><p class='big'><strong>Минимальная Длина Имени = 3<br />Максимальная Длина Имени = 25</strong></p>";
+            $errmsg = "<h1>ОШИБКА.</h1><p class='big'><strong>Имя содержит недопустимые символы или пустое.</strong></p><p class='big'><strong>Минимальная Длина Имени = 3<br />Максимальная Длина Имени = 50</strong></p>";
         } elseif($password1 !== $password2) {
             $errmsg = "<h1>ОШИБКА.</h1><p class='big'><strong>Пароль и проверка не совпадают!</strong></p>";
         } elseif($password1 === $username) {
