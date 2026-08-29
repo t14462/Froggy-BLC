@@ -1177,7 +1177,11 @@ function loginPage() {
 
     
 
-    <legend>Данные входа:</legend><input type='text' name='username' id='username' value='' /><label for='username'>Имя пользователя</label><br />
+    <legend>Данные входа:</legend>
+    
+    <p class='big'>Разрешены Сущности HTML-4.01,<br />(Специальные Символы в Имени)</p>
+    
+    <input type='text' name='username' id='username' value='' /><label for='username'>Имя пользователя</label><br />
     <input type='password' name='password' id='password' value='' /><label for='password'>Пароль</label><br />
     <input type='submit' value='☑️ Войти' /></fieldset></form><hr />
     <p><strong class='big'><a href='?registerg=1'>РЕГИСТРАЦИЯ</a></strong></p>";
