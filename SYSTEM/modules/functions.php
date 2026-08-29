@@ -444,8 +444,12 @@ function mb_superTrim(string $text): string {
             return $ch;
         }
 
+        if ($ch === "\r") {
+            return "";
+        }
+
         // Остальное выкидываем
-        return '';
+        return ' ';
     }, $text);
 
     // 3. Удаляем Unicode-пробелы по краям
@@ -485,13 +489,17 @@ function mb_softTrim(string $text): string {
             return "\n";
         }
 
+        if ($ch === "\r") {
+            return "";
+        }
+
         // ZWJ (U+200D) и другие — нужны для эмоджи типа 👩‍💻
         if ($ch === "\u{200D}" || $ch === "\u{FE0F}" || $ch === "\u{FE0E}") {
             return $ch;
         }
 
         // Остальное выкидываем
-        return '';
+        return ' ';
     }, $text);
     
 

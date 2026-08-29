@@ -457,7 +457,7 @@ function validateUsername(input) {
     }
     */
 
-    if(/[\x00-\x1F\x7F\\]/.test(value)) {
+    if(/[\x00-\x1F\x7F-\x9F\u2028\u2029\\]/.test(value)) {
         valid = false;
     }
 
@@ -478,7 +478,7 @@ function validateUserHash(input) {
 
     const value = input.value.trim();
 
-    const valid = /^[0-9a-f]{128}$/i.test(value);
+    const valid = /^[0-9a-f]{128}$/.test(value);
 
     input.classList.toggle('invalidField', !valid);
 
@@ -513,7 +513,7 @@ function htmlspecialchars(value) {
  */
 function evaluateUserList() {
 
-    const forms = Array.from(document.querySelectorAll('.user-form'));
+    const forms = Array.from(document.querySelectorAll('#admUserListGenerator .user-form'));
     const output = document.getElementById('generatedUserArrayOutput');
 
     const usernames = new Map();
@@ -523,9 +523,9 @@ function evaluateUserList() {
      */
     for(const form of forms) {
 
-        const nameInput = form.querySelector('.user-name');
-        const hashInput = form.querySelector('.user-hash');
-        const privilegesSelect = form.querySelector('.user-privileges');
+        const nameInput = form.querySelector('#admUserListGenerator .user-name');
+        const hashInput = form.querySelector('#admUserListGenerator .user-hash');
+        const privilegesSelect = form.querySelector('#admUserListGenerator .user-privileges');
 
         const name = nameInput.value.trim();
         const nameLength = Array.from(name).length;
@@ -536,10 +536,10 @@ function evaluateUserList() {
             // name.trim() !== '' &&
             nameLength >= 3 &&
             nameLength <= 25 &&
-            !/[\x00-\x1F\x7F\\]/.test(name);
+            !/[\x00-\x1F\x7F-\x9F\u2028\u2029\\]/.test(name);
 
         const hashValid =
-            /^[0-9a-f]{128}$/i.test(hash);
+            /^[0-9a-f]{128}$/.test(hash);
 
         const privilegesValid =
             /^[0-4]$/.test(privileges);
@@ -586,9 +586,9 @@ function evaluateUserList() {
 
     for(const form of forms) {
 
-        const nameInput = form.querySelector('.user-name');
-        const hashInput = form.querySelector('.user-hash');
-        const privilegesSelect = form.querySelector('.user-privileges');
+        const nameInput = form.querySelector('#admUserListGenerator .user-name');
+        const hashInput = form.querySelector('#admUserListGenerator .user-hash');
+        const privilegesSelect = form.querySelector('#admUserListGenerator .user-privileges');
 
         /*
          * Если хотя бы одно поле ошибочно —
@@ -619,7 +619,7 @@ function evaluateUserList() {
     if(submitButton) {
         submitButton.disabled =
             forms.length === 0 ||
-            document.querySelector('.invalidField') !== null;
+            document.querySelector('#admUserListGenerator .invalidField') !== null;
     }
 }
 
@@ -629,14 +629,14 @@ function evaluateUserList() {
  */
 function removeThisUserForm(button) {
 
-    const form = button.closest('.user-form');
+    const form = button.closest('#admUserListGenerator .user-form');
 
     if(!form) {
         return;
     }
 
-    const name = form.querySelector('.user-name').value.trim();
-    const hash = form.querySelector('.user-hash').value.trim();
+    const name = form.querySelector('#admUserListGenerator .user-name').value.trim();
+    const hash = form.querySelector('#admUserListGenerator .user-hash').value.trim();
 
     // Пустую форму удаляем сразу, без вопроса.
     if(name === '' && hash === '') {
@@ -695,7 +695,7 @@ function addUserForm() {
      */
     evaluateUserList();
 
-    form.querySelector('.user-name').focus();
+    form.querySelector('#admUserListGenerator .user-name').focus();
 }
 
 
@@ -714,8 +714,8 @@ document.addEventListener('DOMContentLoaded', function() {
     document.addEventListener('input', function(event) {
 
         if(
-            event.target.matches('.user-name') ||
-            event.target.matches('.user-hash')
+            event.target.matches('#admUserListGenerator .user-name') ||
+            event.target.matches('#admUserListGenerator .user-hash')
         ) {
             evaluateUserList();
         }
@@ -724,7 +724,7 @@ document.addEventListener('DOMContentLoaded', function() {
     /*
      * Удаляем первую (dummy) форму, если она существует.
      */
-    document.querySelector('.user-form')?.remove();
+    document.querySelector('#admUserListGenerator .user-form')?.remove();
 
     evaluateUserList();
 });

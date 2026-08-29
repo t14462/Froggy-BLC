@@ -2082,7 +2082,8 @@ function editUsers() {
             <li><strong>2</strong> = <em>Модераторы комментариев. Могут только удалять комменты. Могут оставлять комментарии с HTML и не вводить капчу.</em></li>
             <li><strong>3</strong> = <em>Редакторы - не могут сбрасывать лог и тереть комменты. (Редактируют статьи и перемещают). Могут оставлять комментарии с HTML и не вводить капчу.</em></li>
             <li><strong>4</strong> = <em>Администраторы - могут всё.</em></li>
-        </ul><br />";
+        </ul><br />
+        <div id='admUserListGenerator'>";
 
         foreach($cred as $username => $data) {
 
@@ -2133,7 +2134,7 @@ function editUsers() {
 
         <input type="hidden" name="csrf" value="'.$csrf.'" />
 
-        <input type="submit" id="UserFormBaseSubmit" value="💾" onclick="return confirm(\'Вы уверены?\');" /></form></div>
+        <input type="submit" id="UserFormBaseSubmit" value="💾" onclick="return confirm(\'Вы уверены?\');" /></form></div></div>
         <br /><br /><br />
         <iframe src="?uhcalc=1" style="width: 100%; height: 50vh; border: none;" onload="PseudoAJAX(this, \'admUserHashCalculator\')">Калькулятор Хэша Пользователя</iframe>
         <div id="admUserHashCalculator"></div>';
