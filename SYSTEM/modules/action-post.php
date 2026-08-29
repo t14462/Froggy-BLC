@@ -2318,9 +2318,9 @@ function userHashCalcp() {
 
             $userhash = hash('sha512', $username."@".$password1."@".generateSalt($username, $password1).$mySalt);
 
-            /// $username = str_replace("&", "&amp;", $username);
+            $username = str_replace("&", "&amp;", $username);
 
-            $result .= "
+            $result .= "<p class='big'><strong>$username</strong></p>
             <p><code style='display: inline-block; width: 100%; padding: .75rem; font-size: 1.4rem; text-wrap: nowrap; overflow-x: scroll;'>$userhash</code></p>";
         }
 
