@@ -855,6 +855,8 @@ function filterUsername(string $username): bool {
         return false;
     }
 
+    $lenghtCheck = $username;
+
     $username = normalize_entities_my($username);
 
     // Пустое имя или имя, состоящее только из пробельных символов
@@ -887,7 +889,7 @@ function filterUsername(string $username): bool {
         return false;
     }
 
-    if(mb_strlen($usernameDec) < 3 || mb_strlen($usernameDec) > 25) {
+    if(mb_strlen($usernameDec) < 3 || mb_strlen($lenghtCheck) > 50) {
         return false;
     }
 
