@@ -357,7 +357,7 @@ function mb_superTrim(string $text): string {
         '&uml;' => true, '&upsih;' => true, '&Upsilon;' => true, '&upsilon;' => true, '&Uuml;' => true,
         '&uuml;' => true, '&weierp;' => true, '&Xi;' => true, '&xi;' => true, '&Yacute;' => true,
         '&yacute;' => true, '&yen;' => true, '&Yuml;' => true, '&yuml;' => true, '&Zeta;' => true,
-        '&zeta;' => true, '&zwj;' => true,
+        '&zeta;' => true, '&zwj;' => true, '&shy;' => true,
 
         // Десятичные записи этих же символов и печатного ASCII.
         '&#33;' => true, '&#34;' => true, '&#35;' => true, '&#36;' => true, '&#37;' => true, '&#38;' => true,
@@ -424,7 +424,7 @@ function mb_superTrim(string $text): string {
         '&#8838;' => true, '&#8839;' => true, '&#8853;' => true, '&#8855;' => true, '&#8869;' => true,
         '&#8901;' => true, '&#8968;' => true, '&#8969;' => true, '&#8970;' => true, '&#8971;' => true,
         '&#9001;' => true, '&#9002;' => true, '&#9674;' => true, '&#9824;' => true, '&#9827;' => true,
-        '&#9829;' => true, '&#9830;' => true, '&#8205;' => true,
+        '&#9829;' => true, '&#9830;' => true, '&#8205;' => true, '&#173;' => true,
     ];
 
     $text = preg_replace_callback(
@@ -441,6 +441,11 @@ function mb_superTrim(string $text): string {
 
         // ZWJ (U+200D) и другие — нужны для эмоджи типа 👩‍💻
         if ($ch === "\u{200D}" || $ch === "\u{FE0F}" || $ch === "\u{FE0E}") {
+            return $ch;
+        }
+
+        // Мягкий перенос
+        if ($ch === "\u{00AD}") {
             return $ch;
         }
 
@@ -491,6 +496,11 @@ function mb_softTrim(string $text): string {
 
         if ($ch === "\r") {
             return "";
+        }
+
+        // Мягкий перенос
+        if ($ch === "\u{00AD}") {
+            return $ch;
         }
 
         // ZWJ (U+200D) и другие — нужны для эмоджи типа 👩‍💻
@@ -555,7 +565,7 @@ function mb_softTrim(string $text): string {
         '&uml;' => true, '&upsih;' => true, '&Upsilon;' => true, '&upsilon;' => true, '&Uuml;' => true,
         '&uuml;' => true, '&weierp;' => true, '&Xi;' => true, '&xi;' => true, '&Yacute;' => true,
         '&yacute;' => true, '&yen;' => true, '&Yuml;' => true, '&yuml;' => true, '&Zeta;' => true,
-        '&zeta;' => true, '&nbsp;' => true, '&zwj;' => true,
+        '&zeta;' => true, '&nbsp;' => true, '&zwj;' => true, '&shy;' => true,
 
         // Десятичные записи этих же символов и печатного ASCII.
         '&#33;' => true, '&#34;' => true, '&#35;' => true, '&#36;' => true, '&#37;' => true, '&#38;' => true,
@@ -622,7 +632,7 @@ function mb_softTrim(string $text): string {
         '&#8838;' => true, '&#8839;' => true, '&#8853;' => true, '&#8855;' => true, '&#8869;' => true,
         '&#8901;' => true, '&#8968;' => true, '&#8969;' => true, '&#8970;' => true, '&#8971;' => true,
         '&#9001;' => true, '&#9002;' => true, '&#9674;' => true, '&#9824;' => true, '&#9827;' => true,
-        '&#9829;' => true, '&#9830;' => true, '&#160;' => true, '&#8205;' => true,
+        '&#9829;' => true, '&#9830;' => true, '&#160;' => true, '&#8205;' => true, '&#173;' => true,
     ];
 
     $text = preg_replace_callback(
