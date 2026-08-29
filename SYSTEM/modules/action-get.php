@@ -1179,8 +1179,6 @@ function loginPage() {
 
     <legend>Данные входа:</legend>
     
-    <p class='big'>Разрешены Сущности HTML-4.01,<br />(Специальные Символы в Имени)</p>
-    
     <input type='text' name='username' id='username' value='' /><label for='username'>Имя пользователя</label><br />
     <input type='password' name='password' id='password' value='' /><label for='password'>Пароль</label><br />
     <input type='submit' value='☑️ Войти' /></fieldset></form><hr />
@@ -2180,7 +2178,11 @@ function userHashCalcg() {
     <body>
     <form method='post'><fieldset>
 
-    <legend><strong>Калькулятор User-Hash.</strong> Данные входа:</legend><input type='text' name='uhusername' id='rusername' value='' /><label for='rusername'>Имя пользователя</label><br />
+    <legend><strong>Калькулятор User-Hash.</strong> Данные входа:</legend>
+    
+    <p class='big'>Разрешены Сущности HTML-4.01,<br />(Специальные Символы в Имени)</p>
+    
+    <input type='text' name='uhusername' id='rusername' value='' /><label for='rusername'>Имя пользователя</label><br />
     <input type='password' name='uhpassword1' id='rpassword1' value='' /><label for='rpassword1'>Пароль</label><br />
     <input type='password' name='uhpassword2' id='rpassword2' value='' /><label for='rpassword2'>Проверка</label><br />
     <input type='submit' value='⚛️ Вычислить' /></fieldset></form>
