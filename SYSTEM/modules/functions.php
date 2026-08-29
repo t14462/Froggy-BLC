@@ -293,8 +293,8 @@ function set_cookie(string $name, string $value, int $expires): bool
  *
  * Явный WhiteList печатных именованных сущностей HTML 4.01.
  * Источник: https://www.w3.org/TR/html401/sgml/entities.html
- * Из 252 имён исключены 8 пробельных/форматирующих:
- * nbsp, shy, ensp, emsp, thinsp, zwnj, lrm, rlm.
+ * Из 252 имён исключены 7 пробельных/форматирующих:
+ * nbsp, ensp, emsp, thinsp, zwnj, lrm, rlm.
  *
  * Числовые записи: только кодовые точки разрешённых HTML4-знаков
  * и печатный ASCII (33–126), перечисленные в массиве буквально.
@@ -473,8 +473,8 @@ function mb_superTrim(string $text): string {
  *
  * Явный WhiteList печатных именованных сущностей HTML 4.01.
  * Источник: https://www.w3.org/TR/html401/sgml/entities.html
- * Из 252 имён исключены 7 пробельных/форматирующих:
- * shy, ensp, emsp, thinsp, zwnj, lrm, rlm.
+ * Из 252 имён исключены 6 пробельных/форматирующих:
+ * ensp, emsp, thinsp, zwnj, lrm, rlm.
  *
  * Числовые записи: только кодовые точки разрешённых HTML4-знаков
  * и печатный ASCII (33–126), перечисленные в массиве буквально.
