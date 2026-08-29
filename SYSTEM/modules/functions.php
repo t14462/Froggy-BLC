@@ -1054,7 +1054,7 @@ function filter_filename(string $filename): string {
     $limit = ($ext !== '') ? max(1, 255 - (strlen($ext) + 1)) : 255;
     $base  = mb_strcut($base, 0, $limit, 'UTF-8');
 
-    if($base === '' || strlen($ext) > 10) die();
+    if($base === '' || strlen($ext) > 10) die("PANIC: Incorrect File Name!");
 
     return ($ext !== '') ? ($base . '.' . $ext) : $base;
 }
