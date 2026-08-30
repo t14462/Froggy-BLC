@@ -1007,39 +1007,83 @@ function canProceed($datip) {
     return true; // Можно продолжать
 }
 
+
+
 function refreshhandle($time, $link, $update = true) {
 
     global $head;
 
-    if ($update) {
+    if($update) {
         refreshCaches();
         unlockByName($_SESSION['username'] ?? 'dummy');
     }
 
     $time = (int)$time;
 
-    $linkHtml = htmlspecialchars($link, ENT_QUOTES | ENT_HTML401 | ENT_SUBSTITUTE, 'UTF-8', false);
-    $linkJs   = json_encode($link, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT);
+    // Проверяем адрес до HTML- и JavaScript-экранирования.
+    $link = safeRequestUri($link);
 
-    if ($time > 0) {
-        $head .= "\n<noscript><meta http-equiv='refresh' content='{$time};url={$linkHtml}' /></noscript>
-        <script>
-            function addrrefr() {
-                setTimeout(function() {
-                    window.location.replace({$linkJs});
-                }, {$time} * 1000);
-            }
-            window.addEventListener('DOMContentLoaded', addrrefr);
-        </script>\n";
+    if(!mb_check_encoding($link, 'UTF-8')) {
+        die('PANIC: Broken Redirect URL Encoding!');
+    }
+
+    $linkHtml = htmlspecialchars(
+        $link,
+        ENT_QUOTES | ENT_HTML401 | ENT_SUBSTITUTE,
+        'UTF-8',
+        true
+    );
+
+    $linkJs = json_encode(
+        $link,
+        JSON_HEX_TAG |
+        JSON_HEX_AMP |
+        JSON_HEX_APOS |
+        JSON_HEX_QUOT |
+        JSON_THROW_ON_ERROR
+    );
+
+    if($time > 0) {
+
+        $head .= "
+            <noscript>
+                <meta http-equiv='refresh' content='{$time};url={$linkHtml}' />
+            </noscript>
+
+            <script>
+                window.addEventListener('DOMContentLoaded', function() {
+
+                    setTimeout(function() {
+                        window.location.replace({$linkJs});
+                    }, {$time} * 1000);
+                });
+            </script>
+        ";
+
     } else {
+
         exit(
-            "<!DOCTYPE html><html><head><meta charset='utf-8' />" .
-            "<noscript><meta http-equiv='refresh' content='0;url={$linkHtml}' /></noscript>" .
-            "<script>location.replace({$linkJs});</script>" .
-            "</head><body>&nbsp;</body></html>"
+            "<!DOCTYPE html>
+            <html>
+                <head>
+                    <meta charset='UTF-8' />
+
+                    <noscript>
+                        <meta http-equiv='refresh' content='0;url={$linkHtml}' />
+                    </noscript>
+
+                    <script>
+                        window.location.replace({$linkJs});
+                    </script>
+                </head>
+
+                <body>&nbsp;</body>
+            </html>"
         );
     }
 }
+
+
 
 function filter_filename(string $filename): string {
 

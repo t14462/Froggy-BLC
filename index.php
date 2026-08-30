@@ -22,43 +22,57 @@ $cred['dummy'] = "0<!!!>6f2d8413fc885ef73fcd4166ee768d8664b74e539701b1a703349351
 $mySalt = 0;
 
 
-function safeRequestUri(mixed $uri): string
+
+function safeRequestUri(?string $uri): string
 {
+    $fallback = '/';
 
-    $fallback = "/";
-
-    if(!is_string($uri)) {
+    if(!mb_check_encoding($uri, 'UTF-8')) {
         return $fallback;
     }
 
-    if($uri === '' || $uri[0] !== '/') {
+    if($uri === null || $uri === '') {
         return $fallback;
     }
 
-    // Не принимать protocol-relative вид: //evil.example/path
-    if(isset($uri[1]) && $uri[1] === '/') {
+    // Разрешаем:
+    // /page
+    // /?page
+    // ?page
+    if($uri[0] !== '/' && $uri[0] !== '?') {
         return $fallback;
     }
 
-    // Защита от CRLF/header injection и прочих управляющих символов
+    // Запрещаем protocol-relative URL: //evil.example/path
+    if(
+        $uri[0] === '/' &&
+        isset($uri[1]) &&
+        $uri[1] === '/'
+    ) {
+        return $fallback;
+    }
+
+    // NUL, TAB, CR, LF, DEL и остальные управляющие символы
     if(preg_match('/[\x00-\x1F\x7F]/', $uri)) {
         return $fallback;
     }
 
-    // Лучше не пускать backslash: браузеры/серверы могут трактовать его странно
+    // Браузеры могут интерпретировать backslash как обычный slash
     /*
     if(str_contains($uri, '\\')) {
         return $fallback;
     }
-    */ 
+    */
 
-    // Защита от безумно длинных URI
+    // Ограничение длины в байтах
     if(strlen($uri) > 8192) {
         return $fallback;
     }
 
     return $uri;
 }
+
+
 
 define('SECURE_ACCESS', true);
 

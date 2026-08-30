@@ -1976,7 +1976,7 @@ function deletePage() {
             }
         }
     }
-        
+    
     unlockByName($_SESSION['username'] ?? "dummy");
 }
 
