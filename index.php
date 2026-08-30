@@ -133,7 +133,7 @@ session_set_cookie_params([
 session_start();
 
 
-$csrf = $_SESSION['csrf'] ?? random_int(0, 0xFFFFFFFF);
+$csrf = $_SESSION['csrf'] ?? "DUMMY_VALUE-" . random_int(0, 0xFFFFFFFFFFFFFFF);
 
 
 # if( !defined( __DIR__ ) ) define( __DIR__, dirname(__FILE__) );

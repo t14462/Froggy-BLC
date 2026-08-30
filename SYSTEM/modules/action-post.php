@@ -21,19 +21,39 @@ function savePage() {
 
     */
 
-        if( $checkpermission < 3 ) {
 
-            $raw = function_exists('ini_get') ? ini_get('max_execution_time') : false;
+        if(!hash_equals((string)$csrf, (string)($safePost["csrf"] ?? ""))) {
 
-            $sleep = ($raw === false) ? 16 : (int)$raw;
+            $recovery = substr($safePost["textedit"], 0, (int)(128.125 * 1024));
 
-            if ($sleep <= 0) {
-                $sleep = 16;
-            }
+            $recovery = str_ireplace("<textarea", "&lt;textarea", $recovery);
+            $recovery = str_ireplace("</textarea", "&lt;/textarea", $recovery);
+            $recovery = str_ireplace("textarea>", "textarea&gt;", $recovery);
 
-            sleep(max(1, intdiv($sleep, 2)));
+            $recovery = escape_amp_txtarea($recovery);
+
+            $recovery = "<!DOCTYPE html>
+            <html lang='ru'>
+            <head>
+                <meta charset='UTF-8' />
+                <meta name='viewport' content='width=device-width, initial-scale=1.0' />
+                <title>Страница Восстановления Данных.</title>
+            </head>
+            
+            <body>
+                <h1>Страница Восстановления Данных.</h1>
+                <textarea style='width: 95%; min-height: 80vh; padding: 2%; resize: none;' readonly='readonly'>$recovery</textarea>
+            </body>
+            </html>
+            ";
+
+            http_response_code(200);
+            exit((string)$recovery);
         }
 
+
+
+        
         $textedit = substr($safePost["textedit"], 0, (int)(128.125 * 1024));
         $pgtitle  = $safePost["title"];
         $htag     = (int)$safePost["h"];
@@ -586,6 +606,7 @@ function savePage() {
             <p><strong>{{download|DATABASE/fupload/Example.zip}}</strong>&nbsp;&mdash; Используйте это для вставки URL загрузок.</p>
             <p>Для вставки Тире используйте \" -- \" (без кавычек, с пробелами по краям)</p>
             <p><strong>{{lambda}} FROG!!!</strong></p>
+
             <input id='edpagetitle' type='text' name='title' value='".$pgtitle."' />".$hsel.
             "<textarea rows='9' name='textedit' id='textedit'>"
             .$textedit2."</textarea><div class='el-in-line'> <input type='submit' value='💾 Отправить' />
@@ -2150,7 +2171,7 @@ function registerp() {
             <li><strong>3</strong> = <em>Редакторы - не могут сбрасывать лог и тереть комменты. (Редактируют статьи и перемещают). Могут оставлять комментарии с HTML и не вводить капчу.</em></li>
             <li><strong>4</strong> = <em>Администраторы - могут всё.</em></li>
         </ul>
-        <p class='big'>ЭТО СЕКРЕТНАЯ СТРОКА!<br />ДЛЯ ЕЁ ДОБАВЛЕНИЯ СВЯЖИТЕСЬ С АДМИНОМ,<br />И БОЛЬШЕ НИКОМУ ЕЁ НЕ ДАВАЙТЕ!</p>
+        <p class='big'>ЭТО СЕКРЕТНАЯ СТРОКА!<br />ДЛЯ ЕЁ ДОБАВЛЕНИЯ СВЯЖИТЕСЬ С АДМИНОМ,<br />И БОЛЬШЕ НИКОМУ ЕЁ НЕ СООБЩАЙТЕ!</p>
         ";
     }
 
