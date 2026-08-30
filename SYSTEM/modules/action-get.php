@@ -1612,7 +1612,7 @@ function gallery() {
         if($galpg == $i) {
             $pager .= " <strong>".$i."</strong> "; // Текущая страница
         } else {
-            $pager .= " <a rel='nofollow' href='?gallery=$i'>".$i."</a> "; // Ссылка на другую страницу
+            $pager .= " <a rel='nofollow' href='?gallery=$i#galleryTableGrid'>".$i."</a> "; // Ссылка на другую страницу
         }
     }
 
@@ -1656,7 +1656,7 @@ function gallery() {
     </style>";
 
     if (!empty($selectedimg)) {
-        $content .= "<table class='gallery'><tr>";
+        $content .= "<table class='gallery' id='galleryTableGrid'><tr>";
 
         $i = 0;
         $total = count($selectedimg);
@@ -1696,7 +1696,7 @@ function dlFiles() {
 
     global $content, $safeGet, $mainPageTitle, $csrf;
 
-    $limit = 25;
+    $limit = 50;
 
     $exts = [
         // Текстовые и данные
