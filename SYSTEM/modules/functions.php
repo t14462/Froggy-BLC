@@ -1023,9 +1023,11 @@ function refreshhandle($time, $link, $update = true) {
     // Проверяем адрес до HTML- и JavaScript-экранирования.
     $link = safeRequestUri($link);
 
+    /*
     if(!mb_check_encoding($link, 'UTF-8')) {
         die('PANIC: Broken Redirect URL Encoding!');
     }
+    */
 
     $linkHtml = htmlspecialchars(
         $link,

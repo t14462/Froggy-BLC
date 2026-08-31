@@ -1860,7 +1860,7 @@ function loginPost() {
 
             $_SESSION["username"] = $username;
             $_SESSION["userhash"] = hash('sha512', $userhash.$ip.$userAgent);
-            $_SESSION['csrf'] = random_int(0, 0xFFFFFFFF);
+            $_SESSION['csrf'] = random_int(0, 0xFFFFFFFFFFFFFFF);
 
             mylog("<strong style='color:DarkGreen'>Вход в систему (".$_SESSION["username"].").</strong>");
 

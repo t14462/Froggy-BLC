@@ -10,11 +10,11 @@ function safeRequestUri(?string $uri): string
 {
     $fallback = '/';
 
-    if(!mb_check_encoding($uri, 'UTF-8')) {
+    if($uri === null || $uri === '') {
         return $fallback;
     }
 
-    if($uri === null || $uri === '') {
+    if(!mb_check_encoding($uri, 'UTF-8')) {
         return $fallback;
     }
 
