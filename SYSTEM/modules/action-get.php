@@ -698,7 +698,7 @@ function commentRemove() {
             $filedest->fwriteOrDie($commdataline."\n");
 
 
-            if(gnuCatTailAvailable()) {
+            if(catTailAvailable()) {
 
                 $PosMark = $filesource->ftell();
 
@@ -1314,7 +1314,7 @@ function addPage() {
                 $filedest->fwriteOrDie($line);
 
 
-                if(gnuCatTailAvailable()) {
+                if(catTailAvailable()) {
 
                     $PosMark = $filesource->ftell();
 
@@ -1444,7 +1444,7 @@ function movePageDown() {
             $filedest->fwriteOrDie($nextline.$prevline);
 
 
-            if(gnuCatTailAvailable()) {
+            if(catTailAvailable()) {
 
                 $PosMark = $filesource->ftell();
 
@@ -1524,7 +1524,7 @@ function movePageUp() {
             $filedest->fwriteOrDie($nextline.$prevline);
 
 
-            if(gnuCatTailAvailable()) {
+            if(catTailAvailable()) {
 
                 $PosMark = $filesource->ftell();
 
@@ -1896,7 +1896,7 @@ function deletePage() {
                 /// $filedest = openFileOrDie("DATABASE/DB/data.html.new." . getmypid(), 'ab');
 
 
-                if(gnuCatTailAvailable()) {
+                if(catTailAvailable()) {
 
                     $PosMark = $filesource->ftell();
 

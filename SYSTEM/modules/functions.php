@@ -3411,13 +3411,13 @@ function concater(string $fname1, string $fname2, int $pos): void
      * $pos = 100            => взять $fname2 со 101-го байта
      * $pos >= filesize(...) => tail даст пустой хвост, и это нормально
      *
-     * GNU tail -c +N считает с 1, поэтому +1.
+     * POSIX/BSD/GNU tail -c +N считает с 1, поэтому +1.
      */
     $tailStart = $pos + 1;
 
     $cmd =
-    '{ /usr/bin/cat -- ' . escapeshellarg($fname1) .
-    ' && /usr/bin/tail -c +' . (int)$tailStart . ' -- ' . escapeshellarg($fname2) .
+    '{ command -p cat -- ' . escapeshellarg($fname1) .
+    ' && command -p tail -c +' . (int)$tailStart . ' -- ' . escapeshellarg($fname2) .
     '; } > ' . escapeshellarg($new);
 
     $shellOutput = [];
@@ -3445,10 +3445,48 @@ function concater(string $fname1, string $fname2, int $pos): void
 
 
 
+function catTailAvailable(): bool
+{
+    static $cached = null;
+
+    if($cached !== null) {
+        return $cached;
+    }
+
+    if(!function_exists('exec')) {
+        return $cached = false;
+    }
+
+    if(PHP_OS_FAMILY === 'Windows') {
+        return $cached = false;
+    }
+
+    $shellOutput = [];
+    $exitCode = 1;
+
+    exec(
+        'command -p -v cat >/dev/null 2>&1'
+        . ' && command -p -v tail >/dev/null 2>&1',
+        $shellOutput,
+        $exitCode
+    );
+
+    return $cached = ($exitCode === 0);
+}
 
 
 
 
+
+
+
+
+
+
+
+
+
+/*
 function gnuCatTailAvailable(): bool
 {
     static $cached = null;
@@ -3476,6 +3514,11 @@ function gnuCatTailAvailable(): bool
 
     return $cached = ($exitCode === 0);
 }
+*/
+
+
+
+
 
 
 

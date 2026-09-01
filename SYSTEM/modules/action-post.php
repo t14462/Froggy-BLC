@@ -668,7 +668,7 @@ function savePage() {
                 $filedest->fwriteOrDie($pageid.$textedit."\n");
 
 
-                if(gnuCatTailAvailable()) {
+                if(catTailAvailable()) {
 
                     $PosMark = $filesource->ftell();
 
@@ -1317,7 +1317,7 @@ function commentReply() {
             $filedest->fwriteOrDie($commdataline."\n");
 
 
-            if(gnuCatTailAvailable()) {
+            if(catTailAvailable()) {
 
                 $PosMark = $filesource->ftell();
 

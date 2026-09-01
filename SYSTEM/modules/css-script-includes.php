@@ -92,7 +92,7 @@ if($checkpermission) {
     Не делайте в Админке скриншоты <u>с видимой адресной строкой!</u>
     </strong></aside>";
 
-    if(gnuCatTailAvailable()) {
+    if(catTailAvailable()) {
         $footer .= "<span title='Exec + Utils: ЕСТЬ.'>🟢</span>";
     } else {
         $footer .= "<span title='Exec + Utils: НЕТУ.'>🔴</span>";
