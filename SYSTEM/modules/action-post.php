@@ -908,6 +908,8 @@ function commentReply() {
 
         $commpost = normalize_entities_my($commpost);
 
+        $commpost  = str_ireplace("<br!>", "\n", $commpost);
+
         $commpost = mb_softTrim($commpost);
 
         /// $commpost = str_replace("\r", "", $commpost);
@@ -1104,8 +1106,6 @@ function commentReply() {
             // $commpost = str_ireplace("<id>", "", $commpost);
 
             if($checkpermission) {
-
-                $commpost  = str_ireplace("<br!>", " ", $commpost);
 
                 /*
                 $commpost = str_ireplace("<ul", "<ul class=\"ul-fix\"", $commpost);
@@ -1427,6 +1427,8 @@ function postComment() {
         
         $commpost = normalize_entities_my($commpost);
 
+        $commpost  = str_ireplace("<br!>", "\n", $commpost);
+
         $commpost = mb_softTrim($commpost);
 
         /// $commpost = str_replace("\r", "", $commpost);
@@ -1568,8 +1570,6 @@ function postComment() {
             // $commpost = str_ireplace("<id>", "", $commpost);
 
             if($checkpermission) {
-
-                $commpost  = str_ireplace("<br!>", " ", $commpost);
 
                 /*
                 $commpost = str_ireplace("<ul", "<ul class=\"ul-fix\"", $commpost);
@@ -2159,7 +2159,9 @@ function registerp() {
 
         $userhash = hash('sha512', $username."@".$password1."@".generateSalt($username, $password1).$mySalt);
 
-        $username = str_replace("&", "&amp;", $username);
+        /// $username = str_replace("&", "&amp;", $username);
+
+        $username = escape_amp_txtarea($username);
 
         $content .= "
         <p>Добавьте в <strong>cred.php</strong> строчку:</p>
@@ -2339,7 +2341,9 @@ function userHashCalcp() {
 
             $userhash = hash('sha512', $username."@".$password1."@".generateSalt($username, $password1).$mySalt);
 
-            $username = str_replace("&", "&amp;", $username);
+            /// $username = str_replace("&", "&amp;", $username);
+
+            $username = escape_amp_txtarea($username);
 
             $result .= "<p class='big'><strong>$username</strong></p>
             <p><code style='display: inline-block; width: 100%; padding: .75rem; font-size: 1.4rem; text-wrap: nowrap; overflow-x: scroll;'>$userhash</code></p>";
