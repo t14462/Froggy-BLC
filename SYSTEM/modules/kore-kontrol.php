@@ -419,7 +419,7 @@ function sitemapflush() {
 
     global $sitemaptxt, $chTimeDB;
 
-    $sitemaptxtvar = join("\n", $sitemaptxt);
+    $sitemaptxtvar = join("\n", $sitemaptxt) . "\n";
 
     dbprepCache("sitemap.txt");
 
@@ -463,7 +463,7 @@ function sitemapflushXml() {
         $sitemapxmlvar .= "  </url>\n";
     }
 
-    $sitemapxmlvar .= "</urlset>";
+    $sitemapxmlvar .= "</urlset>\n";
 
     // $sitemaptxtvar = join("\n", $sitemaptxt);
 
