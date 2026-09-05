@@ -56,7 +56,7 @@ if(    is_file("DATABASE/DB/DB-TOC-Cache.txt")
     /// && !is_file("DATABASE/DB/MenuCache.txt.lock")
     && is_file("DATABASE/DB/SEO-Cache.txt")
     /// && !is_file("DATABASE/DB/SEO-Cache.txt.lock")
-    && !$checkpermission /* && getFileOrDie('DATABASE/fingerprint.txt') == $url."\n".PHP_OS."\n".$servIP */) {
+    && $checkpermission < 2 /* && getFileOrDie('DATABASE/fingerprint.txt') == $url."\n".PHP_OS."\n".$servIP */) {
 
     $i = 0;
 
@@ -229,13 +229,13 @@ if(    is_file("DATABASE/DB/DB-TOC-Cache.txt")
                 $gCC = getCommCount($iddump);
 
                 if($num == 1) {
-                    $out .= "\n<li>".$admpgctl."<a href='".$addr."' itemprop='name'>".$line2."</a>".$gCC;
+                    $out .= "\n<li>".$admpgctl."<a href='".$addr."' itemprop='url'><span itemprop='name'>".removeKwd($line2).extractKwd2($line2)."</span></a>".$gCC;
 
-                    $mCACHE .= "\n<li><a href='".$addr."' itemprop='name'>".$line2."</a>".$gCC;
+                    $mCACHE .= "\n<li><a href='".$addr."' itemprop='url'><span itemprop='name'>".removeKwd($line2).extractKwd2($line2)."</span></a>".$gCC;
                 } else {
-                    $out .= "\n<ul><li>".$admpgctl."<a href='".$addr."' itemprop='name'>".$line2."</a>".$gCC;
+                    $out .= "\n<ul><li>".$admpgctl."<a href='".$addr."' itemprop='url'><span itemprop='name'>".removeKwd($line2).extractKwd2($line2)."</span></a>".$gCC;
 
-                    $mCACHE .= "\n<ul><li><a href='".$addr."' itemprop='name'>".$line2."</a>".$gCC;
+                    $mCACHE .= "\n<ul><li><a href='".$addr."' itemprop='url'><span itemprop='name'>".removeKwd($line2).extractKwd2($line2)."</span></a>".$gCC;
                 }
 
             } else {
@@ -296,9 +296,9 @@ if(    is_file("DATABASE/DB/DB-TOC-Cache.txt")
 
                 $gCC = getCommCount($iddump);
 
-                $out .= "\n<li>".$admpgctl."<a href='".$addr."' itemprop='name'>".$line2."</a>".$gCC;
+                $out .= "\n<li>".$admpgctl."<a href='".$addr."' itemprop='url'><span itemprop='name'>".removeKwd($line2).extractKwd2($line2)."</span></a>".$gCC;
 
-                $mCACHE .= "\n<li><a href='".$addr."' itemprop='name'>".$line2."</a>".$gCC;
+                $mCACHE .= "\n<li><a href='".$addr."' itemprop='url'><span itemprop='name'>".removeKwd($line2).extractKwd2($line2)."</span></a>".$gCC;
             }
 
             $sitemaptxt[] = $url.$addr;

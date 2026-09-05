@@ -106,3 +106,36 @@ td.gallery-img > img, td.gallery-fill > span {
     background-color: Orange !important;
 }
 
+
+
+
+
+
+a[itemprop="url"] > span[itemprop="name"] > span.tag {
+    padding-left: 2px;
+    padding-right: 2px;
+    white-space: nowrap;
+    font-weight: bold;
+    font-style: normal;
+    background: #666;
+    color: white;
+    opacity: .5;
+    border-radius: 3px;
+}
+
+
+
+
+
+h1 > span[itemprop="headline"] > span.tag {
+
+    font-size: .85em;
+    background: white;
+    color: #666;
+    opacity: .5;
+    border-radius: 5px;
+    white-space: nowrap;
+    padding-left: 5px;
+    padding-right: 5px;
+    font-style: normal;
+}

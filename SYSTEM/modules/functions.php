@@ -3576,3 +3576,119 @@ function shuffleString(string $text, string $seed): string
     return seeded_shuffle::shuffle($text, $seed);
 }
 
+
+
+
+
+
+
+
+
+
+
+
+function extractKwd(string $title): string
+{
+    if(preg_match('/\(([^)]*)\)\z/u', trim($title), $matches) !== 1) {
+        return '';
+    }
+
+    $tags = preg_split(
+        '/\s*,\s*/u',
+        trim($matches[1]),
+        -1,
+        PREG_SPLIT_NO_EMPTY
+    );
+
+    if($tags === false || $tags === []) {
+        return '';
+    }
+
+    $tags = array_map(
+        static fn(string $tag): string => htmlspecialchars(
+            $tag,
+            ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML5,
+            'UTF-8',
+            false
+        ),
+        $tags
+    );
+
+    return ' (<span class="tag" itemprop="keywords">' . join('</span>, <span class="tag" itemprop="keywords">', $tags) . '</span>)';
+}
+
+
+
+
+
+
+
+
+
+
+
+
+function extractKwd2(string $title): string
+{
+    if(preg_match('/\(([^)]*)\)\z/u', trim($title), $matches) !== 1) {
+        return '';
+    }
+
+    $tags = preg_split(
+        '/\s*,\s*/u',
+        trim($matches[1]),
+        -1,
+        PREG_SPLIT_NO_EMPTY
+    );
+
+    if($tags === false || $tags === []) {
+        return '';
+    }
+
+    $tags = array_map(
+        static fn(string $tag): string => htmlspecialchars(
+            $tag,
+            ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML5,
+            'UTF-8',
+            false
+        ),
+        $tags
+    );
+
+    return ' (<span class="tag">' . join('</span>, <span class="tag">', $tags) . '</span>)';
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function removeKwd(string $title): string
+{
+    $trimmedTitle = rtrim($title);
+    $count = 0;
+
+    $result = preg_replace(
+        '/\([^)]*\)\z/u',
+        '',
+        $trimmedTitle,
+        1,
+        $count
+    );
+
+    if($result === null || $count === 0) {
+        return $title;
+    }
+
+    // Удаляем пробел, оставшийся перед скобками.
+    return rtrim($result);
+}
+

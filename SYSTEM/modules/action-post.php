@@ -124,7 +124,7 @@ function savePage() {
 
             $herror = 7;
 
-        } elseif(mb_strlen(urlPrep3($pgtitle)) < 3) {
+        } elseif(mb_strlen(urlPrep3(removeKwd($pgtitle))) < 3) {
 
             $herror = 2;
 

@@ -573,7 +573,7 @@ rich-paragraph {
     text-indent: .75rem;
 }
 
-rich-paragraph:has(img, .vid-wrapper, .fig-img) {
+rich-paragraph:has(img, div, .vid-wrapper, .fig-img) {
 
     text-indent: 0;
 }

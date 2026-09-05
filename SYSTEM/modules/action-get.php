@@ -336,14 +336,14 @@ function pageload() {
 
         if(!$pgtoc) {
             
-            $content .= "<article itemscope='itemscope' itemtype='https://schema.org/Article'><h1>".$ptitle[2]." $permalinkA</h1>\n<section>".$article."</section></article>";
+            $content .= "<article itemscope='itemscope' itemtype='https://schema.org/Article'><h1><span itemprop='headline'>".removeKwd($ptitle[2]).extractKwd($ptitle[2])."</span> $permalinkA</h1>\n<section>".$article."</section></article>";
 
             $html = str_get_html($content, false, true, "UTF-8", false) or die("XSS?.. Пустой или битый HTML.");
 
         } else {
 
             // TOC
-            $content .= "<article itemscope='itemscope' itemtype='https://schema.org/Article'><h1>".$ptitle[2]." $permalinkA</h1>\n<section><nav aria-label='Содержание' id='TOC'></nav>\n".$article."</section></article>";
+            $content .= "<article itemscope='itemscope' itemtype='https://schema.org/Article'><h1><span itemprop='headline'>".removeKwd($ptitle[2]).extractKwd($ptitle[2])."</span> $permalinkA</h1>\n<section><nav aria-label='Содержание' id='TOC'></nav>\n".$article."</section></article>";
 
             $html = str_get_html($content, false, true, "UTF-8", false) or die("XSS?.. Пустой или битый HTML.");
 
