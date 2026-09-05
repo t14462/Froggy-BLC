@@ -3614,7 +3614,7 @@ function extractKwd(string $title): string
         $tags
     );
 
-    return ' (<span class="tag" itemprop="keywords">' . join('</span>, <span class="tag" itemprop="keywords">', $tags) . '</span>)';
+    return strtolower( ' (<span class="tag" itemprop="keywords">' . join('</span>, <span class="tag" itemprop="keywords">', $tags) . '</span>)' );
 }
 
 
@@ -3655,7 +3655,7 @@ function extractKwd2(string $title): string
         $tags
     );
 
-    return ' (<span class="tag">' . join('</span>, <span class="tag">', $tags) . '</span>)';
+    return strtolower( ' (<span class="tag">' . join('</span>, <span class="tag">', $tags) . '</span>)' );
 }
 
 
