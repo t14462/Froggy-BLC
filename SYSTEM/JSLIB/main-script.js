@@ -130,7 +130,7 @@ ready(function () {
     document.body.appendChild(lightboxOverlay);
 
     // Открываем изображение в lightbox при клике на него
-    document.querySelectorAll('img:not(header img):not(body>aside img):not(footer img)').forEach(img => {
+    document.querySelectorAll('img:not(header img, body > aside img, footer img, #captcha_image)').forEach(img => {
         img.addEventListener('click', function () {
             lightboxImage.src = this.src;
             lightboxOverlay.style.display = 'flex';
