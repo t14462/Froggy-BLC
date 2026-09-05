@@ -978,6 +978,7 @@ h6::before {content: "6";}
 #sitemenu {
 
     width: calc(34vw - 1.6rem);
+    display: flow-root;
 }
 
 #sitemenu li {
