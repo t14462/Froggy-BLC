@@ -190,8 +190,9 @@ ready(function () {
 
         // Индекс: [normText, rawText, href]
         const entries = [];
-        scope.querySelectorAll('a[itemprop="name"][href]').forEach(a => {
-            const raw = (a.textContent || '').trim();
+        scope.querySelectorAll('a[itemprop="url"][href]').forEach(a => {
+            const name = a.querySelector('[itemprop="name"]');
+            const raw = ((name || a).textContent || '').trim();
             if (!raw) return;
             const hrefAttr = a.getAttribute('href') || '';
             if (!hrefAttr || hrefAttr.startsWith('#')) return; // отсечём якоря
