@@ -390,6 +390,71 @@ ready(function () {
 
 
 
+
+
+
+
+
+
+
+
+    (() => {
+
+        const searchField = document.getElementById('menuSearch');
+
+        if(!searchField) {
+            return;
+        }
+
+        function normalize(text) {
+            return String(text)
+                .toLowerCase()
+                .normalize('NFKC')
+                .replace(/ё/g, 'е')
+                .replace(/\s+/g, ' ')
+                .trim();
+        }
+
+        document.querySelectorAll('.tag').forEach(function(tag) {
+
+            tag.addEventListener('click', function(event) {
+
+                event.preventDefault();
+
+                const tagText = this.innerText.trim();
+
+                if(tagText === '') {
+                    return;
+                }
+
+                const currentValue = normalize(searchField.value);
+                const normalizedTag = normalize(tagText);
+
+                // Проверяем полное совпадение слова или фразы.
+                if(
+                    (' ' + currentValue + ' ')
+                        .includes(' ' + normalizedTag + ' ')
+                ) {
+                    return;
+                }
+
+                searchField.value = (
+                    searchField.value.trim()
+                    + ' '
+                    + tagText
+                ).trim();
+
+                searchField.dispatchEvent(
+                    new Event('input', {bubbles: true})
+                );
+            });
+        });
+    })();
+
+
+
+
+
 });
 
 
