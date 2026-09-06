@@ -72,7 +72,20 @@ $stoolbox = "<div id='system-links'><a target='_blank' href='?".$queryBase."&amp
 $menubar = '
 
 <div id="menu-search-wrap">
-  <input id="menuSearch" type="search" placeholder="🔎 Поиск по меню…" autocomplete="off" />
+  <input id="menuSearch" type="search" placeholder="🔎 Поиск по меню…" autocomplete="off" /><button
+    type="button"
+    aria-label="Очистить поиск"
+    onclick="
+        const input = document.getElementById(\'menuSearch\');
+
+        if(input) {
+            input.value = \'\';
+            input.dispatchEvent(
+                new Event(\'input\', {bubbles: true})
+            );
+        }
+    "
+>X</button>
   <ol id="menuSearchResults"></ol>
 </div>
 '.$menubar;
