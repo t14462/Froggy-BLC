@@ -84,8 +84,7 @@ $menubar = '
                 new Event(\'input\', {bubbles: true})
             );
         }
-    "
->X</button>
+    ">X</button>
   <ol id="menuSearchResults"></ol>
 </div>
 '.$menubar;

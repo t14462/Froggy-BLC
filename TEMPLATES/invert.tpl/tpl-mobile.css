@@ -1599,10 +1599,13 @@ main article *, #sitemenu a {
 #menu-search-wrap {
     padding-left: 1.6rem;
     padding-bottom: 1.6rem;
+
+    position: relative;
 }
 
 #menu-search-wrap input, #menu-search-wrap button {
 
+    border: 2px solid #555;
     -webkit-appearance: none;
     appearance: none;
     font: inherit;
@@ -1614,7 +1617,8 @@ main article *, #sitemenu a {
 
 #menu-search-wrap button {
 
-    width: 4rem !important;
+    width: 4rem;
+    border-left: none;
 } 
 
 #menu-search-wrap a, #menu-search-wrap a:visited {
@@ -1628,10 +1632,30 @@ main article *, #sitemenu a {
     padding: 0;
 }
 
+/* !!! */
+#menu-search-wrap ol {
+
+    border: 2px solid #555;
+    border-top: none;
+    position: absolute;
+    top: 2rem;
+    z-index: 2;
+    background: #FFF;
+
+    padding: .6rem;
+    padding-top: 0;
+    
+    width: calc(100% - 2.8rem - 4px);
+}
+
 #menu-search-wrap li {
 
     padding-top: .8rem;
     list-style-position: inside;
+}
+
+#menuSearchResults:empty {
+    display: none;
 }
 
 
