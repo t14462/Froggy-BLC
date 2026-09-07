@@ -84,9 +84,7 @@ $menubar = '
                 new Event(\'input\', {bubbles: true})
             );
         }
-    ">X</button>
-  <ol id="menuSearchResults"></ol>
-</div>
+    ">X</button><ol id="menuSearchResults"></ol></div>
 '.$menubar;
 
 $footer = "\n<em>Автор: Тимофеев Святослав aka Paulter Gates, PhD.<br />
