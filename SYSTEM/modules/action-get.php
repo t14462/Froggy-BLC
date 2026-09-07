@@ -2091,6 +2091,7 @@ function editUsers() {
             // 4<!!!>62c5...  ->  privilege = 4, hash = 62c5...
             [$privilege, $hash] = explode('<!!!>', $data, 2);
 
+            $username = escape_amp_txtarea($username);
 
             $content .= '<div class="user-form">' . "\n";
 
