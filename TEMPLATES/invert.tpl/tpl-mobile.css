@@ -1651,12 +1651,16 @@ main article *, #sitemenu a {
 
 #menu-search-wrap li {
 
-    padding-top: .8rem;
+    padding-top: .6rem;
     list-style-position: inside;
 }
 
 #menuSearchResults:empty {
     display: none;
+}
+
+#sitemenu a.active .tag {
+    pointer-events: auto !important;
 }
 
 
