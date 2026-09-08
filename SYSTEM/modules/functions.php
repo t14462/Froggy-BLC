@@ -1173,7 +1173,7 @@ function dbdone($filename, $recovery) {
     $lockvar = (int)(string)stream_get_contents($locktmp);
 
     /// flock($locktmp, LOCK_UN);
-    fclose($locktmp);
+    /// fclose($locktmp);
 
     if(is_file($filename.".src." . getmypid())) {
         @unlink($filename.".src." . getmypid());
@@ -1189,6 +1189,8 @@ function dbdone($filename, $recovery) {
 
         touchMy($filename);
 
+        fclose($locktmp);
+
         /// unlink($filename.".lock");
 
         return true;
@@ -1203,6 +1205,8 @@ function dbdone($filename, $recovery) {
 
             unlockByName($_SESSION['username'] ?? "dummy");
         }
+
+        fclose($locktmp);
 
         $recovery = $recovery ?: "ДАННЫЕ НЕ СОХРАНЕНЫ!";
 
