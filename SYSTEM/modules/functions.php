@@ -753,7 +753,7 @@ $replacementDLCNT = static function ($m) {
         }
         $dlcntFmt = number_format($dlcnt, 0, ',', ' ');
 
-        $targetIframe = urlPrep2($file);
+        $targetIframe = htmlPrepID($file);
 
         $safeName = htmlspecialchars($file, ENT_QUOTES | ENT_HTML401 | ENT_SUBSTITUTE, 'UTF-8');
 
@@ -1660,6 +1660,79 @@ function urlPrep2($st) {
 
 
 
+
+
+
+
+/*
+ * Подготовка идентификатора HTML-якоря.
+ *
+ * Результат предназначен только для:
+ *
+ *     id="..."
+ *     href="#..."
+ *
+ * Для CSS-селекторов и querySelector() функция не предназначена.
+ *
+ * Уникальность якорей в пределах страницы проверяется отдельно.
+ */
+function htmlPrepID(string $st): string
+{
+    // Декодировать HTML-сущности
+    $st = html_entity_decode(
+        $st,
+        ENT_QUOTES | ENT_HTML401,
+        'UTF-8'
+    );
+
+    // Пользовательская транслитерация русского текста
+    $st = rusTranslitHelper($st);
+
+    // Транслитерация остальных письменностей
+    $tmp = transliterator_transliterate(
+        'Any-Latin; Latin-ASCII; [:Nonspacing Mark:] Remove; NFC;',
+        $st
+    );
+
+    if($tmp !== false) {
+        $st = $tmp;
+    }
+
+    // Нормализовать пробелы
+    $st = mb_superTrim($st);
+
+    // Пробелы преобразовать в подчёркивания
+    $st = preg_replace('/\s+/u', '_', $st) ?? '';
+
+    // Схлопнуть повторяющиеся разделители
+    $st = preg_replace('/_{2,}/', '_', $st) ?? '';
+    $st = preg_replace('/-{2,}/', '-', $st) ?? '';
+    $st = preg_replace('/\.{2,}/', '.', $st) ?? '';
+
+    // Удалить разделители по краям
+    $st = trim($st, '._-');
+
+    /*
+     * Закодировать остальные символы через %XX.
+     * Без изменений остаются: A-Z a-z 0-9 - _ . ~
+     */
+    $st = rawurlencode($st);
+
+    // Гарантировать непустое значение
+    if($st === '') {
+        $st = 'anchor';
+    }
+
+    return $st;
+}
+
+
+
+
+
+
+
+
 function urlPrep2(string $st): string
 {
     // Снять только первый ведущий ?
@@ -1710,7 +1783,7 @@ function urlPrep2(string $st): string
 
         
         $part = preg_replace_callback(
-            '/[^A-Za-z0-9_.:-]+/u',
+            '/[^A-Za-z0-9_-]+/u',
             static function ($m) {
                 return rawurlencode($m[0]);
             },
@@ -1726,13 +1799,13 @@ function urlPrep2(string $st): string
     ));
 
     /// return '?' . implode('/', $parts);
-    return implode('/', $parts);
+    return implode('-', $parts);
 }
 
 
 
 
-function urlPrep3($st) {
+function shrinkNameLenght($st) {
 
     // 1) вычищаем HTML-сущности (&nbsp; &#160; &#xA0; и т.п.)
     $st = remove_entities($st);

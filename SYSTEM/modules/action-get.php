@@ -361,7 +361,7 @@ function pageload() {
 
                 $innerTEXT = mb_superTrim($innerTEXT);
 
-                $id = 'h'.$iID.'-'.urlPrep2($innerTEXT);
+                $id = 'h'.$iID.'-'.htmlPrepID($innerTEXT);
 
                 // $h->id= $id; // add id attribute so we can jump to this element
                 $h->setAttribute('id', $id); // add id attribute so we can jump to this element
