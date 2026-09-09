@@ -1183,9 +1183,9 @@ function dbdone($filename, $recovery) {
 
     if($lockvar === getmypid()) {
 
-        if(is_file($filename)) rename($filename, $filename.".bak");
+        /// if(is_file($filename)) rename($filename, $filename.".bak");
     
-        rename($filename.".new." . getmypid(), $filename);
+        rename($filename.".new." . getmypid(), $filename) or die();
 
         touchMy($filename);
 
