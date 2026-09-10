@@ -1678,6 +1678,12 @@ function urlPrep2($st) {
  */
 function htmlPrepID(string $st): string
 {
+
+    $st = normalize_entities_my($st);
+
+    // Нормализовать пробелы
+    $st = mb_superTrim($st);
+
     // Декодировать HTML-сущности
     $st = html_entity_decode(
         $st,
@@ -1697,9 +1703,6 @@ function htmlPrepID(string $st): string
     if($tmp !== false) {
         $st = $tmp;
     }
-
-    // Нормализовать пробелы
-    $st = mb_superTrim($st);
 
     // Пробелы преобразовать в подчёркивания
     $st = preg_replace('/\s+/u', '_', $st) ?? '';
@@ -2293,22 +2296,85 @@ function parseSpoilers(simple_html_dom $html): simple_html_dom {
 }
 
 function wrap_images_with_figure(simple_html_dom $html): simple_html_dom {
-    // Безопасный снимок массива элементов
+    // Корень сайта на диске.
+    $root = realpath($_SERVER['DOCUMENT_ROOT'] ?? '');
+
+    // Безопасный снимок массива элементов.
     $images = iterator_to_array($html->find('img'), false);
 
     foreach ($images as $img) {
         $img->setAttribute('loading', 'lazy');
 
-        $fname = $img->getAttribute('src');
-        $fname = basename(str_replace('\\', '/', $fname));
+        $src = $img->getAttribute('src') ?? '';
 
-        $alt = mb_superTrim(normalize_entities_my($img->getAttribute('alt') ?? ''));
+        // Получить путь из src, отбросив query string и #fragment.
+        $url = parse_url(
+            html_entity_decode(
+                $src,
+                ENT_QUOTES | ENT_HTML5,
+                'UTF-8'
+            )
+        );
+
+        // Обрабатывать только локальные пути.
+        if (
+            $root !== false &&
+            is_array($url) &&
+            !isset($url['scheme']) &&
+            !isset($url['host'])
+        ) {
+            $path = rawurldecode($url['path'] ?? '');
+
+            if ($path !== '' && !str_contains($path, "\0")) {
+                $prefix = rtrim($root, DIRECTORY_SEPARATOR)
+                    . DIRECTORY_SEPARATOR;
+
+                $file = realpath($prefix . ltrim($path, '/'));
+
+                // Файл должен находиться внутри корня сайта.
+                if (
+                    $file !== false &&
+                    str_starts_with($file, $prefix) &&
+                    is_file($file) &&
+                    is_readable($file)
+                ) {
+
+                    $size = @getimagesize($file);
+
+                    if (
+                        $size !== false &&
+                        $size[0] > 0 &&
+                        $size[1] > 0
+                    ) {
+                        $img->setAttribute('width', (string) $size[0]);
+                        $img->setAttribute('height', (string) $size[1]);
+
+                        $img->setAttribute(
+                            'src',
+                            $url['path'] . '?' . (int) @filemtime($file)
+                        );
+                    }
+                }
+            }
+        }
+
+        $fname = basename(str_replace('\\', '/', $src));
+
+        $alt = mb_superTrim(
+            normalize_entities_my($img->getAttribute('alt') ?? '')
+        );
+
         if ($alt !== '' && rawurlencode($alt) !== $fname) {
             $imgHtml = $img->outertext;
+
             // $altEscaped = mb_superTrim(htmlspecialchars(strip_tags($alt), ENT_QUOTES | ENT_HTML401 | ENT_SUBSTITUTE, 'UTF-8', false));
             // $altEscaped = str_ireplace('&amp;@', '&', $altEscaped);
             // $figureHtml = '<figure class="fig-img clearfix">' . $imgHtml . '<figcaption>' . $altEscaped . '</figcaption></figure>';
-            $figureHtml = '<figure class="fig-img clearfix">' . $imgHtml . '<figcaption>' . $alt . '</figcaption></figure>';
+
+            $figureHtml = '<figure class="fig-img clearfix">'
+                . $imgHtml
+                . '<figcaption>' . $alt . '</figcaption>'
+                . '</figure>';
 
             $img->outertext = $figureHtml;
         }

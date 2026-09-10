@@ -36,8 +36,10 @@ function delimg() {
 
         if(is_file("DATABASE/gallery/".$filetodel)) {
             // rename("DATABASE/gallery/".$filetodel, "DATABASE/gallery/img.del");
-            @unlink("DATABASE/gallery/".$filetodel);
-            mylog("<em style='color:DarkOrange'>Изображение ".$filetodel." успешно удалено. (".$_SESSION["username"].").</em>");
+            if(@unlink("DATABASE/gallery/".$filetodel)) {
+
+                mylog("<em style='color:DarkOrange'>Изображение ".$filetodel." успешно удалено. (".$_SESSION["username"].").</em>");
+            }
         }
 
         refreshhandle(0, "?gallery=-1", false);
@@ -55,8 +57,9 @@ function delfile() {
 
         if(is_file("DATABASE/fupload/".$filetodel)) {
             // rename("DATABASE/fupload/".$filetodel, "DATABASE/fupload/file.del");
-            @unlink("DATABASE/fupload/".$filetodel);
-            mylog("<em style='color:DarkOrange'>Файл ".$filetodel." успешно удалён. (".$_SESSION["username"].").</em>");
+            if(@unlink("DATABASE/fupload/".$filetodel)) {
+                mylog("<em style='color:DarkOrange'>Файл ".$filetodel." успешно удалён. (".$_SESSION["username"].").</em>");
+            }
         }
 
         refreshhandle(0, "?dlfiles=-1", false);
@@ -489,7 +492,7 @@ function pageload() {
             
             <input type='hidden' name='dbtimestamp' value='$dbMtime' />
 
-            <fieldset><legend>Ваш комментарий:</legend><p><em>Интервал отправки = <strong>3 Минуты.</strong></em></p><label for='visitor'>Ваше имя:</label><input type='text' id='visitor' name='visitor' ".$visitor3." /><textarea rows='9' maxlength='2500' name='commpost' id='commpost' onkeyup='countChars(this);' onfocus='countChars(this);'>".$commRecov."</textarea><input type='hidden' name='commaddr' value='".$commaddr."' /><div class='el-in-line'><input type='submit' value='💾 Отправить' /><span id='symcount'>2500 Осталось.</span><br style='clear: both;' /><input type='text' name='captcha' placeholder='код' /><img loading='lazy' src='SYSTEM/modules/captcha.php?time=".time()."' alt='CAPTCHA' id='captcha_image' /><a href='javascript: refreshCaptcha();' title='Обновить картинку' class='refresh-captcha'>🔄</a></div></fieldset></form>";
+            <fieldset><legend>Ваш комментарий:</legend><p><em>Интервал отправки = <strong>3 Минуты.</strong></em></p><label for='visitor'>Ваше имя:</label><input type='text' id='visitor' name='visitor' ".$visitor3." /><textarea rows='9' maxlength='2500' name='commpost' id='commpost' onkeyup='countChars(this);' onfocus='countChars(this);'>".$commRecov."</textarea><input type='hidden' name='commaddr' value='".$commaddr."' /><div class='el-in-line'><input type='submit' value='💾 Отправить' /><span id='symcount'>2500 Осталось.</span><br style='clear: both;' /><input type='text' name='captcha' placeholder='код' /><img loading='lazy' width='130' height='50' src='SYSTEM/modules/captcha.php?time=".time()."' alt='CAPTCHA' id='captcha_image' /><a href='javascript: refreshCaptcha();' title='Обновить картинку' class='refresh-captcha'>🔄</a></div></fieldset></form>";
         }
 
         if(is_file("DATABASE/comments/".$commaddr)) {
@@ -592,7 +595,7 @@ function pageload() {
                     
                     <input type='hidden' name='dbtimestamp' value='$dbMtime' />
                     
-                    <fieldset><legend>Ответ на комментарий:</legend><p><em>Интервал отправки = <strong>3 Минуты.</strong></em> <a href='?".$queryBase."&commpage=".$commpage."' onclick=\"return confirm('Вы действительно хотите покинуть редактор? Несохранённые данные БУДУТ УТЕРЯНЫ!');\">Отменить ответ ⬅️</a></p><label for='visitor'>Ваше имя:</label><input type='text' id='visitor' name='visitor' ".$visitor3." /><input type='hidden' name='commaddr' value='".$commreplyactarr[0]."' /><input type='hidden' name='pgcommnum' value='".$commreplyactarr[1]."' /><input type='hidden' name='repcommid' value='".$commreplyactarr[2]."' /><input type='hidden' name='commpage' value='".$commpage."' /><textarea rows='9' maxlength='2500' name='commpost' id='commpost' onkeyup='countChars(this);' onfocus='countChars(this);'>".$commRecov."</textarea><div class='el-in-line'><input type='submit' value='💾 Отправить' /> <span id='symcount'>2500 Осталось.</span><br style='clear: both;' /><input type='text' name='captcha' placeholder='код' /> <img loading='lazy' src='SYSTEM/modules/captcha.php?time=".time()."' alt='CAPTCHA' id='captcha_image' /><a href='javascript: refreshCaptcha();' title='Обновить картинку' class='refresh-captcha'>🔄</a></div></fieldset></form>";
+                    <fieldset><legend>Ответ на комментарий:</legend><p><em>Интервал отправки = <strong>3 Минуты.</strong></em> <a href='?".$queryBase."&commpage=".$commpage."' onclick=\"return confirm('Вы действительно хотите покинуть редактор? Несохранённые данные БУДУТ УТЕРЯНЫ!');\">Отменить ответ ⬅️</a></p><label for='visitor'>Ваше имя:</label><input type='text' id='visitor' name='visitor' ".$visitor3." /><input type='hidden' name='commaddr' value='".$commreplyactarr[0]."' /><input type='hidden' name='pgcommnum' value='".$commreplyactarr[1]."' /><input type='hidden' name='repcommid' value='".$commreplyactarr[2]."' /><input type='hidden' name='commpage' value='".$commpage."' /><textarea rows='9' maxlength='2500' name='commpost' id='commpost' onkeyup='countChars(this);' onfocus='countChars(this);'>".$commRecov."</textarea><div class='el-in-line'><input type='submit' value='💾 Отправить' /> <span id='symcount'>2500 Осталось.</span><br style='clear: both;' /><input type='text' name='captcha' placeholder='код' /> <img loading='lazy' width='130' height='50' src='SYSTEM/modules/captcha.php?time=".time()."' alt='CAPTCHA' id='captcha_image' /><a href='javascript: refreshCaptcha();' title='Обновить картинку' class='refresh-captcha'>🔄</a></div></fieldset></form>";
                 }
 
             } elseif(isset($safePost["pgcommnum"])) {
@@ -602,7 +605,7 @@ function pageload() {
                 
                 <input type='hidden' name='dbtimestamp' value='$dbMtime' />
                 
-                <fieldset><legend>Ответ на комментарий:</legend><p><em>Интервал отправки = <strong>3 Минуты.</strong></em> <a href='?".$queryBase."&commpage=".$safePost["commpage"]."' onclick=\"return confirm('Вы действительно хотите покинуть редактор? Несохранённые данные БУДУТ УТЕРЯНЫ!');\">Отменить ответ ⬅️</a></p><label for='visitor'>Ваше имя:</label><input type='text' id='visitor' name='visitor' ".$visitor3." /><input type='hidden' name='commaddr' value='".$safePost["commaddr"]."' /><input type='hidden' name='pgcommnum' value='".$safePost["pgcommnum"]."' /><input type='hidden' name='repcommid' value='".$safePost["repcommid"]."' /><input type='hidden' name='commpage' value='".$safePost["commpage"]."' /><textarea rows='9' maxlength='2500' name='commpost' id='commpost' onkeyup='countChars(this);' onfocus='countChars(this);'>".$commRecov."</textarea><div class='el-in-line'><input type='submit' value='💾 Отправить' /> <span id='symcount'>2500 Осталось.</span><br style='clear: both;' /><input type='text' name='captcha' placeholder='код' /> <img loading='lazy' src='SYSTEM/modules/captcha.php?time=".time()."' alt='CAPTCHA' id='captcha_image' /><a href='javascript: refreshCaptcha();' title='Обновить картинку' class='refresh-captcha'>🔄</a></div></fieldset></form>";
+                <fieldset><legend>Ответ на комментарий:</legend><p><em>Интервал отправки = <strong>3 Минуты.</strong></em> <a href='?".$queryBase."&commpage=".$safePost["commpage"]."' onclick=\"return confirm('Вы действительно хотите покинуть редактор? Несохранённые данные БУДУТ УТЕРЯНЫ!');\">Отменить ответ ⬅️</a></p><label for='visitor'>Ваше имя:</label><input type='text' id='visitor' name='visitor' ".$visitor3." /><input type='hidden' name='commaddr' value='".$safePost["commaddr"]."' /><input type='hidden' name='pgcommnum' value='".$safePost["pgcommnum"]."' /><input type='hidden' name='repcommid' value='".$safePost["repcommid"]."' /><input type='hidden' name='commpage' value='".$safePost["commpage"]."' /><textarea rows='9' maxlength='2500' name='commpost' id='commpost' onkeyup='countChars(this);' onfocus='countChars(this);'>".$commRecov."</textarea><div class='el-in-line'><input type='submit' value='💾 Отправить' /> <span id='symcount'>2500 Осталось.</span><br style='clear: both;' /><input type='text' name='captcha' placeholder='код' /> <img loading='lazy' width='130' height='50' src='SYSTEM/modules/captcha.php?time=".time()."' alt='CAPTCHA' id='captcha_image' /><a href='javascript: refreshCaptcha();' title='Обновить картинку' class='refresh-captcha'>🔄</a></div></fieldset></form>";
 
             }
         }
@@ -1665,7 +1668,14 @@ function gallery() {
             $i++;
             $delimg = basename(str_replace('\\', '/', $file));
 
-            $content .= "<td class='gallery-img'><img loading='lazy' src=\"".$file."\" alt='Картинка из галереи' title='$delimg' /><button onclick='copyToClipboard(\"".$file."\");' title='Копировать Адрес'>🔗".$delimg."</button> <a rel='nofollow' href='?delimg=$delimg&amp;csrf=$csrf' class='imgdellink' onclick=\"return confirm('Вы уверены?');\">Уд.</a></td>";
+            // Кодируем имя для URL, сохраняя исходный путь для чтения метаданных.
+            $delimgEncoded = rawurlencode($delimg);
+            $fileUrl = 'DATABASE/gallery/' . $delimgEncoded;
+            $mtime = is_file($file) ? (int) @filemtime($file) : 0;
+            $imgSrc = $fileUrl . '?' . $mtime;
+            $fileNameHtml = htmlspecialchars($delimg, ENT_QUOTES | ENT_HTML401 | ENT_SUBSTITUTE, 'UTF-8');
+
+            $content .= "<td class='gallery-img'><img loading='lazy' src=\"".$imgSrc."\" alt='Картинка из галереи' title='$fileNameHtml' /><button onclick='copyToClipboard(\"".$fileUrl."\");' title='Копировать Адрес'>🔗".$fileNameHtml."</button> <a rel='nofollow' href='?delimg=$delimgEncoded&amp;csrf=$csrf' class='imgdellink' onclick=\"return confirm('Вы уверены?');\">Уд.</a></td>";
 
             // открывать новую строку только если это НЕ последний элемент
             if ($i % $cols === 0 && $i < $total) {
@@ -1786,8 +1796,12 @@ function dlFiles() {
     $selectedfile = array_slice($files, $offset, $limit);
 
     foreach($selectedfile as $file) {
-        $delfile = explode("/", $file)[2];
-        $content .= "<p class='gallery-img'>".$file." <button onclick='copyToClipboard(\"".$file."\");' title='Копировать Адрес'>🔗</button> <a rel='nofollow' href='?delfile=$delfile&amp;csrf=$csrf' class='imgdellink' onclick=\"return confirm('Вы уверены?');\">УДАЛИТЬ</a></p><hr />";
+        $delfile = basename($file);
+        $delfileEncoded = rawurlencode($delfile);
+        $fileUrl = 'DATABASE/fupload/' . $delfileEncoded;
+        $fileHtml = htmlspecialchars($file, ENT_QUOTES | ENT_HTML401 | ENT_SUBSTITUTE, 'UTF-8');
+
+        $content .= "<p class='gallery-img'>".$fileHtml." <button onclick='copyToClipboard(\"".$fileUrl."\");' title='Копировать Адрес'>🔗</button> <a rel='nofollow' href='?delfile=$delfileEncoded&amp;csrf=$csrf' class='imgdellink' onclick=\"return confirm('Вы уверены?');\">УДАЛИТЬ</a></p><hr />";
     }
 
     $mainPageTitle = "Список файлов";
@@ -2196,7 +2210,5 @@ function userHashCalcg() {
     http_response_code(200);
     exit((string)$content);
 }
-
-
 
 
