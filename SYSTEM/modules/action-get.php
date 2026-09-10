@@ -1796,7 +1796,7 @@ function dlFiles() {
     $selectedfile = array_slice($files, $offset, $limit);
 
     foreach($selectedfile as $file) {
-        $delfile = basename($file);
+        $delfile = basename(str_replace('\\', '/', $file));
         $delfileEncoded = rawurlencode($delfile);
         $fileUrl = 'DATABASE/fupload/' . $delfileEncoded;
         $fileHtml = htmlspecialchars($file, ENT_QUOTES | ENT_HTML401 | ENT_SUBSTITUTE, 'UTF-8');
