@@ -1085,11 +1085,13 @@ nav#TOC > ol {
     padding: 0;
 }
 
+/*
 .el-in-line > br {
     display: block;
     content: "";
     margin-bottom: 1rem;
 }
+*/
 
 .el-in-line > :not(br) {
     display: inline-block;
@@ -1102,6 +1104,7 @@ nav#TOC > ol {
     font-size: 1.4rem;
     line-height: 2.5rem;
     text-decoration: none;
+    margin-bottom: 1rem !important;
 }
 
 .el-in-line > input {
@@ -1133,7 +1136,6 @@ nav#TOC > ol {
 }
 
 .el-in-line > .refresh-captcha {
-    margin: 0 !important;
     padding: 0;
     font-size: 2.5rem;
     line-height: 3rem;
