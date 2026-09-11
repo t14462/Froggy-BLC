@@ -223,7 +223,14 @@ function savePage() {
         $textedit = str_replace("  />", " />", $textedit);
 
 
-        $textedit = remEmptyLi($textedit);
+        /// $textedit = remEmptyLi($textedit);
+
+
+        if($herror === 0) {
+            $checkHTML = escape_amp_txtarea($textedit);
+            $checkHTML = @str_get_html($checkHTML, false, true, "UTF-8", false) or ($herror = 11);
+            unset($checkHTML);
+        }
 
 
         /*
@@ -589,6 +596,8 @@ function savePage() {
 
         $textedit2 = escape_amp_txtarea($textedit);
 
+        $pgtitle2 = escape_amp_txtarea($pgtitle);
+
         $queryString = $_SERVER['QUERY_STRING'] ?? '';
         $queryBase = explode('&', $queryString)[0];
 
@@ -607,7 +616,7 @@ function savePage() {
             <p>Для вставки Тире используйте \" -- \" (без кавычек, с пробелами по краям)</p>
             <p><strong>{{lambda}} FROG!!!</strong></p>
 
-            <input id='edpagetitle' type='text' name='title' value='".$pgtitle."' />".$hsel.
+            <input id='edpagetitle' type='text' name='title' value='".$pgtitle2."' />".$hsel.
             "<textarea rows='9' name='textedit' id='textedit'>"
             .$textedit2."</textarea><div class='el-in-line'> <input type='submit' value='💾 Отправить' />
 
@@ -857,6 +866,21 @@ function savePage() {
                 $errmsg .= "<p class='big'>Только <strong>редакторы</strong> и <strong>администраторы</strong> это могут делать.</p>";
 
                 $errmsg .= "<p class='big'><em><u>Ваш IP-адрес изменился — сессия недействительна!</u><br />В форме ниже представлены несохранённые данные, которые вы можете скопировать.</em></p>";
+
+                $content = $dumpEdit;
+
+                // mylog("<em style='color:DarkMagenta'>БД была заблокирована. (Отредактирована другим пользователем).</em>");
+
+                break;
+
+            case 11:
+
+                $head .= $headEd;
+                $body .= $bodyEd;
+
+                $errmsg = "<h1>ОШИБКА 11.</h1><p class='big'>Не удалось обработать HTML статьи.</p>";
+
+                /// $errmsg .= "<p class='big'><em><u>Ваш IP-адрес изменился — сессия недействительна!</u><br />В форме ниже представлены несохранённые данные, которые вы можете скопировать.</em></p>";
 
                 $content = $dumpEdit;
 
@@ -1170,7 +1194,7 @@ function commentReply() {
                     $commpost
                 ); */
 
-                $commpost = remEmptyLi($commpost);
+                /// $commpost = remEmptyLi($commpost);
 
                 $commpost = escape_amp_txtarea($commpost);
 
@@ -1633,7 +1657,7 @@ function postComment() {
                     $commpost
                 ); */
 
-                $commpost = remEmptyLi($commpost);
+                /// $commpost = remEmptyLi($commpost);
 
                 $commpost = escape_amp_txtarea($commpost);
 

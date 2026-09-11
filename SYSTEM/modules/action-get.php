@@ -1148,6 +1148,8 @@ function pageEdit() {
 
         // $line = protect_amp_entities_for_textarea($line);
 
+        $ptitle = escape_amp_txtarea($ptitle);
+
         $line = escape_amp_txtarea($line);
         
 
