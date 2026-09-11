@@ -1258,40 +1258,63 @@ nav#TOC > ol {
 
 
 .el-in-line {
-
-    margin: 1rem 0;
-    vertical-align: middle;
-    /* height: 3rem; */
+    margin: 1rem;
     padding: 0;
 }
 
-.el-in-line *:not(br), .el-in-line input[type=file]::file-selector-button  {
+.el-in-line > br {
+    display: block;
+    content: "";
+    margin-bottom: 1rem;
+}
 
+.el-in-line > :not(br) {
     display: inline-block;
+    height: 3rem !important;
+    box-sizing: border-box;
     vertical-align: middle;
-    margin: 0;
-    margin-right: .5rem;
-    text-decoration: none;
-    line-height: 3rem;
+    margin: 0 !important;
+    margin-right: .6rem !important;
     padding: .25rem;
     font-size: 1.4rem;
+    line-height: 2.5rem;
+    text-decoration: none;
 }
 
-.el-in-line img {
+.el-in-line > input {
+    line-height: normal;
+}
 
+.el-in-line input[type="file"]::file-selector-button {
+    height: 100%;
+    box-sizing: border-box;
+    vertical-align: middle;
+    margin: 0 1.2rem 0 0;
+    padding: 0 .25rem;
+    font-size: inherit;
+    line-height: normal;
+}
+
+.el-in-line > img {
+    float: none !important;
+    clear: none !important;
+    max-width: 100% !important;
+    width: auto !important;
     padding: 0;
     object-fit: contain !important;
-    height: 3rem !important;
-    width: auto !important;
     image-rendering: smooth;
 }
 
-.el-in-line .refresh-captcha {
-
-    padding: 0;
-    font-size: 3rem;
-    text-decoration: none;
+.el-in-line > #symcount {
     margin-right: 0 !important;
+}
+
+.el-in-line > .refresh-captcha {
+    margin: 0 !important;
+    padding: 0;
+    font-size: 2.5rem;
+    line-height: 3rem;
+    text-decoration: none;
 }
 
 
