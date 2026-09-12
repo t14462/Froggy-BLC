@@ -1,15 +1,28 @@
 header {
-  background-image: url('argyle.png');
-  background-repeat: repeat;
-  animation: scroll-bg 40s linear infinite;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background-image: none;
+  animation: none;
+}
+
+header::before {
+  content: "";
+  position: absolute;
+  inset: -96px -106px 0 0;
+  z-index: -1;
+  pointer-events: none;
+
+  background: url("argyle.png") repeat;
+  animation: scroll-bg 4s linear infinite;
 }
 
 @keyframes scroll-bg {
   from {
-    background-position: 0 0;
+    transform: translate(0, 0);
   }
   to {
-    background-position: -1060px 960px;
+    transform: translate(-106px, 96px);
   }
 }
 
@@ -17,13 +30,16 @@ header {
 
 
 header strong::after {
-  animation: blink 1.6s steps(2, start) infinite;
+  animation: blink 1.6s step-end infinite;
 }
 
 /* Анимация "мигания" */
 @keyframes blink {
-  to {
-    visibility: hidden;
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
   }
 }
 
