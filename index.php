@@ -132,6 +132,7 @@ session_set_cookie_params([
 ]);
 session_start();
 
+header('Cache-Control: no-store');
 
 $csrf = $_SESSION['csrf'] ?? random_int(0, 0xFFFFFFFFFFFFFFF);
 
