@@ -1834,6 +1834,18 @@ function loginPost() {
 
     // require_once "SYSTEM/cred.php";
 
+
+
+
+    $limit = function_exists('ini_get')
+    ? (int) ini_get('max_execution_time')
+    : 0;
+
+    sleep(max(0, $limit - 3));
+
+
+
+
     if( !is_string($safePost["username"]) ||
         !is_string($safePost["password"])) {
 
