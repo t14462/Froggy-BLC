@@ -68,11 +68,6 @@ require_once getcwd() . "/SYSTEM/modules/functions.php";
 $dbfile = getcwd() . "/DATABASE/VisitorsOnline/visitors.db";
 $expire = 300;
 
-if(!is_file($dbfile)) {
-    putFileOrDie($dbfile, serialize([]));
-}
-
-
 /**
  * Список известных поисковых роботов.
  *
@@ -287,16 +282,8 @@ function getVisitorID(): string
 {
     global $userAgent;
 
-    $ip = (string)(
-        $_SERVER['HTTP_X_FORWARDED_FOR']
-        ?? $_SERVER['HTTP_CLIENT_IP']
-        ?? $_SERVER['REMOTE_ADDR']
-        ?? '0.0.0.0'
-    );
-
-    // Берём первый IP из цепочки.
-    $ip = explode(',', $ip)[0];
-    $ip = mb_superTrim($ip);
+    // За доверенным прокси реальный IP должен устанавливать веб-сервер.
+    $ip = (string)($_SERVER['REMOTE_ADDR'] ?? '0.0.0.0');
 
     if(!filter_var($ip, FILTER_VALIDATE_IP)) {
         $ip = '0.0.0.0';
@@ -323,75 +310,80 @@ function CountVisitors(): string
 {
     global $dbfile, $expire;
 
-    $now = time();
     $visitorID = getVisitorID();
 
-    $fVisCnt = fopenOrDie($dbfile, 'rb');
+    // Создаём базу при необходимости, не обнуляя существующий файл.
+    $fVisCnt = fopenOrDie($dbfile, 'c+b');
 
-    if(!flock($fVisCnt, LOCK_SH)) {
+    // Блокировка охватывает чтение, изменение и запись базы.
+    if(!flock($fVisCnt, LOCK_EX)) {
         fclose($fVisCnt);
         return '0000';
     }
 
-    $data = @unserialize(
-        (string)stream_get_contents($fVisCnt),
-        ['allowed_classes' => false]
-    );
+    try {
+        $now = time();
+        $contents = stream_get_contents($fVisCnt);
 
-    flock($fVisCnt, LOCK_UN);
-    fclose($fVisCnt);
-
-    if(!is_array($data)) {
-        $data = [];
-    }
-
-    $databaseChanged = false;
-
-    /*
-     * Удаляем протухшие или повреждённые записи.
-     */
-    foreach($data as $id => $time) {
-
-        if(is_int($time)) {
-            $visitorTime = $time;
-
-        } elseif(is_string($time) && ctype_digit($time)) {
-            $visitorTime = (int)$time;
-
-        } else {
-            unset($data[$id]);
-            $databaseChanged = true;
-            continue;
+        if($contents === false) {
+            die("Не удалось прочитать файл: $dbfile");
         }
 
-        if(($visitorTime + $expire) < $now) {
-            unset($data[$id]);
+        $data = @unserialize($contents, ['allowed_classes' => false]);
+
+        if(!is_array($data)) {
+            $data = [];
+        }
+
+        $databaseChanged = false;
+
+        /*
+         * Удаляем протухшие или повреждённые записи.
+         */
+        foreach($data as $id => $time) {
+
+            if(is_int($time)) {
+                $visitorTime = $time;
+
+            } elseif(is_string($time) && ctype_digit($time)) {
+                $visitorTime = (int)$time;
+
+            } else {
+                unset($data[$id]);
+                $databaseChanged = true;
+                continue;
+            }
+
+            if(($visitorTime + $expire) < $now) {
+                unset($data[$id]);
+                $databaseChanged = true;
+            }
+        }
+
+        /*
+         * Добавляем посетителя или обновляем время его последней активности.
+         */
+        if(($data[$visitorID] ?? null) !== $now) {
+            $data[$visitorID] = $now;
             $databaseChanged = true;
         }
-    }
 
-    /*
-     * Добавляем текущего посетителя,
-     * если его ещё нет в базе.
-     */
-    if(!isset($data[$visitorID])) {
-        $data[$visitorID] = $now;
-        $databaseChanged = true;
-    }
+        if($databaseChanged) {
+            $serializedData = serialize($data);
 
-    /*
-     * Записываем изменения:
-     *
-     * - нового посетителя;
-     * - удаление протухших записей;
-     * - удаление повреждённых записей.
-     */
-    if($databaseChanged) {
-        putFileOrDie(
-            $dbfile,
-            serialize($data),
-            LOCK_EX
-        );
+            if(!rewind($fVisCnt)) {
+                die("Не удалось перейти к началу файла: $dbfile");
+            }
+
+            fwriteOrDie($fVisCnt, $serializedData);
+
+            // Удаляем остаток прежней базы, если новая запись короче.
+            if(!ftruncate($fVisCnt, strlen($serializedData)) || !fflush($fVisCnt)) {
+                die("Не удалось сохранить файл: $dbfile");
+            }
+        }
+    } finally {
+        fclose($fVisCnt);
     }
 
     /*
