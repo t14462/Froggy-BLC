@@ -26,3 +26,11 @@ RewriteRule ^cgi-bin/ - [F,L]
 
     Header always set Cross-Origin-Opener-Policy "same-origin"
 </IfModule>
+
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresDefault "access plus 2 weeks"
+
+    ExpiresByType text/html "access plus 0 seconds"
+</IfModule>
+
