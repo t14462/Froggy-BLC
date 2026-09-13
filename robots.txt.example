@@ -7,5 +7,11 @@ Allow: /DATABASE/fupload/
 Allow: /DATABASE/gallery/
 Allow: /SYSTEM/JSLIB/
 
+Allow: /SYSTEM/modules/sitemap.css$
+Allow: /SYSTEM/modules/captcha.php?
+Allow: /SYSTEM/modules/download.php?
+
+Allow: /DATABASE/DB/ryba.jpg?
+
 Sitemap: https://froggy-blc.com/sitemap.xml
 Sitemap: https://froggy-blc.com/sitemap.txt
