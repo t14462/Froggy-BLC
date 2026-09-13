@@ -19,6 +19,7 @@ RewriteRule ^SYSTEM/JSLIB/ - [L]
 RewriteRule ^SYSTEM/modules/sitemap\.css$ - [L]
 RewriteRule ^SYSTEM/modules/captcha\.php$ - [L]
 RewriteRule ^SYSTEM/modules/download\.php$ - [L]
+RewriteRule ^SYSTEM/modules/my-ck-ed\.css$ - [L]
 
 # --- Запрещаем всё остальное в /SYSTEM/ ---
 RewriteRule ^SYSTEM/ - [F,L]
