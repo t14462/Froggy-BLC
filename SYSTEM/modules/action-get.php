@@ -564,6 +564,9 @@ function pageload() {
 
                     $line = str_replace("<id>", $commaddr."-", $line);
 
+                    $line = str_replace(">rep.</a>", " rel='nofollow'>rep.</a>", $line);
+                    $line = str_replace(">del.</a>", " rel='nofollow'>del.</a>", $line);
+
                     $commentschunk .= $line;
 
                 } else {
