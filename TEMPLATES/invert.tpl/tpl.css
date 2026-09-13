@@ -1378,6 +1378,9 @@ main article *, #sitemenu a {
     width: calc(100% - 4rem);
     height: 2rem;
     margin: 0;
+
+    vertical-align: middle;
+    border-radius: 0;
 }
 
 #menu-search-wrap button {
