@@ -69,13 +69,10 @@ function DlIncrement(id) {
         return;
     }
 
-    const count = parseInt(el.textContent, 10);
+    const count = parseInt(el.textContent.replace(/[\s,]/g, ''), 10);
+    const next = Number.isNaN(count) ? 1 : count + 1;
 
-    if(Number.isNaN(count)) {
-        el.textContent = "1";
-    } else {
-        el.textContent = String(count + 1);
-    }
+    el.textContent = String(next).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
 }
 
 
