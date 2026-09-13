@@ -1093,7 +1093,7 @@ nav#TOC > ol {
 }
 */
 
-.el-in-line > :not(br) {
+.el-in-line > :not(br, form), .el-in-line > form > :not(br) {
     display: inline-block;
     height: 3rem !important;
     box-sizing: border-box;
@@ -1140,6 +1140,13 @@ nav#TOC > ol {
     font-size: 2.5rem;
     line-height: 3rem;
     text-decoration: none;
+}
+
+.el-in-line form {
+
+    display: inline-block;
+    margin: 0;
+    padding: 0;
 }
 
 .vid-wrapper {
