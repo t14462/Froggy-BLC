@@ -1524,6 +1524,7 @@ main article *, #sitemenu a {
 
     vertical-align: middle;
     border-radius: 0;
+    display: inline-block;
 }
 
 #menu-search-wrap button {
