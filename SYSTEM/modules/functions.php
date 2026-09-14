@@ -2823,8 +2823,22 @@ function protect_code_double_hyphen($html, &$ctx)
         $out .= substr($html, $pos, $start - $pos);
 
         // Конец открывающего тега <code ...>
-        $tagEnd = strpos($html, '>', $start);
-        if ($tagEnd === false) {
+        // Символ > внутри кавычек атрибута не завершает тег.
+        $tagEnd = $start + 5;
+        $quote = null;
+        $length = strlen($html);
+        while ($tagEnd < $length) {
+            $char = $html[$tagEnd];
+            if ($quote !== null) {
+                if ($char === $quote) $quote = null;
+            } elseif ($char === '"' || $char === "'") {
+                $quote = $char;
+            } elseif ($char === '>') {
+                break;
+            }
+            $tagEnd++;
+        }
+        if ($tagEnd >= $length) {
             // битый HTML — дописываем остаток как есть
             $out .= substr($html, $start);
             break;
@@ -3094,8 +3108,22 @@ function protect_code_quotes($html, &$ctx)
 
         $out .= substr($html, $pos, $start - $pos);
 
-        $tagEnd = strpos($html, '>', $start);
-        if ($tagEnd === false) {
+        // Символ > внутри кавычек атрибута не завершает тег.
+        $tagEnd = $start + 5;
+        $quote = null;
+        $length = strlen($html);
+        while ($tagEnd < $length) {
+            $char = $html[$tagEnd];
+            if ($quote !== null) {
+                if ($char === $quote) $quote = null;
+            } elseif ($char === '"' || $char === "'") {
+                $quote = $char;
+            } elseif ($char === '>') {
+                break;
+            }
+            $tagEnd++;
+        }
+        if ($tagEnd >= $length) {
             $out .= substr($html, $start);
             break;
         }
@@ -3167,6 +3195,17 @@ function ru_nbsp_typograf(string $text, bool $useHtmlNbsp = false): string
     // Неразрывный пробел и тире
     $nbsp  = $useHtmlNbsp ? '&nbsp;' : "\u{00A0}";
     $mdash = $useHtmlNbsp ? '&mdash;' : '—';
+
+
+    // Теги и комментарии сохраняем отдельно от текста. В атрибутах допустим >.
+    $markupPattern = <<<'REGEX'
+~(<!--.*?(?:-->|$)|<!\[CDATA\[.*?(?:\]\]>|$)|<\?.*?(?:\?>|$)|<[!/]?[A-Za-z](?:[^"'<>]|"[^"]*"|'[^']*')*>)~s
+REGEX;
+    $parts = preg_split($markupPattern, $text, -1, PREG_SPLIT_DELIM_CAPTURE);
+    if ($parts === false) {
+        $text = restore_code_double_hyphen($text, $ctx);
+        return restore_code_quotes($text, $ctx);
+    }
 
     // ── 1) Устойчивые обороты, сокращения, тире ────────────────────
     //    (без предлогов/союзов — их обрабатываем отдельно ниже)
@@ -3246,8 +3285,22 @@ function ru_nbsp_typograf(string $text, bool $useHtmlNbsp = false): string
         // '&amp;',
     ];
 
-    // Сначала фиксируем устойчивые конструкции, чтобы потом не разломать их предлогами
-    $text = str_replace($search, $replace, $text);
+    // Для сокращений допускаем также начало текста сразу после HTML-тега.
+    foreach ($search as $index => $needle) {
+        if (str_starts_with($replace[$index], ' ')) {
+            $search[$index] = '~(^| )' . preg_quote(substr($needle, 1), '~') . '~u';
+            $replace[$index] = '$1' . substr($replace[$index], 1);
+        } else {
+            $search[$index] = '~' . preg_quote($needle, '~') . '~u';
+        }
+    }
+
+    // Чётные элементы — текст, нечётные — неизменяемая HTML-разметка.
+    foreach ($parts as $index => $part) {
+        if ($index % 2 === 0) {
+            $parts[$index] = preg_replace($search, $replace, $part) ?? $part;
+        }
+    }
 
     // ── 2) Короткие союзы/предлоги ─────────────────────────────────
     //    - ' в '      → ' в&nbsp;'
@@ -3292,33 +3345,33 @@ function ru_nbsp_typograf(string $text, bool $useHtmlNbsp = false): string
     $replaceWords = [];
 
     foreach ($shortSpecs as [$lower, $upper]) {
-        // 2A) Строчная внутри текста: ' в ' → ' в&nbsp;'
-        $searchWords[]  = ' ' . $lower . ' ';
-        $replaceWords[] = ' ' . $lower . $nbsp;
-
-        // 2B) Заглавная в начале предложения: 'В ' → 'В&nbsp;'
-        $searchWords[]  = $upper . ' ';
-        $replaceWords[] = $upper . $nbsp;
-
-        // 2C) Уже склеенное слева слово: '&nbsp;в ' → '&nbsp;в&nbsp;'
-        $searchWords[]  = $nbsp . $lower . ' ';
-        $replaceWords[] = $nbsp . $lower . $nbsp;
-
-        // 2D) То же для заглавной: '&nbsp;В ' → '&nbsp;В&nbsp;'
-        $searchWords[]  = $nbsp . $upper . ' ';
-        $replaceWords[] = $nbsp . $upper . $nbsp;
+        // Слово должно начинаться отдельно, а не быть окончанием «МОСКВА».
+        // \K оставляет само слово нетронутым и заменяет только пробел после него.
+        $searchWords[] = '~(?<![\p{L}\p{M}\p{N}_-])(?:'
+            . preg_quote($lower, '~') . '|' . preg_quote($upper, '~') . ')\K ~u';
+        $replaceWords[] = $nbsp;
     }
 
-    $text = str_replace($searchWords, $replaceWords, $text);
+    foreach ($parts as $index => $part) {
+        if ($index % 2 === 0) {
+            $parts[$index] = preg_replace($searchWords, $replaceWords, $part) ?? $part;
+        }
+    }
 
     // ── 3) Частицы "же", "ли", "бы", "б" ───────────────────────────
     // NBSP СЛЕВА: "как же выйти" → "как&nbsp;же выйти"
 
-    $text = preg_replace(
-        "/ (же\b|ли\b|бы\b|б\b|&mdash;|—|&ndash;|–)/u",
-        $nbsp . '$1',
-        $text
-    );
+    foreach ($parts as $index => $part) {
+        if ($index % 2 === 0) {
+            $parts[$index] = preg_replace(
+                "/ (же\b|ли\b|бы\b|б\b|&mdash;|—|&ndash;|–)/u",
+                $nbsp . '$1',
+                $part
+            ) ?? $part;
+        }
+    }
+
+    $text = implode('', $parts);
 
     $text = typograph_guillemets($text);             // «ёлочки»
 
