@@ -2296,8 +2296,14 @@ function parseSpoilers(simple_html_dom $html): simple_html_dom {
 }
 
 function wrap_images_with_figure(simple_html_dom $html): simple_html_dom {
-    // Корень сайта на диске.
-    $root = realpath($_SERVER['DOCUMENT_ROOT'] ?? '');
+    // Корень домена на диске; каталог установки CMS может быть вложенным.
+    $documentRoot = $_SERVER['DOCUMENT_ROOT'] ?? '';
+    $root = $documentRoot !== '' ? realpath($documentRoot) : false;
+
+    // Каталог URL текущей страницы: /cms/ и /cms/index.php дают /cms/.
+    // Query string с адресом статьи не участвует в разрешении пути.
+    $requestPath = explode('?', $_SERVER['REQUEST_URI'] ?? ($_SERVER['SCRIPT_NAME'] ?? '/'))[0];
+    $pageDirectory = substr($requestPath, 0, (int) strrpos($requestPath, '/') + 1);
 
     // Безопасный снимок массива элементов.
     $images = iterator_to_array($html->find('img'), false);
@@ -2323,7 +2329,16 @@ function wrap_images_with_figure(simple_html_dom $html): simple_html_dom {
             !isset($url['scheme']) &&
             !isset($url['host'])
         ) {
-            $path = rawurldecode($url['path'] ?? '');
+            $urlPath = $url['path'] ?? '';
+            $path = $urlPath;
+
+            // Как в браузере: /img.png — от корня домена,
+            // img.png и ../img.png — от каталога текущей страницы.
+            if ($path !== '' && !str_starts_with($path, '/')) {
+                $path = $pageDirectory . $path;
+            }
+
+            $path = rawurldecode($path);
 
             if ($path !== '' && !str_contains($path, "\0")) {
                 $prefix = rtrim($root, DIRECTORY_SEPARATOR)
