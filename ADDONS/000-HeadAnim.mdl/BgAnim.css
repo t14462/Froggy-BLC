@@ -131,12 +131,18 @@ a[itemprop="url"] > span[itemprop="name"] > span.tag {
     padding-left: 2px;
     padding-right: 2px;
     white-space: nowrap;
+    hyphens: none;
+    word-break: normal;
+    overflow-wrap: normal;
     font-weight: bold;
     font-style: normal;
     background: #666;
     color: white;
     opacity: .5;
     border-radius: 3px;
+    -moz-hyphens: none;
+    -webkit-hyphens: none;
+    -ms-hyphens: none;
 }
 
 
@@ -151,7 +157,32 @@ h1 > span[itemprop="headline"] > span.tag {
     opacity: .5;
     border-radius: 5px;
     white-space: nowrap;
+    hyphens: none;
+    word-break: normal;
+    overflow-wrap: normal;
     padding-left: 5px;
     padding-right: 5px;
     font-style: normal;
+    -moz-hyphens: none;
+    -webkit-hyphens: none;
+    -ms-hyphens: none;
+}
+
+
+
+
+
+
+pre:not(:has(> .hljs)), code:not(.hljs) {
+
+    text-indent: 0 !important;
+
+    white-space: pre-line !important;
+    hyphens: none !important;
+    word-break: normal !important;
+    overflow-wrap: normal !important;
+
+    -moz-hyphens: none !important;
+    -webkit-hyphens: none !important;
+    -ms-hyphens: none !important;
 }
