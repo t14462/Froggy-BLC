@@ -2013,84 +2013,29 @@ function pforbidden() {
     return "<h1>403.</h1><p class='big'><strong>Доступ запрещён.</strong></p>";
 }
 
+/**
+ * Возвращает индекс последней страницы (с нуля); для пустого файла — 0.
+ * При $update = true принудительно пересчитывает строки и обновляет кэш.
+ */
 function calcTotPages(string $commaddr, int $limit, bool $update = false): int
 {
-    if ($limit <= 0) {
-        die('PANIC: bad $limit');
-    }
-
-    $commentsFile = "DATABASE/comments/" . $commaddr;
-    $cacheFile    = $commentsFile . ".pages-cache";
-
-    // ── 1) Если update=false — пытаемся прочитать кэш ─────────────────────────
-    if ($update === false && is_file($cacheFile)) {
-        $fh = @fopen($cacheFile, 'rb');
-        if ($fh) {
-            @flock($fh, LOCK_SH);
-            $raw = (int)(string)stream_get_contents($fh);
-            /// @flock($fh, LOCK_UN);
-            fclose($fh);
-
-            return $raw;
-
-            /*
-            $raw = trim((string)$raw);
-
-            // строго: только 0..N
-            if ($raw !== '' && ctype_digit($raw)) {
-                return (int)$raw;
-            }
-            */
-            // кэш битый — пересчитаем ниже
-        }
-    }
-
-    // ── 2) Считаем количество строк комментариев (по \n) ───────────────────────────
-    if (!is_file($commentsFile)) {
-        /// $totalPages = 0;
-        /// return $totalPages;
-        return 0;
-
-    } else {
-
-        $commcount  = 0;
-        $bufferSize = 128 * 1024;
-        
-        $file = openFileOrDie($commentsFile, 'rb');
-        /// $file->flock(LOCK_SH);
-
-        while ($buffer = $file->freadOrDie($bufferSize)) {
-            $commcount += substr_count($buffer, "\n");
-        }
-
-        /// $file->flock(LOCK_UN);
-        $file = null;
-
-        $totalPages = ($commcount <= 0)
-            ? 0
-            : ((int)ceil($commcount / $limit) - 1);
-    }
-
-    // ── 3) Обновляем кэш ─────────────────────────────────────────────────────
-    $dir = dirname($cacheFile);
-    if (is_dir($dir) && is_writable($dir)) {
-
-        /*
-        $tmp = $cacheFile . ".tmp";
-        if (@file_put_contents($tmp, (string)$totalPages, LOCK_EX) !== false) {
-            @rename($tmp, $cacheFile);
-        } else {
-            @unlink($tmp);
-        }
-        */
-
-        @file_put_contents($cacheFile, (string)$totalPages, LOCK_EX);
-    }
-
-    return $totalPages;
+    return calcCommentLastPage($commaddr, $limit, $update);
 }
 
+/**
+ * Как calcTotPages(), но использует известное число строк без чтения комментариев.
+ * При $update = false корректный кэш имеет приоритет над $commcount.
+ */
 function calcTotPages2(int $commcount, string $commaddr, int $limit, bool $update = false): int
+{
+    return calcCommentLastPage($commaddr, $limit, $update, $commcount);
+}
+
+/**
+ * Общий расчёт: null в $commcount означает, что строки нужно посчитать из файла.
+ * Кэш хранит число строк, поэтому подходит для любого $limit.
+ */
+function calcCommentLastPage(string $commaddr, int $limit, bool $update, ?int $commcount = null): int
 {
     if ($limit <= 0) {
         die('PANIC: bad $limit');
@@ -2099,76 +2044,52 @@ function calcTotPages2(int $commcount, string $commaddr, int $limit, bool $updat
     $commentsFile = "DATABASE/comments/" . $commaddr;
     $cacheFile    = $commentsFile . ".pages-cache";
 
-    // ── 1) Если update=false — пытаемся прочитать кэш ─────────────────────────
-    if ($update === false && is_file($cacheFile)) {
+    if (!is_file($commentsFile)) {
+        return 0;
+    }
+
+    if (!$update && is_file($cacheFile)) {
         $fh = @fopen($cacheFile, 'rb');
-        if ($fh) {
-            @flock($fh, LOCK_SH);
-            $raw = (int)(string)stream_get_contents($fh);
-            /// @flock($fh, LOCK_UN);
+        if ($fh !== false) {
+            $cached = null;
+            if (@flock($fh, LOCK_SH)) {
+                $raw = stream_get_contents($fh);
+                if ($raw !== false) {
+                    $cached = json_decode($raw, true);
+                }
+            }
             fclose($fh);
 
-            return $raw;
-
-            /*
-            $raw = trim((string)$raw);
-
-            // строго: только 0..N
-            if ($raw !== '' && ctype_digit($raw)) {
-                return (int)$raw;
+            if (is_array($cached) && isset($cached['commcount'])
+                && is_int($cached['commcount']) && $cached['commcount'] >= 0) {
+                return $cached['commcount'] > 0
+                    ? intdiv($cached['commcount'] - 1, $limit)
+                    : 0;
             }
-            */
-            // кэш битый — пересчитаем ниже
+            // Старый числовой или повреждённый кэш заменяем новым.
         }
     }
 
-    // ── 2) Считаем количество строк комментариев (по \n) ───────────────────────────
-    if (!is_file($commentsFile)) {
-        /// $totalPages = 0;
-        /// return $totalPages;
-        return 0;
-
-    } else {
-
-        /*
-
-        $commcount  = 0;
+    if ($commcount === null) {
+        $commcount = 0;
         $bufferSize = 128 * 1024;
-        
         $file = openFileOrDie($commentsFile, 'rb');
-        /// $file->flock(LOCK_SH);
 
-        while ($buffer = $file->freadOrDie($bufferSize)) {
+        // Каждая строка комментариев, включая последнюю, заканчивается \n.
+        while (($buffer = $file->freadOrDie($bufferSize)) !== false && $buffer !== '') {
             $commcount += substr_count($buffer, "\n");
         }
-
-        /// $file->flock(LOCK_UN);
         $file = null;
-
-        */
-
-        $totalPages = ($commcount <= 0)
-            ? 0
-            : ((int)ceil($commcount / $limit) - 1);
     }
 
-    // ── 3) Обновляем кэш ─────────────────────────────────────────────────────
+    $commcount = max(0, $commcount);
+
     $dir = dirname($cacheFile);
     if (is_dir($dir) && is_writable($dir)) {
-
-        /*
-        $tmp = $cacheFile . ".tmp";
-        if (@file_put_contents($tmp, (string)$totalPages, LOCK_EX) !== false) {
-            @rename($tmp, $cacheFile);
-        } else {
-            @unlink($tmp);
-        }
-        */
-
-        @file_put_contents($cacheFile, (string)$totalPages, LOCK_EX);
+        @file_put_contents($cacheFile, json_encode(['commcount' => $commcount]), LOCK_EX);
     }
 
-    return $totalPages;
+    return $commcount > 0 ? intdiv($commcount - 1, $limit) : 0;
 }
 
 function loadTplSess() {
