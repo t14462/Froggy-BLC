@@ -112,32 +112,133 @@ ready(function () {
 
 
 
+    // Собираем изображения в порядке HTML до создания самого LightBox.
+    const lightboxImages = Array.from(document.querySelectorAll(
+        'img:not(header img, body > aside img, footer img, #captcha_image)'
+    ));
+    let currentImageIndex = -1;
+    let previousFocus = null;
+
     // Создаем lightbox overlay и элементы
     const lightboxOverlay = document.createElement('div');
     lightboxOverlay.className = 'lightbox-overlay';
+    lightboxOverlay.setAttribute('role', 'dialog');
+    lightboxOverlay.setAttribute('aria-modal', 'true');
+    lightboxOverlay.setAttribute('aria-label', 'Просмотр изображений');
     const lightboxImage = document.createElement('img');
     lightboxImage.className = 'lightbox-image';
     const lightboxClose = document.createElement('span');
     lightboxClose.className = 'lightbox-close';
     lightboxClose.textContent = '×';
+    lightboxClose.title = 'Закрыть (Escape)';
+    lightboxClose.setAttribute('role', 'button');
+    lightboxClose.tabIndex = 0;
+    lightboxClose.setAttribute('aria-label', 'Закрыть');
+
+    const lightboxPrev = document.createElement('button');
+    lightboxPrev.type = 'button';
+    lightboxPrev.className = 'lightbox-nav lightbox-prev';
+    lightboxPrev.textContent = '‹';
+    lightboxPrev.title = 'Предыдущее изображение (←)';
+    lightboxPrev.setAttribute('aria-label', 'Предыдущее изображение');
+    lightboxPrev.hidden = lightboxImages.length < 2;
+
+    const lightboxNext = document.createElement('button');
+    lightboxNext.type = 'button';
+    lightboxNext.className = 'lightbox-nav lightbox-next';
+    lightboxNext.textContent = '›';
+    lightboxNext.title = 'Следующее изображение (→)';
+    lightboxNext.setAttribute('aria-label', 'Следующее изображение');
+    lightboxNext.hidden = lightboxImages.length < 2;
 
     // Добавляем элементы в overlay
     lightboxOverlay.appendChild(lightboxImage);
+    lightboxOverlay.appendChild(lightboxPrev);
+    lightboxOverlay.appendChild(lightboxNext);
     lightboxOverlay.appendChild(lightboxClose);
     document.body.appendChild(lightboxOverlay);
 
+    function showLightboxImage(index) {
+        if (index < 0 || index >= lightboxImages.length) {
+            return;
+        }
+
+        currentImageIndex = index;
+        const img = lightboxImages[index];
+        lightboxImage.src = img.currentSrc || img.src;
+        lightboxImage.alt = img.alt;
+        lightboxPrev.disabled = index === 0;
+        lightboxNext.disabled = index === lightboxImages.length - 1;
+
+        // Не оставляем фокус на стрелке, которая стала неактивной.
+        if (document.activeElement === lightboxPrev && lightboxPrev.disabled
+            || document.activeElement === lightboxNext && lightboxNext.disabled) {
+            lightboxClose.focus({preventScroll: true});
+        }
+    }
+
+    function closeLightbox() {
+        lightboxOverlay.style.display = 'none';
+        currentImageIndex = -1;
+        if (previousFocus) {
+            previousFocus.focus({preventScroll: true});
+        }
+    }
+
     // Открываем изображение в lightbox при клике на него
-    document.querySelectorAll('img:not(header img, body > aside img, footer img, #captcha_image)').forEach(img => {
-        img.addEventListener('click', function () {
-            lightboxImage.src = this.src;
+    lightboxImages.forEach((img, index) => {
+        img.addEventListener('click', function (e) {
+            e.preventDefault();
+            previousFocus = document.activeElement;
+            showLightboxImage(index);
             lightboxOverlay.style.display = 'flex';
+            lightboxClose.focus({preventScroll: true});
         });
     });
 
-    // Закрываем lightbox при клике на overlay или кнопку закрытия
+    lightboxPrev.addEventListener('click', function () {
+        showLightboxImage(currentImageIndex - 1);
+    });
+    lightboxNext.addEventListener('click', function () {
+        showLightboxImage(currentImageIndex + 1);
+    });
+    lightboxClose.addEventListener('click', closeLightbox);
+    lightboxClose.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            closeLightbox();
+        }
+    });
+
+    // Клик по изображению или стрелкам не закрывает LightBox.
     lightboxOverlay.addEventListener('click', function (e) {
-        if(e.target === lightboxOverlay || e.target === lightboxClose) {
-            lightboxOverlay.style.display = 'none';
+        if (e.target === lightboxOverlay) {
+            closeLightbox();
+        }
+    });
+
+    document.addEventListener('keydown', function (e) {
+        if (currentImageIndex < 0 || e.altKey || e.ctrlKey || e.metaKey) {
+            return;
+        }
+
+        if (e.key === 'ArrowLeft') {
+            e.preventDefault();
+            showLightboxImage(currentImageIndex - 1);
+        } else if (e.key === 'ArrowRight') {
+            e.preventDefault();
+            showLightboxImage(currentImageIndex + 1);
+        } else if (e.key === 'Escape') {
+            e.preventDefault();
+            closeLightbox();
+        } else if (e.key === 'Tab') {
+            // Пока окно открыто, Tab перемещается только между его кнопками.
+            e.preventDefault();
+            const buttons = [lightboxPrev, lightboxNext, lightboxClose]
+                .filter(button => !button.hidden && !button.disabled);
+            const index = buttons.indexOf(document.activeElement);
+            const nextIndex = (index + (e.shiftKey ? -1 : 1) + buttons.length) % buttons.length;
+            buttons[nextIndex].focus({preventScroll: true});
         }
     });
 

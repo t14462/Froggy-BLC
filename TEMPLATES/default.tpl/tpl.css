@@ -1282,14 +1282,69 @@ nav#TOC > ol {
     image-rendering: smooth;
 }
 
-/* Close button */
-.lightbox-close {
+/* LightBox controls */
+.lightbox-close, .lightbox-nav {
     position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background-color: transparent;
+    color: #fff;
+    font: 2rem/1 sans-serif;
+    text-shadow: 0 1px 4px #000;
+    user-select: none;
+    cursor: url('hover.cur.svg'), pointer;
+}
+
+.lightbox-close {
+    z-index: 2;
     top: 1rem;
     right: 1rem;
-    color: #fff;
-    font-size: 2rem;
-    cursor: url('hover.cur.svg'), pointer;
+    width: 3rem;
+    height: 3rem;
+}
+
+/* Полупрозрачные зоны листания по всей высоте краёв окна. */
+.lightbox-nav {
+    z-index: 1;
+    top: 0;
+    width: clamp(44px, 12vw, 10rem);
+    height: 100%;
+    font-size: 3rem;
+}
+
+.lightbox-prev {
+    left: 0;
+    background-image: linear-gradient(to right, rgba(0, 0, 0, 0.35), transparent);
+}
+
+.lightbox-next {
+    right: 0;
+    background-image: linear-gradient(to left, rgba(0, 0, 0, 0.35), transparent);
+}
+
+.lightbox-nav[hidden] {
+    display: none;
+}
+
+.lightbox-nav:disabled {
+    opacity: 0.35;
+    cursor: default;
+}
+
+.lightbox-nav:hover:not(:disabled) {
+    background-color: rgba(0, 0, 0, 0.15);
+}
+
+.lightbox-close:focus-visible, .lightbox-nav:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: -3px;
 }
 
 
