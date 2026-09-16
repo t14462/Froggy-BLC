@@ -36,9 +36,8 @@ if( $chTimeMenu < $chTimeDB && is_file("DATABASE/DB/MenuCache.txt")) {
 
     // rename("DATABASE/DB/MenuCache.txt", "DATABASE/DB/MenuCache.txt.del");
 
-    if(is_file("DATABASE/DB/MenuCache.txt")) {
-        @unlink("DATABASE/DB/MenuCache.txt");
-    }
+    @unlink("DATABASE/DB/MenuCache.txt");
+    
 }
 
 /*
@@ -353,7 +352,7 @@ if(    is_file("DATABASE/DB/DB-TOC-Cache.txt")
 
         if(dbdone("DATABASE/DB/DB-TOC-Cache.txt", "")) {
 
-            touchMy("DATABASE/DB/DB-TOC-Cache.txt", $chTimeDB);
+            touchMy("DATABASE/DB/DB-TOC-Cache.txt", $chTimeDB) or die("Не удалось обновить метку времени файла DATABASE/DB/DB-TOC-Cache.txt.");
         }
     }
 
@@ -367,7 +366,7 @@ if(    is_file("DATABASE/DB/DB-TOC-Cache.txt")
 
         if(dbdone("DATABASE/DB/SEO-Cache.txt", "")) {
 
-            touchMy("DATABASE/DB/SEO-Cache.txt", $chTimeDB);
+            touchMy("DATABASE/DB/SEO-Cache.txt", $chTimeDB) or die("Не удалось обновить метку времени файла DATABASE/DB/SEO-Cache.txt.");
         }
     }
 
@@ -433,7 +432,7 @@ function sitemapflush() {
 
     if(!dbdone("sitemap.txt", "")) return false;
 
-    touchMy("sitemap.txt", $chTimeDB);
+    touchMy("sitemap.txt", $chTimeDB) or die("Не удалось обновить метку времени файла sitemap.txt.");
 
     // mylog("<strong style='color:DarkMagenta'>Карта сайта пересоздана.</strong>");
 }
@@ -479,7 +478,7 @@ function sitemapflushXml() {
 
     if(!dbdone("sitemap.xml", "")) return false;
 
-    touchMy("sitemap.xml", $chTimeDB);
+    touchMy("sitemap.xml", $chTimeDB) or die("Не удалось обновить метку времени файла sitemap.xml.");
 
     // mylog("<strong style='color:DarkMagenta'>Карта сайта XML пересоздана.</strong>");
 }

@@ -57,47 +57,78 @@ if(isset($_SESSION["username"]) && isset($_SESSION["userhash"])) {
 
 
 /**
- * Сохраняет текущее microtime(true) или переданное значение в ПУТЬ_К_ФАЙЛУ.time
+ * Обновляет mtime существующего файла и сохраняет метку в ПУТЬ_К_ФАЙЛУ.time в формате %.4F.
+ * Если целевого файла нет — возвращает false, ничего не создавая.
  *
  * @param string $file Путь к целевому файлу
  * @param float|null $customTime Если указан — используется он вместо текущего времени
- * @return bool true, если файл успешно записан
+ * @return bool true, если mtime обновлён и метка полностью записана
  */
 function touchMy(string $file, ?float $customTime = null): bool {
     $timeFile = $file . '.time';
     $timeToWrite = $customTime ?? microtime(true);
-    $touched = touch($file, (int)$timeToWrite);
-    $written = file_put_contents($timeFile, sprintf('%.4f', $timeToWrite), LOCK_EX) !== false;
 
-    return $touched && $written;
+    if(!is_finite($timeToWrite) || $timeToWrite < PHP_INT_MIN || $timeToWrite >= PHP_INT_MAX) {
+        return false;
+    }
+
+    $contents = sprintf('%.4F', $timeToWrite);
+
+    clearstatcache();
+    if(!is_file($file)) {
+        return false;
+    }
+
+    if(!touch($file, (int)(float)$contents)) {
+        return false;
+    }
+
+    return file_put_contents($timeFile, $contents, LOCK_EX) === strlen($contents);
 }
 
 /**
- * Читает microtime из ПУТЬ_К_ФАЙЛУ.time
- * Если .time нет — берёт значение filemtime().
- * Если и целевого файла нет — возвращает 0.0 .
+ * Возвращает большую из меток filemtime() и ПУТЬ_К_ФАЙЛУ.time с точностью %.4F.
+ * Если .time отсутствует, недоступен или повреждён — использует filemtime().
+ * Если mtime целевого файла недоступен (в том числе файл удалён) — возвращает 0.0.
+ * Результат остаётся float; завершающие нули нужны только при выводе через sprintf().
  */
 function filemtimeMy(string $file): float {
     $timeFile = $file . '.time';
 
-    if (is_file($timeFile)) {
+    // Файл мог измениться другим процессом после предыдущего чтения в этом запросе.
+    clearstatcache();
+    $fileTime = @filemtime($file);
 
-        $locktmp = fopenOrDie($timeFile, 'rb');
-        flock($locktmp, LOCK_SH);
-
-        $contents = (string)stream_get_contents($locktmp);
-
-        /// $contents = file_get_contents($timeFile);
-
-        /// flock($locktmp, LOCK_UN);
-        fclose($locktmp);
-
-        return (float)sprintf('%.4f', $contents);
-
-        /// return (float) trim(file_get_contents($timeFile));
+    if($fileTime === false) {
+        return 0.0;
     }
 
-    return (float)@filemtime($file);
+    $time = (float)$fileTime;
+
+    if(is_file($timeFile)) {
+        $locktmp = @fopen($timeFile, 'rb');
+
+        if($locktmp !== false) {
+            try {
+                if(@flock($locktmp, LOCK_SH)) {
+                    $contents = @stream_get_contents($locktmp);
+
+                    if($contents !== false) {
+                        $contents = trim($contents);
+
+                        if(is_numeric($contents) && is_finite((float)$contents)) {
+                            $time = max($time, (float)$contents);
+                        }
+                    }
+                }
+            } finally {
+                // fclose() также освобождает блокировку.
+                fclose($locktmp);
+            }
+        }
+    }
+
+    return (float)sprintf('%.4F', $time);
 }
 
 # DO NOT DELETE
@@ -1187,7 +1218,7 @@ function dbdone($filename, $recovery) {
     
         rename($filename.".new." . getmypid(), $filename) or die();
 
-        touchMy($filename);
+        touchMy($filename) or die("Не удалось обновить метку времени файла: $filename. Проверьте права доступа и свободное место на диске.");
 
         fclose($locktmp);
 

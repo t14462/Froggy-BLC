@@ -1408,23 +1408,22 @@ nav#TOC > ol {
     height: 3rem;
 }
 
-/* Полупрозрачные зоны листания по всей высоте краёв окна. */
+/* Зоны листания по центру краёв окна. */
 .lightbox-nav {
     z-index: 1;
-    top: 0;
+    top: 50%;
     width: clamp(44px, 12vw, 10rem);
-    height: 100%;
+    height: 34%;
+    transform: translateY(-50%);
     font-size: 3rem;
 }
 
 .lightbox-prev {
     left: 0;
-    background-image: linear-gradient(to right, rgba(0, 0, 0, 0.35), transparent);
 }
 
 .lightbox-next {
     right: 0;
-    background-image: linear-gradient(to left, rgba(0, 0, 0, 0.35), transparent);
 }
 
 .lightbox-nav[hidden] {
@@ -1436,13 +1435,10 @@ nav#TOC > ol {
     cursor: default;
 }
 
-.lightbox-nav:hover:not(:disabled) {
-    background-color: rgba(0, 0, 0, 0.15);
-}
-
+.lightbox-close:focus, .lightbox-nav:focus,
 .lightbox-close:focus-visible, .lightbox-nav:focus-visible {
-    outline: 2px solid #fff;
-    outline-offset: -3px;
+    outline: none;
+    box-shadow: none;
 }
 
 
