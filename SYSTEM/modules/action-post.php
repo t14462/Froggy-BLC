@@ -2251,6 +2251,12 @@ function pobyava() {
 
         $obstring = $safePost['pobyava'];
 
+        // Ограничение формы нужно проверять и на сервере, до разбора HTML.
+        if(mb_strlen($obstring) > 3000) {
+            $errmsg = "<h1>ОШИБКА.</h1><p class='big'><strong>Объявление слишком большое (больше 3000 символов, включая HTML-разметку).</strong></p>";
+            return;
+        }
+
         ensure_html_purifier_loaded();
 
         $config = HTMLPurifier_Config::createDefault();

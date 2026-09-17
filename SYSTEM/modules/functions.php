@@ -3357,12 +3357,29 @@ function obyava() {
 
     $obfile = "DATABASE/obyava.txt";
 
-    $br = "<br /><br />";
+    $br = "";
     $obstring = "";
 
-    if (is_file($obfile) && filesize($obfile) > 4) {
+    if(is_file($obfile)) {
+        $fp = fopenOrDie($obfile, 'rb');
 
-        $obstring = getFileOrDie($obfile);
+        try {
+            if(!flock($fp, LOCK_SH)) {
+                die("Не удалось заблокировать файл для чтения: $obfile.");
+            }
+
+            // Читаем под той же блокировкой, которую учитывает запись в pobyava().
+            // Дополнительный байт позволяет обнаружить превышение лимита парсера.
+            $obstring = stream_get_contents($fp, MAX_FILE_SIZE + 1);
+            if($obstring === false) {
+                $obstring = "Не удалось прочитать файл: $obfile.";
+            }
+        } finally {
+            fclose($fp); // Также снимает блокировку.
+        }
+    }
+
+    if(!empty($obstring) && strlen($obstring) <= MAX_FILE_SIZE) {
 
         $obstring = normalize_entities_my($obstring);
 
@@ -3405,22 +3422,44 @@ function obyava() {
 
         $obstring = escape_amp_txtarea($obstring);
 
-        $html = str_get_html($obstring, false, true, "UTF-8", false) or die("XSS?.. Пустой или битый HTML.");
+        $parsedObstring = false;
 
-        $html = replaceSemanticSpans($html);
+        // Предупреждения парсера обрабатываем так же, как исключения.
+        set_error_handler(static function(int $severity, string $message, string $file, int $line): never {
+            throw new ErrorException($message, 0, $severity, $file, $line);
+        });
 
-        $obstring = $html->save();
+        try {
+            $html = str_get_html($obstring, false, true, "UTF-8", false);
 
-        /* $obstring = str_ireplace(
-            ['&@lt;', '&@gt;', '&@quot;', '&@apos;', '&@amp;'],
-            ['&lt;',  '&gt;',  '&quot;',  '&#039;',   '&amp;'],
-            $obstring
-        ); */
+            if($html !== false) {
+                $html = replaceSemanticSpans($html);
+                $parsedObstring = $html->save();
+            }
+        } catch(Throwable $e) {
+            error_log("obyava(): ошибка Simple-HTML-DOM: " . $e->getMessage());
+        } finally {
+            restore_error_handler();
+        }
 
-        // $obstring = typograph_guillemets($obstring);
-        $obstring = ru_nbsp_typograf($obstring);
+        // false возможен и при превышении лимита после экранирования.
+        if($parsedObstring !== false) {
+            $obstring = $parsedObstring;
 
-        $obstring = "<aside id='obyava' class='clearfix' aria-label='Объявление'>$obstring</aside>";
+            /* $obstring = str_ireplace(
+                ['&@lt;', '&@gt;', '&@quot;', '&@apos;', '&@amp;'],
+                ['&lt;',  '&gt;',  '&quot;',  '&#039;',   '&amp;'],
+                $obstring
+            ); */
+
+            // $obstring = typograph_guillemets($obstring);
+            $obstring = ru_nbsp_typograf($obstring);
+
+            $obstring = "<aside id='obyava' class='clearfix' aria-label='Объявление'>$obstring</aside>";
+            $br = "<br /><br />";
+        } else {
+            $obstring = "<hr />";
+        }
 
     } else {
 
