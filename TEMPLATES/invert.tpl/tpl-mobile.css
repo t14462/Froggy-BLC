@@ -297,8 +297,7 @@ body {
     background: #f8f8f8;
     border-top: 1px solid #ccc;
     display: flex;
-    justify-content: space-around;
-    align-items: center;
+    align-items: stretch;
     height: 40px;
     z-index: 1001; /* выше revision-me, если он 1000 */
     font-size: 16px;
@@ -307,6 +306,10 @@ body {
 
 .mscroll a {
 
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
     text-decoration: none;
     color: #333;
 

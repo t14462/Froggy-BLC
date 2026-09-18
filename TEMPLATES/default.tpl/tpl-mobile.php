@@ -55,6 +55,6 @@ if (!defined('SECURE_ACCESS')) { die('Direct access not permitted'); }
 <!-- <p class="mscroll">&nbsp;<a href="#system-links">ВВЕРХ!</a>&nbsp;&nbsp;<a href="#comm-title">Коммент</a>&nbsp;&nbsp;<a href="#sitemenu">Меню</a></p> -->
 </aside>
 <footer><?php echo $footer; ?></footer>
-<div class="mscroll"><a href="#system-links">ВВЕРХ!</a>&nbsp;<a href="#comm-title">Коммент</a>&nbsp;<a href="#to-menu-bar">Меню</a></div>
+<div class="mscroll"><a href="#system-links">ВВЕРХ!</a><a href="#comm-title">Коммент</a><a href="#to-menu-bar">Меню</a></div>
 </body>
 </html>
