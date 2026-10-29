@@ -1836,12 +1836,13 @@ function loginPost() {
 
 
 
-
+    /*
     $limit = function_exists('ini_get')
     ? (int) ini_get('max_execution_time')
     : 0;
 
     sleep(max(0, $limit - 3));
+    */
 
 
 
