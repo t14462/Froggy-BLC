@@ -1196,7 +1196,7 @@ function dbprepCache($filename) {
 
 function dbdone($filename, $recovery) {
 
-    global $errmsg, $content;
+    global $errmsg, $content, $safeGet, $safePost;
 
     $locktmp = fopenOrDie($filename.".lock", 'rb');
     flock($locktmp, LOCK_SH);
