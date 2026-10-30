@@ -1772,9 +1772,9 @@ function postComment() {
                 // $commpost = str_ireplace("\n", "<br />\n", $commpost);
             }
 
-            if(!is_file("DATABASE/comments/".$commaddr)) {
-                @copy("SYSTEM/modules/dummy.txt", "DATABASE/comments/".$commaddr);
-            }
+            // Создаём отсутствующий файл, не обнуляя его при параллельной отправке.
+            $file = fopenOrDie("DATABASE/comments/".$commaddr, 'c+b');
+            fclose($file);
 
             dbprepApnd("DATABASE/comments/".$commaddr);
 
