@@ -930,8 +930,6 @@ function commentReply() {
 
         $commpost = mb_substr($commpost, 0, 2550);
 
-        $replyRecoveryText = $commpost;
-
         $commpost = normalize_entities_my($commpost);
 
         $commpost  = str_ireplace("<br!>", "\n", $commpost);
@@ -1046,7 +1044,7 @@ function commentReply() {
 
         } elseif(substr_count($commdataline, "<$repcommid />") !== 1) {
 
-            $rejectMissingReply($replyRecoveryText);
+            $rejectMissingReply($commpost);
             return;
 
         } elseif(!$checkpermission && !canProceed($ip)) {
@@ -1345,7 +1343,7 @@ function commentReply() {
             if($replyReplacements !== 1) {
                 @unlink("DATABASE/comments/".$commaddr.".new." . getmypid());
                 @unlink("DATABASE/comments/".$commaddr.".src." . getmypid());
-                $rejectMissingReply($replyRecoveryText);
+                $rejectMissingReply($commpost2);
                 return;
             }
 
