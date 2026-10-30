@@ -611,7 +611,7 @@ function validateUsername(input) {
 
     let valid = true;
 
-    if(length < 3 || length > 25) {
+    if(length < 3 || length > 50) {
         valid = false;
     }
 
@@ -699,7 +699,7 @@ function evaluateUserList() {
         const nameValid =
             // name.trim() !== '' &&
             nameLength >= 3 &&
-            nameLength <= 25 &&
+            nameLength <= 50 &&
             !/[\x00-\x1F\x7F-\x9F\u2028\u2029\\]/.test(name);
 
         const hashValid =
