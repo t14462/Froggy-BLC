@@ -2669,7 +2669,15 @@ function normalize_entities_my(string $text): string {
 
     // 2) Шестнадцатеричные: к десятичным + правим диапазоны
     $text = preg_replace_callback('/&#x0*([0-9a-f]+);/i', static function ($m) use ($toDecEnt) {
-        return $toDecEnt(hexdec($m[1]));
+        $digits = ltrim($m[1], '0');
+
+        // Кодовая точка Unicode занимает не более шести hex-цифр.
+        // Не передаём длинные числа в hexdec(): он может вернуть float.
+        if (strlen($digits) > 6) {
+            return $toDecEnt(0xFFFD);
+        }
+
+        return $toDecEnt($digits === '' ? 0 : (int)hexdec($digits));
     }, $text);
 
     // 3) Именованные → нижний регистр (канон для HTML)

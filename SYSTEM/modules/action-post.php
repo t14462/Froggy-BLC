@@ -930,6 +930,8 @@ function commentReply() {
 
         $commpost = mb_substr($commpost, 0, 2550);
 
+        $replyRecoveryText = $commpost;
+
         $commpost = normalize_entities_my($commpost);
 
         $commpost  = str_ireplace("<br!>", "\n", $commpost);
@@ -999,6 +1001,19 @@ function commentReply() {
 
         $today = date('Y-m-d');
 
+        $rejectMissingReply = static function(string $text) use (&$errmsg, &$commRecov): void {
+            $errmsg = "<h1>ОШИБКА.</h1><p class='big'><strong>Комментарий для ответа не найден или структура ветки повреждена. Ваш текст сохранён в форме.</strong></p>";
+            $commRecov = $text;
+            $commRecov = str_ireplace("<textarea", "&lt;textarea", $commRecov);
+            $commRecov = str_ireplace("</textarea", "&lt;/textarea", $commRecov);
+            $commRecov = str_ireplace("textarea>", "textarea&gt;", $commRecov);
+            // $commRecov = str_ireplace("&", "&amp;", $commRecov);
+            // $commRecov = str_ireplace("&amp;amp;", "&amp;", $commRecov);
+            $commRecov = escape_amp_txtarea($commRecov);
+            $commRecov .= " ";
+            pageload();
+        };
+
         if($commdataline === "") {
 
             $errmsg = "<h1>ОШИБКА.</h1><p class='big'><strong>Недопустимый номер строки.</strong></p>";
@@ -1027,6 +1042,11 @@ function commentReply() {
             $commRecov = escape_amp_txtarea($commRecov);
             $commRecov .= " ";
             pageload();
+            return;
+
+        } elseif(substr_count($commdataline, "<$repcommid />") !== 1) {
+
+            $rejectMissingReply($replyRecoveryText);
             return;
 
         } elseif(!$checkpermission && !canProceed($ip)) {
@@ -1319,7 +1339,15 @@ function commentReply() {
 
             $now = date('Y-m-d H:i');
 
-            $commdataline = str_replace("<$repcommid />", "<ul><li><$commid>$visitor2<d>$commpost<br!><br!>$now</d><a href='?<QS>&amp;creply=<id>{$pgcommnum}-$commid#R'>rep.</a> <a href='?<QS>&amp;cmove=<id>{$pgcommnum}-$commid'>del.</a><$commid><$commid /></li></ul><$repcommid />", $commdataline);
+            $commdataline = str_replace("<$repcommid />", "<ul><li><$commid>$visitor2<d>$commpost<br!><br!>$now</d><a href='?<QS>&amp;creply=<id>{$pgcommnum}-$commid#R'>rep.</a> <a href='?<QS>&amp;cmove=<id>{$pgcommnum}-$commid'>del.</a><$commid><$commid /></li></ul><$repcommid />", $commdataline, $replyReplacements);
+
+            // Повторная проверка по снимку: ветка могла измениться после валидации.
+            if($replyReplacements !== 1) {
+                @unlink("DATABASE/comments/".$commaddr.".new." . getmypid());
+                @unlink("DATABASE/comments/".$commaddr.".src." . getmypid());
+                $rejectMissingReply($replyRecoveryText);
+                return;
+            }
 
             $commdataline = str_replace("</ul><ul>", "", $commdataline);
             
