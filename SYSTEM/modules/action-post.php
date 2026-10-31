@@ -1000,7 +1000,7 @@ function commentReply() {
         $today = date('Y-m-d');
 
         $rejectMissingReply = static function(string $text) use (&$errmsg, &$commRecov): void {
-            $errmsg = "<h1>ОШИБКА.</h1><p class='big'><strong>Комментарий для ответа не найден или структура ветки повреждена. Ваш текст сохранён в форме.</strong></p>";
+            $errmsg = "<h1>ОШИБКА.</h1><p class='big'><strong>Комментарий для ответа не найден. Ваш текст сохранён в форме.</strong></p>";
             $commRecov = $text;
             $commRecov = str_ireplace("<textarea", "&lt;textarea", $commRecov);
             $commRecov = str_ireplace("</textarea", "&lt;/textarea", $commRecov);
