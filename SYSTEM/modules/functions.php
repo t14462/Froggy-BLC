@@ -1091,9 +1091,7 @@ function refreshhandle($time, $link, $update = true) {
                         window.location.replace({$linkJs});
                     }, {$time} * 1000);
                 });
-            </script>
-            
-        ";
+            </script>\n\n";
 
     } else {
 
