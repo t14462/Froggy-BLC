@@ -1111,7 +1111,7 @@ function refreshhandle($time, $link, $update = true) {
                 </head>
 
                 <body>&nbsp;</body>
-            </html>"
+            </html>\n"
         );
     }
 }
