@@ -1079,6 +1079,7 @@ function refreshhandle($time, $link, $update = true) {
     if($time > 0) {
 
         $head .= "
+
             <noscript>
                 <meta http-equiv='refresh' content='{$time};url={$linkHtml}' />
             </noscript>
@@ -1091,6 +1092,7 @@ function refreshhandle($time, $link, $update = true) {
                     }, {$time} * 1000);
                 });
             </script>
+            
         ";
 
     } else {
