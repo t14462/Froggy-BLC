@@ -1012,6 +1012,7 @@ function commentReply() {
             pageload();
         };
 
+        /*
         if($commdataline === "") {
 
             $errmsg = "<h1>ОШИБКА.</h1><p class='big'><strong>Недопустимый номер строки.</strong></p>";
@@ -1028,6 +1029,10 @@ function commentReply() {
             return;
 
         } elseif($safePost['dbtimestamp'] !== filemtimeMy("DATABASE/comments/".$commaddr)) {
+
+        */
+
+        if($safePost['dbtimestamp'] !== filemtimeMy("DATABASE/comments/".$commaddr)) {
 
             $errmsg = "<h1>ПРЕДУПРЕЖДЕНИЕ.</h1><p class='big'><strong>Во время написания комментария БД изменилась.</strong></p>";
             
