@@ -3838,7 +3838,7 @@ function shuffleString(string $text, string $seed): string
 
 function extractKwd(string $title): string
 {
-    if(preg_match('/\(([^)]*)\)\z/u', trim($title), $matches) !== 1) {
+    if(preg_match('/\(([^()]*)\)\z/u', trim($title), $matches) !== 1) {
         return '';
     }
 
@@ -3879,7 +3879,7 @@ function extractKwd(string $title): string
 
 function extractKwd2(string $title): string
 {
-    if(preg_match('/\(([^)]*)\)\z/u', trim($title), $matches) !== 1) {
+    if(preg_match('/\(([^()]*)\)\z/u', trim($title), $matches) !== 1) {
         return '';
     }
 
@@ -3926,7 +3926,7 @@ function removeKwd(string $title): string
     $count = 0;
 
     $result = preg_replace(
-        '/\([^)]*\)\z/u',
+        '/\([^()]*\)\z/u',
         '',
         $trimmedTitle,
         1,
