@@ -100,6 +100,8 @@ $metaDescription = "";
 
 $seoPagesTimes = Array();
 
+$waitFile = "";
+
 // $errmsg .= $server_ip;
 
 mb_internal_encoding("UTF-8");

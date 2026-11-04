@@ -1158,9 +1158,19 @@ function filter_filename(string $filename): string {
 
 function dbprepApnd($filename) {
 
+    global $waitFile;
+
     if(function_exists('ignore_user_abort')) {
         ignore_user_abort(true); // Установить игнорирование разрыва соединения
     }
+
+    $waitFile = fopenOrDie($filename . ".wait", 'c+b');
+    
+    if(!flock($waitFile, LOCK_EX)) {
+        fclose($waitFile);
+        die('Cannot lock file');
+    }
+            
 
     $lockFile = $filename . ".lock";
     $newFile = $filename . ".new." . getmypid();
@@ -1183,9 +1193,19 @@ function dbprepApnd($filename) {
 
 function dbprepCache($filename) {
 
+    global $waitFile;
+
     if(function_exists('ignore_user_abort')) {
         ignore_user_abort(true); // Установить игнорирование разрыва соединения
     }
+
+    $waitFile = fopenOrDie($filename . ".wait", 'c+b');
+    
+    if(!flock($waitFile, LOCK_EX)) {
+        fclose($waitFile);
+        die('Cannot lock file');
+    }
+    
 
     $lockFile = $filename . ".lock";
 
@@ -1196,7 +1216,7 @@ function dbprepCache($filename) {
 
 function dbdone($filename, $recovery) {
 
-    global $errmsg, $content, $safeGet, $safePost;
+    global $errmsg, $content, $safeGet, $safePost, $waitFile;
 
     $locktmp = fopenOrDie($filename.".lock", 'rb');
     flock($locktmp, LOCK_SH);
@@ -1223,6 +1243,8 @@ function dbdone($filename, $recovery) {
         fclose($locktmp);
 
         /// unlink($filename.".lock");
+
+        fclose($waitFile);
 
         return true;
 
@@ -1252,6 +1274,8 @@ function dbdone($filename, $recovery) {
         $content = "<textarea style='width: 95%; min-height: 65vh; padding: 2%; resize: none;' readonly='readonly'>".$recovery."</textarea>";
 
         /// return false;
+
+        fclose($waitFile);
 
         return false;
     }

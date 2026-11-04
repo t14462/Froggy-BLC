@@ -896,7 +896,7 @@ function savePage() {
 
 function commentReply() {
 
-    global $safePost, $idcache, $errmsg, $ip, $checkpermission, $patternYT, $replacementYT, $patternVimeo, $replacementVimeo, $patternDM, $replacementDM, $commRecov, $userAgent, $cred, $mySalt;
+    global $safePost, $idcache, $errmsg, $ip, $checkpermission, $patternYT, $replacementYT, $patternVimeo, $replacementVimeo, $patternDM, $replacementDM, $commRecov, $userAgent, $cred, $mySalt, $waitFile;
 
     // require_once "SYSTEM/cred.php";
 
@@ -1348,6 +1348,7 @@ function commentReply() {
             if($replyReplacements !== 1) {
                 @unlink("DATABASE/comments/".$commaddr.".new." . getmypid());
                 @unlink("DATABASE/comments/".$commaddr.".src." . getmypid());
+                fclose($waitFile);
                 $rejectMissingReply($commpost2);
                 return;
             }
