@@ -111,7 +111,10 @@ function viewLog() {
         $content .= "<br /><div>";
 
         $file = fopenOrDie("DATABASE/DB/sys.log", "rb");
-        flock($file, LOCK_SH);
+        if(!flock($file, LOCK_SH)) {
+            fclose($file);
+            die('Cannot lock file');
+        }
         fseekOrDie($file, $offset);
         $logTxt = freadOrDie($file, $limit * 1024).fgetsOrDie($file);
         /// flock($file, LOCK_UN);

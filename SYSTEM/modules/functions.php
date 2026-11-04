@@ -769,7 +769,10 @@ $replacementDLCNT = static function ($m) {
         if (is_file($pathCnt) && is_readable($pathCnt)) {
 
             $ftmp = fopenOrDie($pathCnt, 'rb');
-            flock($ftmp, LOCK_SH);
+            if(!flock($ftmp, LOCK_SH)) {
+                fclose($ftmp);
+                die('Cannot lock file');
+            }
 
             $dlcnt = (int)(string)stream_get_contents($ftmp);
 
@@ -964,7 +967,10 @@ function repeatCaptcha($userInput) {
         // Чтение данных из файла
 
         $locktmp = fopenOrDie($sessionFile, 'rb');
-        flock($locktmp, LOCK_SH);
+        if(!flock($locktmp, LOCK_SH)) {
+            fclose($locktmp);
+            die('Cannot lock file');
+        }
 
         $sessionData = json_decode((string)stream_get_contents($locktmp), true);
 
@@ -1010,7 +1016,10 @@ function canProceed($datip) {
         // Читаем данные из файла
 
         $locktmp = fopenOrDie($lockFile, 'rb');
-        flock($locktmp, LOCK_SH);
+        if(!flock($locktmp, LOCK_SH)) {
+            fclose($locktmp);
+            die('Cannot lock file');
+        }
 
         $lockData = json_decode((string)stream_get_contents($locktmp), true);
 
@@ -1219,7 +1228,10 @@ function dbdone($filename, $recovery) {
     global $errmsg, $content, $safeGet, $safePost, $waitFile;
 
     $locktmp = fopenOrDie($filename.".lock", 'rb');
-    flock($locktmp, LOCK_SH);
+    if(!flock($locktmp, LOCK_SH)) {
+        fclose($locktmp);
+        die('Cannot lock file');
+    }
 
     $lockvar = (int)(string)stream_get_contents($locktmp);
 
@@ -2577,7 +2589,10 @@ function getCommCount($commaddr) {
     if(is_file("DATABASE/comments/".$commaddr.".count")) {
 
         $locktmp = fopenOrDie("DATABASE/comments/".$commaddr.".count", 'rb');
-        flock($locktmp, LOCK_SH);
+        if(!flock($locktmp, LOCK_SH)) {
+            fclose($locktmp);
+            die('Cannot lock file');
+        }
         $contents = (string)stream_get_contents($locktmp);
         /// flock($locktmp, LOCK_UN);
         fclose($locktmp);
