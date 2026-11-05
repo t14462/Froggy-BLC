@@ -60,7 +60,7 @@ if(!is_string($randQuot) || $randQuot === '') {
 
 $randQuot = explode("<!!!>", $randQuot, 2);
 
-$randQuot[0] = mb_superTrim($randQuot[0]);
+$randQuot[0] = mb_superTrim(normalize_entities_my($randQuot[0]));
 
 $menubar .= "<figure class='my-blockquote' style='margin-left: 1.6rem;'><blockquote>{$randQuot[0]}</blockquote>";
 
