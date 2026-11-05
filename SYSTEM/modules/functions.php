@@ -3838,7 +3838,7 @@ function shuffleString(string $text, string $seed): string
 
 function extractKwd(string $title): string
 {
-    if(preg_match('/\(([^()]*)\)\z/u', trim($title), $matches) !== 1) {
+    if(preg_match('/ \(([^()]*)\)\z/u', $title, $matches) !== 1) {
         return '';
     }
 
@@ -3879,7 +3879,7 @@ function extractKwd(string $title): string
 
 function extractKwd2(string $title): string
 {
-    if(preg_match('/\(([^()]*)\)\z/u', trim($title), $matches) !== 1) {
+    if(preg_match('/ \(([^()]*)\)\z/u', $title, $matches) !== 1) {
         return '';
     }
 
@@ -3922,13 +3922,13 @@ function extractKwd2(string $title): string
 
 function removeKwd(string $title): string
 {
-    $trimmedTitle = rtrim($title);
+    $title2 = $title;
     $count = 0;
 
     $result = preg_replace(
-        '/\([^()]*\)\z/u',
+        '/ \([^()]*\)\z/u',
         '',
-        $trimmedTitle,
+        $title2,
         1,
         $count
     );
@@ -3937,7 +3937,6 @@ function removeKwd(string $title): string
         return $title;
     }
 
-    // Удаляем пробел, оставшийся перед скобками.
-    return rtrim($result);
+    return $result;
 }
 
