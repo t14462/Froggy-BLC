@@ -6,13 +6,37 @@ if(function_exists('ignore_user_abort')) {
 }
 
 function emojiToHtmlEntities(string $string): string {
+
+    if(!mb_check_encoding($string, 'UTF-8')) {
+        throw new InvalidArgumentException('Invalid UTF-8');
+    }
+
     return preg_replace_callback('/\X/u', static function ($m) {
+
         $g = $m[0];
-        if (preg_match('/(?:\p{So}|\p{Sk}|\x{20E3}|\x{FE0F})/u', $g)) {
-            // кодируем весь кластер целиком
-            return mb_encode_numericentity($g, [0x0, 0x10FFFF, 0, 0x10FFFF], 'UTF-8');
+
+        // Белый список обычных символов:
+        // Буквы, цифры, комбинируемые знаки,
+        // пунктуация, пробелы, математические,
+        // валютные и некоторые другие символы.
+        $ordinary = '/\A[\p{L}\p{N}\p{M}\p{P}\p{Zs}\p{Sc}\p{Sm}\p{Sk}№°©®™→∞]+\z/u';
+
+        // Обычные символы оставляем без изменений.
+        // Исключение: U+20E3 (составные emoji-клавиши).
+        if(
+            preg_match($ordinary, $g) === 1 &&
+            !str_contains($g, "\u{20E3}")
+        ) {
+            return $g;
         }
-        return $g;
+
+        // Всё остальное кодируем целым кластером.
+        return mb_encode_numericentity(
+            $g,
+            [0, 0x10FFFF, 0, 0x10FFFF],
+            'UTF-8'
+        );
+
     }, $string);
 }
 
