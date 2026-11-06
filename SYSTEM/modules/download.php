@@ -9,6 +9,7 @@ function emojiToHtmlEntities(string $string): string {
     return preg_replace_callback('/\X/u', static function ($m) {
         $g = $m[0];
         if (preg_match('/(?:\p{So}|\p{Sk}|\x{20E3}|\x{FE0F})/u', $g)) {
+            // кодируем весь кластер целиком
             return mb_encode_numericentity($g, [0x0, 0x10FFFF, 0, 0x10FFFF], 'UTF-8');
         }
         return $g;
@@ -16,11 +17,17 @@ function emojiToHtmlEntities(string $string): string {
 }
 
 function remove_entities(string $text): string {
+    // 1) именованные (&nbsp;)  2) десятичные (&#160;)  3) шестн. (&#xA0;)
     $text = preg_replace('/&[a-z][a-z0-9]*;/i', '', $text);
     $text = preg_replace('/&#\d+;/', '', $text);
     $text = preg_replace('/&#x[0-9a-f]+;/i', '', $text);
+
+    // 4) Только формы без ';' и не продолжаемые буквой/цифрой/подчёркиванием
     $text = preg_replace('/&(?:nbsp|thinsp|ensp|emsp|zwnj|zwj|lrm|rlm)(?!;)\b/i', '', $text);
+
+    // 5) «голые» & → подчеркивание, чтобы слова не слипались
     $text = preg_replace('/&(?![a-z][a-z0-9]*;|#\d+;|#x[0-9a-f]+;)/i', '_', $text);
+
     return $text;
 }
 
