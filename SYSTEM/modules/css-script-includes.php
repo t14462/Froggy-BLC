@@ -96,7 +96,7 @@ Web-Дизайнер: Артемев Лебедий.</em>
 
 if($checkpermission) {
 
-    $errmsg .= "<aside class='big infobox'><strong>
+    $errmsg .= "<aside class='big infobox' style='margin-top: 0 !important'><strong>
     <u>Никому</u> не сообщайте свой <em>секретный CSRF-токен!</em><br />
     <u>Не публикуйте адрес страницы</u>, находясь в <em>Админ-панели!</em><br />
     Не делайте в Админке скриншоты <u>с видимой адресной строкой!</u>
