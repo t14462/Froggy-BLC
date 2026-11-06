@@ -56,9 +56,24 @@ function remove_entities(string $text): string {
 }
 
 function mb_superTrimLocal(string $text): string {
-    $text = preg_replace('/[\p{Cc}\p{Cf}]/u', ' ', $text);
-    $text = preg_replace('/^[\p{Z}]+|[\p{Z}]+$/u', '', $text);
-    return preg_replace('/[\p{Z}]+/u', ' ', $text);
+
+    if(!mb_check_encoding($text, 'UTF-8')) {
+        throw new InvalidArgumentException('Invalid UTF-8');
+    }
+
+    // Заменяем управляющие, форматирующие, Unicode-пробелы
+    // и составные emoji-флаги одним пробелом.
+    $text = preg_replace(
+        '/(?:\x{1F3F4}[\x{E0030}-\x{E0039}\x{E0061}-\x{E007A}]+\x{E007F}|[\p{Cc}\p{Cf}\p{Z}])+/u',
+        ' ',
+        $text
+    );
+
+    if($text === null) {
+        throw new RuntimeException('PCRE error');
+    }
+
+    return trim($text, ' ');
 }
 
 function filter_filename(string $filename): string {
