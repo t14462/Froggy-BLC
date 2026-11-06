@@ -2367,7 +2367,7 @@ function wrap_images_with_figure(simple_html_dom $html): simple_html_dom {
             normalize_entities_my($img->getAttribute('alt') ?? '')
         );
 
-        if ($alt !== '' && rawurlencode($alt) !== $fname) {
+        if ($alt !== '' && $alt !== $fname && rawurlencode($alt) !== $fname) {
             $imgHtml = $img->outertext;
 
             // $altEscaped = mb_superTrim(htmlspecialchars(strip_tags($alt), ENT_QUOTES | ENT_HTML401 | ENT_SUBSTITUTE, 'UTF-8', false));
