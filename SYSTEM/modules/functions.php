@@ -466,27 +466,42 @@ function mb_superTrim(string $text): string {
         $text
     );
 
-    // 2. Удаляем управляющие и форматирующие символы, но оставляем ZWJ
-    $text = preg_replace_callback('/[\p{Cc}\p{Cf}]/u', static function ($m) {
-        $ch = $m[0];
+    // 2. Удаляем управляющие и форматирующие символы,
+    // сохраняя ZWJ, мягкий перенос и составные emoji-флаги.
 
-        // ZWJ (U+200D) и другие — нужны для эмоджи типа 👩‍💻
-        if ($ch === "\u{200D}" || $ch === "\u{FE0F}" || $ch === "\u{FE0E}") {
-            return $ch;
-        }
+    $text = preg_replace_callback(
+        '/(\x{1F3F4}[\x{E0030}-\x{E0039}\x{E0061}-\x{E007A}]+\x{E007F})|[\p{Cc}\p{Cf}]/u',
+        static function ($m) {
 
-        // Мягкий перенос
-        if ($ch === "\u{00AD}") {
-            return $ch;
-        }
+            $ch = $m[0];
 
-        if ($ch === "\r") {
-            return "";
-        }
+            // Сохраняем полную последовательность emoji-флага
+            if(isset($m[1]) && $m[1] !== '') {
+                return $m[1];
+            }
 
-        // Остальное выкидываем
-        return ' ';
-    }, $text);
+            // Сохраняем ZWJ
+            if($ch === "\u{200D}") {
+                return $ch;
+            }
+
+            // Сохраняем мягкий перенос
+            if($ch === "\u{00AD}") {
+                return $ch;
+            }
+
+            // Удаляем CR
+            if($ch === "\r") {
+                return '';
+            }
+
+            // Остальные управляющие и форматирующие
+            // символы заменяем пробелом
+            return ' ';
+
+        },
+        $text
+    );
 
     // 3. Удаляем Unicode-пробелы по краям
     $text = preg_replace('/^[\p{Z}]+|[\p{Z}]+$/u', '', $text);
@@ -516,32 +531,47 @@ function mb_superTrim(string $text): string {
  */
 function mb_softTrim(string $text): string {
     
-    // Удаляем управляющие и форматирующие символы, но оставляем \n + ZWJ
-    $text = preg_replace_callback('/[\p{Cc}\p{Cf}]/u', static function ($m) {
-        $ch = $m[0];
+    // Удаляем управляющие и форматирующие символы,
+    // но сохраняем LF, ZWJ, мягкий перенос и emoji-флаги.
 
-        // \n оставляем
-        if ($ch === "\n") {
-            return "\n";
-        }
+    $text = preg_replace_callback(
+        '/(\x{1F3F4}[\x{E0030}-\x{E0039}\x{E0061}-\x{E007A}]+\x{E007F})|[\p{Cc}\p{Cf}]/u',
+        static function($m) {
 
-        if ($ch === "\r") {
-            return "";
-        }
+            $ch = $m[0];
 
-        // Мягкий перенос
-        if ($ch === "\u{00AD}") {
-            return $ch;
-        }
+            // Сохраняем составные emoji-флаги
+            if(isset($m[1]) && $m[1] !== '') {
+                return $m[1];
+            }
 
-        // ZWJ (U+200D) и другие — нужны для эмоджи типа 👩‍💻
-        if ($ch === "\u{200D}" || $ch === "\u{FE0F}" || $ch === "\u{FE0E}") {
-            return $ch;
-        }
+            // Сохраняем LF
+            if($ch === "\n") {
+                return $ch;
+            }
 
-        // Остальное выкидываем
-        return ' ';
-    }, $text);
+            // Удаляем CR
+            if($ch === "\r") {
+                return '';
+            }
+
+            // Сохраняем мягкий перенос
+            if($ch === "\u{00AD}") {
+                return $ch;
+            }
+
+            // Сохраняем ZWJ
+            if($ch === "\u{200D}") {
+                return $ch;
+            }
+
+            // Остальные управляющие и форматирующие
+            // символы заменяем пробелом
+            return ' ';
+
+        },
+        $text
+    );
     
 
     // WhiteList: разрешено только то, что явно перечислено.
