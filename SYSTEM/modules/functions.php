@@ -152,15 +152,25 @@ class SafeSplFileObject extends SplFileObject {
 
     public function freadOrDie(int $length): string|false {
 
-        if($this->eof()) {
-            return false; // EOF — не ошибка
-        }
-
         $context = $this->getContext();
 
+        if($length <= 0) {
+            die("freadOrDie: недопустимая длина $length ($context)");
+        }
+
+        if($this->eof()) {
+            return false;
+        }
+
         $data = $this->fread($length);
+
         if($data === false) {
             die("freadOrDie: ошибка чтения из потока ($context)");
+        }
+
+        // Конец файла, обнаруженный непосредственно при чтении
+        if($data === '' && $this->eof()) {
+            return false;
         }
 
         return $data;
@@ -178,30 +188,38 @@ class SafeSplFileObject extends SplFileObject {
         $context = $this->getContext();
 
         try {
-            return $this->fgets();
-        }
-        catch(RuntimeException $e) {
+            $line = $this->fgets();
+
+            if($line === '' && $this->eof()) {
+                return false;
+            }
+
+            return $line;
+
+        } catch(RuntimeException $e) {
             die("fgetsOrDie: ошибка чтения строки ($context): " . $e->getMessage());
         }
     }
 
     public function seekOrDie(int $line): void {
 
-        if($line < 0) {
+        $context = $this->getContext();
 
-            $context = $this->getContext();
+        if($line < 0) {
 
             unlockByName($_SESSION['username'] ?? 'dummy');
 
             die("seekOrDie: отрицательный номер строки $line ($context)");
         }
 
-
         $this->seek($line);
 
-        if(!$this->valid()) {
-
-            $context = $this->getContext();
+        // Проверяем позицию, НЕ считывая содержимое строки
+        if(
+            !$this->valid() ||
+            $this->key() !== $line ||
+            $this->getSize() === 0
+        ) {
 
             unlockByName($_SESSION['username'] ?? 'dummy');
 
@@ -1234,7 +1252,7 @@ function dbprepApnd($filename) {
     $waitFile = fopenOrDie($filename . ".wait", 'c+b');
     
     if(!flock($waitFile, LOCK_EX)) {
-        
+
         fclose($waitFile);
         die('Cannot lock file');
     }
