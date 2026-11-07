@@ -166,8 +166,10 @@ class SafeSplFileObject extends SplFileObject {
         return $data;
     }
 
-    // ✅ безопасная обёртка, возвращает false на EOF
-    public function fgetsOrDie(/* string $context = 'unknown' */): string|false {
+    // Безопасное чтение строки.
+    // false — только при EOF.
+    // Ошибка чтения — PANIC.
+    public function fgetsOrDie(): string|false {
 
         if($this->eof()) {
             return false;
@@ -175,11 +177,12 @@ class SafeSplFileObject extends SplFileObject {
 
         $context = $this->getContext();
 
-        $line = $this->fgets();
-        if($line === false) {
-            die("fgetsOrDie: ошибка чтения строки ($context)");
+        try {
+            return $this->fgets();
         }
-        return $line;
+        catch(RuntimeException $e) {
+            die("fgetsOrDie: ошибка чтения строки ($context): " . $e->getMessage());
+        }
     }
 
     public function seekOrDie(int $line): void {
@@ -1224,12 +1227,14 @@ function dbprepApnd($filename) {
     global $waitFile;
 
     if(function_exists('ignore_user_abort')) {
+
         ignore_user_abort(true); // Установить игнорирование разрыва соединения
     }
 
     $waitFile = fopenOrDie($filename . ".wait", 'c+b');
     
     if(!flock($waitFile, LOCK_EX)) {
+        
         fclose($waitFile);
         die('Cannot lock file');
     }
@@ -1268,7 +1273,7 @@ function dbprepCache($filename) {
     $waitFile = fopenOrDie($filename . ".wait", 'c+b');
     
     if(!flock($waitFile, LOCK_EX)) {
-        
+
         fclose($waitFile);
         die('Cannot lock file');
     }
