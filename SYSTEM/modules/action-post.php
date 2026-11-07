@@ -1976,6 +1976,7 @@ function imageupload() {
 
 
         if(($_FILES["fileToUpload"]['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
+
             $errmsg .= "<li>Ошибка при загрузке файла.</li>";
             mylog("<strong style='color:DarkRed'>Ошибка при загрузке файла. (".$_SESSION["username"].").</strong>");
             $errmsg .= "</ol>";
@@ -2017,24 +2018,31 @@ function imageupload() {
                 $uploadOk = 0;
 
             } elseif(is_file($target_file)) { // Check if file already exists
+
                 $errmsg .= "<li>Извините, файл уже существует.</li>";
                 mylog("<em style='color:DarkOrange'>Извините, файл уже существует. (".$_SESSION["username"].").</em>");
                 $uploadOk = 0;
 
             // Check file size
             } elseif((int)($_FILES["fileToUpload"]["size"] ?? 0) > (3.5 * 1024 * 1024)) {
+
                 $errmsg .= "<li>Извините, ваш файл слишком большой. (&gt; 3.5 МиБ)</li>";
                 mylog("<em style='color:DarkOrange'>Извините, ваш файл слишком большой. (".$_SESSION["username"].").</em>");
                 $uploadOk = 0;
 
             // Check if image file is a actual image or fake image
             } elseif(is_uploaded_file($_FILES["fileToUpload"]["tmp_name"])) {
+
                 $check = getimagesize($_FILES["fileToUpload"]["tmp_name"]);
+
                 if($check !== false) {
+
                     $errmsg .= "<li>Файл является изображением - " . $check["mime"] . ".</li>";
                     mylog("<em style='color:DarkGreen'>Файл является изображением - " . $check["mime"] . ". (".$_SESSION["username"].").</em>");
                     $uploadOk = 1;
+
                 } else {
+
                     $errmsg .= "<li>Файл не является изображением.</li>";
                     mylog("<em style='color:DarkRed'>Файл не является изображением. (".$_SESSION["username"].").</em>");
                     $uploadOk = 0;
@@ -2047,17 +2055,25 @@ function imageupload() {
 
             // Check if $uploadOk is set to 0 by an error
             if($uploadOk == 0) {
+
                 $errmsg .= "<li>Извините, ваш файл не загрузился.</li>";
                 mylog("<em style='color:DarkOrange'>Извините, ваш файл не загрузился. (".$_SESSION["username"].").</em>");
                 // if everything is ok, try to upload file
+
             } else {
+
                 if(!is_uploaded_file($_FILES["fileToUpload"]["tmp_name"])) {
+
                     $errmsg .= "<li>Временный файл загрузки недоступен.</li>";
                     mylog("<em style='color:DarkRed'>Временный файл загрузки недоступен. (".$_SESSION["username"].").</em>");
+
                 } elseif(move_uploaded_file($_FILES["fileToUpload"]["tmp_name"], $target_file)) {
+
                     $errmsg .= "<li>Файл ". htmlspecialchars( basename( $_FILES["fileToUpload"]["name"]), ENT_QUOTES | ENT_HTML401 | ENT_SUBSTITUTE, 'UTF-8', false). " был загружен.</li>";
                     mylog("<em style='color:DarkGreen'>Файл ". htmlspecialchars( basename( $_FILES["fileToUpload"]["name"]), ENT_QUOTES | ENT_HTML401 | ENT_SUBSTITUTE, 'UTF-8', false). " был загружен. (".$_SESSION["username"].").</em>");
+
                 } else {
+
                     $errmsg .= "<li>Извините, произошла ошибка при загрузке файла.</li>";
                     mylog("<em style='color:DarkRed'>Извините, произошла ошибка при загрузке файла. (".$_SESSION["username"].").</em>");
                 }
@@ -2105,6 +2121,7 @@ function fileDlUpload() {
         $newFilePath = 'DATABASE/fupload/' . $srcFileName;
 
         $allowedExtensions = [
+            
             // Текстовые и данные
             'txt', 'csv', 'tsv', 'json', 'xml', 'md', 'log', 'ini', 'yaml', 'yml',
 
@@ -2142,43 +2159,53 @@ function fileDlUpload() {
         /// if($srcFileName == "") {
 
         if(empty($srcFileName)) {
+
             $errmsg = 'Имя файла пустое!';
             mylog("<em style='color:DarkOrange'>Имя файла пустое! (".$_SESSION["username"].").</em>");
 
         } elseif(!in_array($extension, $allowedExtensions, true)) {
+
             $errmsg = 'Загрузка файлов с таким расширением запрещена!';
             mylog("<strong style='color:DarkRed'>Загрузка файлов с таким расширением запрещена! (".$_SESSION["username"].").</strong>");
 
         } elseif($file['error'] !== UPLOAD_ERR_OK) {
+
             $errmsg = 'Неизвестная ошибка при загрузке файла.';
             mylog("<strong style='color:DarkRed'>Неизвестная ошибка при загрузке файла. (".$_SESSION["username"].").</strong>");
 
         } else {
+
             $fileSize = (int)($file['size'] ?? 0);
 
             /// $fileSize = is_uploaded_file($file['tmp_name']) ? (int)filesize($file['tmp_name']) : 0;
 
             if(is_file($newFilePath)) {
+
                 $errmsg = 'Файл с таким именем уже существует.';
                 mylog("<em style='color:DarkOrange'>Файл с таким именем уже существует. (".$_SESSION["username"].").</em>");
 
             } elseif(!is_uploaded_file($file['tmp_name'])) {
+
                 $errmsg = 'Временный файл загрузки недоступен.';
                 mylog("<strong style='color:DarkRed'>Временный файл загрузки недоступен. (".$_SESSION["username"].").</strong>");
 
             } elseif($fileSize === 0) {
+
                 $errmsg = 'Файл пустой.';
                 mylog("<em style='color:DarkMagenta'>Файл пустой. (".$_SESSION["username"].").</em>");
 
             } elseif($fileSize > (3.5 * 1024 * 1024)) {
+
                 $errmsg = 'Файл больше 3.5 МиБ.';
                 mylog("<em style='color:DarkMagenta'>Файл больше 3.5 МиБ. (".$_SESSION["username"].").</em>");
 
             } elseif(!move_uploaded_file($file['tmp_name'], $newFilePath)) {
+
                 $errmsg = 'Ошибка при перемещении файла.';
                 mylog("<strong style='color:DarkRed'>Ошибка при перемещении файла. (".$_SESSION["username"].").</strong>");
 
             } else {
+
                 $errmsg = 'Успешно загружено.';
                 mylog("<strong style='color:DarkGreen'>Успешно загружен файл. (".$_SESSION["username"].").</strong>");
             }

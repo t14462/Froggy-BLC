@@ -29,9 +29,12 @@ function delimg() {
     global $safeGet, $errmsg, $checkpermission;
 
     if($checkpermission < 3) {
+
         $errmsg = pforbidden();
         $errmsg .= "<p class='big'>Только <strong>редакторы</strong> и <strong>администраторы</strong> это могут делать.</p>";
+
     } else {
+        
         $filetodel = filter_filename($safeGet["delimg"] ?? '');
 
         if(is_file("DATABASE/gallery/".$filetodel)) {
@@ -50,14 +53,18 @@ function delfile() {
     global $safeGet, $errmsg, $checkpermission;
 
     if($checkpermission < 3) {
+
         $errmsg = pforbidden();
         $errmsg .= "<p class='big'>Только <strong>редакторы</strong> и <strong>администраторы</strong> это могут делать.</p>";
+
     } else {
+
         $filetodel = filter_filename($safeGet["delfile"] ?? '');
 
         if(is_file("DATABASE/fupload/".$filetodel)) {
             // rename("DATABASE/fupload/".$filetodel, "DATABASE/fupload/file.del");
             if(@unlink("DATABASE/fupload/".$filetodel)) {
+
                 mylog("<em style='color:DarkOrange'>Файл ".$filetodel." успешно удалён. (".$_SESSION["username"].").</em>");
             }
         }

@@ -1243,11 +1243,13 @@ function dbprepApnd($filename) {
 
     // Копируем оригинальный файл в новый dest
     if(!copy($filename, $newFile)) {
+
         die('<!DOCTYPE html><html><head><meta charset="utf-8" /><title>Ошибка</title></head><body><h1>ОШИБКА.</h1><p><strong>Не удалось создать новый файл.</strong></p></body></html>');
     }
 
     // Копируем оригинальный файл в новый src
     if(!copy($filename, $newFileSrc)) {
+
         die('<!DOCTYPE html><html><head><meta charset="utf-8" /><title>Ошибка</title></head><body><h1>ОШИБКА.</h1><p><strong>Не удалось создать новый файл.</strong></p></body></html>');
     }
 
@@ -1259,12 +1261,14 @@ function dbprepCache($filename) {
     global $waitFile;
 
     if(function_exists('ignore_user_abort')) {
+
         ignore_user_abort(true); // Установить игнорирование разрыва соединения
     }
 
     $waitFile = fopenOrDie($filename . ".wait", 'c+b');
     
     if(!flock($waitFile, LOCK_EX)) {
+        
         fclose($waitFile);
         die('Cannot lock file');
     }
