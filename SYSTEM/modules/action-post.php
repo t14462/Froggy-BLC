@@ -44,8 +44,7 @@ function savePage() {
                 <h1>Страница Восстановления Данных.</h1>
                 <textarea style='width: 95%; min-height: 80vh; padding: 2%; resize: none;' readonly='readonly'>$recovery</textarea>
             </body>
-            </html>
-            ";
+            </html>\n";
 
             http_response_code(200);
             exit((string)$recovery);
@@ -54,7 +53,7 @@ function savePage() {
 
 
         
-        $textedit = substr($safePost["textedit"], 0, (int)(128.125 * 1024));
+        $textedit = $safePost["textedit"];
         $pgtitle  = $safePost["title"];
         $htag     = (int)$safePost["h"];
 
@@ -81,6 +80,8 @@ function savePage() {
         // $textedit = str_ireplace("&amp;amp;", "&amp;", $textedit);
         
         $textedit = mb_softTrim($textedit);
+
+        $textedit = substr($textedit, 0, (int)(128.125 * 1024));
 
         // $textedit = escape_amp_txtarea($textedit);
 
@@ -2121,7 +2122,7 @@ function fileDlUpload() {
         $newFilePath = 'DATABASE/fupload/' . $srcFileName;
 
         $allowedExtensions = [
-            
+
             // Текстовые и данные
             'txt', 'csv', 'tsv', 'json', 'xml', 'md', 'log', 'ini', 'yaml', 'yml',
 

@@ -226,6 +226,15 @@ class SafeSplFileObject extends SplFileObject {
             die("seekOrDie: строка $line выходит за пределы файла ($context)");
         }
     }
+
+    public function fflushOrDie(): void {
+
+        if(!$this->fflush()) {
+            $context = $this->getContext();
+
+            die("fflushOrDie: ошибка сброса буфера ($context)");
+        }
+    }
 }
 
 function openFileOrDie(string $filename, string $mode = 'r'): SafeSplFileObject {
@@ -324,6 +333,19 @@ function fseekOrDie($handle, int $offset, int $whence = SEEK_SET): void {
         die("fseekOrDie: ошибка смещения курсора ($context, offset: $offset)");
     }
 }
+
+function fflushOrDie($handle): void {
+
+    if(!is_resource($handle) || get_resource_type($handle) !== 'stream') {
+        die('fflushOrDie: недопустимый файловый дескриптор');
+    }
+
+    if(!fflush($handle)) {
+        die('fflushOrDie: ошибка сброса буфера в файл');
+    }
+}
+
+
 
 function set_cookie(string $name, string $value, int $expires): bool
 {
@@ -2833,36 +2855,47 @@ function remove_entities(string $text): string {
     return $text;
 }
 
-function atomicCounterIncrement($path) {
+function atomicCounterIncrement(string $path): void {
 
-    if(is_file($path)) {
-        if(!is_writable($path)) {
-            die('counter file is not writable');
-        }
-    } else {
-        if(!is_writable(dirname($path))) {
-            die('counter directory is not writable');
-        }
+    $fp = fopenOrDie($path, 'c+b');
+
+    // Эксклюзивная блокировка файла
+    if(!flock($fp, LOCK_EX)) {
+        die("atomicCounterIncrement: ошибка блокировки файла ($path)");
     }
 
-    $fp = fopenOrDie($path, 'c+b'); // создаст файл при отсутствии
-    
-    if(flock($fp, LOCK_EX)) {
-        $val  = 0;
-        rewind($fp);
-        $data = (string)stream_get_contents($fp);
-        $data = trim((string)$data);
-        if($data !== '' && ctype_digit($data)) {
-            $val = (int)$data;
-        }
-        $val++;
-        rewind($fp);
-        if(ftruncate($fp, 0) !== false && fwrite($fp, (string)$val) !== false) {
-            fflush($fp);
-        }
-        /// flock($fp, LOCK_UN);
+    // Читаем текущее значение
+    fseekOrDie($fp, 0);
+
+    $data = stream_get_contents($fp);
+
+    if($data === false) {
+        die("atomicCounterIncrement: ошибка чтения файла ($path)");
     }
-    fclose($fp);
+
+    $data = trim($data);
+
+    $val = 0;
+
+    if($data !== '' && ctype_digit($data)) {
+        $val = (int)$data;
+    }
+
+    // Увеличиваем счётчик
+    $val++;
+
+    // Перезаписываем файл
+    fseekOrDie($fp, 0);
+    ftruncateOrDie($fp, 0);
+    fwriteOrDie($fp, (string)$val);
+
+    // Сбрасываем буфер записи
+    fflushOrDie($fp);
+
+    // Закрытие автоматически освобождает flock()
+    if(!fclose($fp)) {
+        die("atomicCounterIncrement: ошибка закрытия файла ($path)");
+    }
 }
 
 // Небольшой генератор ASCII-токена (на случай старых PHP без random_bytes)
