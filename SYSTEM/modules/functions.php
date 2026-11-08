@@ -217,8 +217,8 @@ class SafeSplFileObject extends SplFileObject {
         // Проверяем позицию, НЕ считывая содержимое строки
         if(
             !$this->valid() ||
-            $this->key() !== $line ||
-            $this->getSize() === 0
+            $this->key() !== $line // ||
+            // $this->getSize() === 0
         ) {
 
             unlockByName($_SESSION['username'] ?? 'dummy');
