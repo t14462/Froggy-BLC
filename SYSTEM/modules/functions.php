@@ -3583,29 +3583,11 @@ function obyava() {
 
         $obstring = escape_amp_txtarea($obstring);
 
-        $parsedObstring = false;
+        $html = str_get_html($obstring, false, true, "UTF-8", false);
 
-        // Предупреждения парсера обрабатываем так же, как исключения.
-        set_error_handler(static function(int $severity, string $message, string $file, int $line): never {
-            throw new ErrorException($message, 0, $severity, $file, $line);
-        });
-
-        try {
-            $html = str_get_html($obstring, false, true, "UTF-8", false);
-
-            if($html !== false) {
-                $html = replaceSemanticSpans($html);
-                $parsedObstring = $html->save();
-            }
-        } catch(Throwable $e) {
-            error_log("obyava(): ошибка Simple-HTML-DOM: " . $e->getMessage());
-        } finally {
-            restore_error_handler();
-        }
-
-        // false возможен и при превышении лимита после экранирования.
-        if($parsedObstring !== false) {
-            $obstring = $parsedObstring;
+        if($html !== false) {
+            $html = replaceSemanticSpans($html);
+            $obstring = $html->save();
 
             /* $obstring = str_ireplace(
                 ['&@lt;', '&@gt;', '&@quot;', '&@apos;', '&@amp;'],

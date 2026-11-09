@@ -2331,6 +2331,36 @@ function pobyava() {
         $purifier = new HTMLPurifier($config);
         $obstring = $purifier->purify($obstring);
 
+        if(!empty($obstring)) {
+            $parsedObstring = false;
+
+            // Проверяем тот же HTML, который будет разбираться при выводе.
+            $checkObstring = escape_amp_txtarea(normalize_entities_my($obstring));
+
+            // Предупреждения парсера обрабатываем так же, как исключения.
+            set_error_handler(static function(int $severity, string $message, string $file, int $line): never {
+                throw new ErrorException($message, 0, $severity, $file, $line);
+            });
+
+            try {
+                $html = str_get_html($checkObstring, false, true, "UTF-8", false);
+
+                if($html !== false) {
+                    $html = replaceSemanticSpans($html);
+                    $parsedObstring = $html->save();
+                }
+            } catch(Throwable $e) {
+                error_log("pobyava(): ошибка Simple-HTML-DOM: " . $e->getMessage());
+            } finally {
+                restore_error_handler();
+            }
+
+            if($parsedObstring === false) {
+                $errmsg = "<h1>ОШИБКА.</h1><p class='big'><strong>Не удалось обработать HTML объявления. Объявление не сохранено.</strong></p>";
+                return;
+            }
+        }
+
         putFileOrDie("DATABASE/obyava.txt", $obstring, LOCK_EX);
 
         mylog("<strong style='color:DarkRed'>Объявление изменено. (".$_SESSION["username"].").</strong>");
