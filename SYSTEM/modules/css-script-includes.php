@@ -37,7 +37,7 @@ if($ispageexist) {
 // $jstime1 = filemtime("SYSTEM/JSLIB/main-script.js");
 
 $head .= '
-<link href="'.skipCache("favicon.ico").'" rel="icon" type="image/x-icon" />
+<link rel="icon" href="'.skipCache("favicon.ico").'" />
 
 <script src="'.skipCache("SYSTEM/JSLIB/main-script.js").'"></script>
 
