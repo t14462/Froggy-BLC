@@ -35,6 +35,7 @@ button, input { font: inherit; }
 button, a { -webkit-tap-highlight-color: transparent; }
 button { cursor: pointer; }
 svg { stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.arrow-icon { display: block; flex: 0 0 auto; align-self: center; width: 20px; height: 20px; fill: none; pointer-events: none; }
 :focus-visible { outline: 3px solid var(--accent); outline-offset: 5px; }
 
 .site-header, .search-layout, .site-footer {
@@ -57,7 +58,6 @@ svg { stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-lin
 .brand-icon svg { width: 25px; height: 25px; }
 .home-link { display: inline-flex; align-items: center; gap: 14px; color: var(--muted); font-size: 14px; }
 .home-link:hover { color: var(--accent); }
-.home-link span { font-size: 21px; }
 
 .search-layout { flex: 1; padding-top: 56px; padding-bottom: 64px; }
 .search-hero { margin-bottom: 32px; }
@@ -94,7 +94,6 @@ h1 em { color: var(--accent); font-family: Georgia, "Times New Roman", serif; fo
 .search-field input::placeholder { color: var(--muted); opacity: .85; }
 .search-field button { display: flex; align-items: center; justify-content: center; gap: 26px; min-height: 52px; padding: 12px 24px; border: 0; border-radius: 11px; background: var(--accent); color: var(--on-accent); font-size: 15px; font-weight: 600; transition: background .15s ease; }
 .search-field button:hover { background: var(--accent-hover); }
-.search-field button span { font-size: 21px; font-weight: 400; }
 .search-hint { display: flex; flex-wrap: wrap; gap: 8px 20px; margin: 12px 2px 0; color: var(--muted); font-size: 12px; }
 .search-hint span + span { padding-left: 20px; border-left: 1px solid var(--line); }
 
@@ -121,14 +120,15 @@ h1 em { color: var(--accent); font-family: Georgia, "Times New Roman", serif; fo
 .result-number { padding-top: 5px; color: var(--muted); font: 12px/1.65 ui-monospace, "SFMono-Regular", Consolas, monospace; }
 .result-content { min-width: 0; overflow-wrap: anywhere; }
 .result-content h3 { margin: 0; font: 400 25px/1.3 Georgia, "Times New Roman", serif; letter-spacing: -.35px; }
-.result-content h3 a { display: flex; justify-content: space-between; align-items: baseline; gap: 20px; }
+.result-content h3 a { display: flex; justify-content: space-between; align-items: center; gap: 20px; }
 .result-content h3 a:hover { color: var(--accent); }
-.result-arrow { flex: 0 0 auto; color: var(--muted); font: 20px/1 sans-serif; }
+.result-arrow { color: var(--muted); }
 .result-content p { margin: 12px 26px 0 0; color: var(--muted); font-size: 14px; line-height: 1.85; }
 mark { padding: .05em .12em; border-radius: 3px; background: var(--mark); color: var(--mark-ink); box-decoration-break: clone; -webkit-box-decoration-break: clone; }
 
 .pagination { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 20px; margin-top: 27px; }
 .page-link { display: inline-flex; align-items: center; justify-content: center; gap: 13px; min-height: 44px; padding: 9px 19px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); font-size: 13px; font-weight: 600; transition: border-color .15s ease, background .15s ease; }
+.page-link .arrow-icon { width: 18px; height: 18px; }
 .page-prev { justify-self: start; }
 .page-next { justify-self: end; border-color: var(--accent); background: var(--accent); color: var(--on-accent); }
 .page-prev:hover { border-color: var(--accent); }
@@ -189,7 +189,7 @@ mark { padding: .05em .12em; border-radius: 3px; background: var(--mark); color:
     .result-content h3 { font-size: 22px; }
     .result-content h3 a { gap: 10px; }
     .result-content p { margin: 10px 0 0; font-size: 13px; line-height: 1.8; }
-    .result-arrow { font-size: 17px; }
+    .result-arrow { width: 17px; height: 17px; }
     .results-toolbar h2 { gap: 7px; font-size: 13px; }
     .results-range { font-size: 11px; }
     .pagination { gap: 10px; }

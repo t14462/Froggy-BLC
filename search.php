@@ -12,14 +12,31 @@
     $search = trim($searchValue);
     $validUtf8 = mb_check_encoding($searchValue, 'UTF-8');
     $searchTooLong = $validUtf8 && mb_strlen($searchValue, 'UTF-8') > $searchMaxLength;
-    $segments = $validUtf8 && !$searchTooLong
-        ? preg_split('/[\s\p{Z}]+/u', $search, -1, PREG_SPLIT_NO_EMPTY) ?: []
-        : [];
-    $searchCanRun = !$searchTooLong && $validUtf8 && $segments !== []
-        && mb_strlen($search, 'UTF-8') >= $searchMinLength
+    $segments = [];
+    $searchQuotesError = false;
+    if($validUtf8 && !$searchTooLong) {
+        // Вне кавычек — отдельные слова, внутри парных кавычек — цельная фраза.
+        preg_match_all(
+            '~"(?<phrase>[^"]*)"|«(?<angle>[^»]*)»|“(?<smart>[^”]*)”|(?<word>[^\s\p{Z}"«»“”]+)|(?<unclosed>["«»“”])~u',
+            $search,
+            $tokens,
+            PREG_SET_ORDER | PREG_UNMATCHED_AS_NULL
+        );
+        foreach($tokens as $token) {
+            if(($token['unclosed'] ?? null) !== null) {
+                $searchQuotesError = true;
+                break;
+            }
+            $segment = $token['phrase'] ?? $token['angle'] ?? $token['smart'] ?? $token['word'];
+            $segment = trim(preg_replace('/[\s\p{Z}]+/u', ' ', $segment) ?? '');
+            if($segment !== '') $segments[] = $segment;
+        }
+    }
+    $searchCanRun = !$searchTooLong && !$searchQuotesError && $validUtf8 && $segments !== []
+        && mb_strlen(implode(' ', $segments), 'UTF-8') >= $searchMinLength
         && (!isset($_GET['pgnum']) || is_string($_GET['pgnum']));
 
-    $view = $searchTooLong ? 'too-long' : 'start';
+    $view = $searchTooLong ? 'too-long' : ($searchQuotesError ? 'quotes-error' : 'start');
     $results = [];
     $pgcount = $pageCount = $pgnum = $searchRetryAfter = 0;
 
@@ -103,7 +120,8 @@
                     $article = $parseArticle($line);
                     if($article === null) continue;
                     [$title, $body, $articleId] = $article;
-                    $text = $title . ' ' . $body;
+                    // Фраза не должна склеиваться из конца заголовка и начала текста.
+                    $text = $title . "\n" . $body;
                     // Если хотя бы один сегмент отсутствует, переходим к следующей статье.
                     foreach($patterns as $segmentPattern) {
                         if(preg_match($segmentPattern, $text) !== 1) continue 2;
@@ -138,11 +156,12 @@
     }
 
     $notices = [
-        'start' => ['⌕', 'Найдите нужную главу', 'Введите слово или несколько слов — от '.$searchMinLength.' до '.$searchMaxLength.' символов. Здесь появятся страницы и короткие фрагменты с совпадениями.'],
+        'start' => ['⌕', 'Найдите нужную главу', 'Введите слово или несколько слов — от '.$searchMinLength.' до '.$searchMaxLength.' символов. Фразу целиком заключите в кавычки.'],
         'too-long' => ['!', 'Слишком длинный запрос', 'Введите не более '.$searchMaxLength.' символов, включая пробелы.'],
+        'quotes-error' => ['!', 'Проверьте кавычки', 'Закройте кавычки вокруг каждой фразы.'],
         'limited' => ['!', 'Слишком частые запросы', 'Повторите поиск через '.$searchRetryAfter.' сек.'],
         'unavailable' => ['!', 'Поиск временно недоступен', 'Попробуйте ещё раз немного позже.'],
-        'empty' => ['∅', 'Ничего не нашлось', 'Попробуйте меньше слов или другую формулировку. В статье должны встречаться все слова запроса.'],
+        'empty' => ['∅', 'Ничего не нашлось', 'Попробуйте меньше слов или другую формулировку. Все слова и фразы запроса должны встречаться в одной статье.'],
     ];
     $pageBase = 'search.php?search=' . rawurlencode($search) . '&pgnum=';
     $start = $pgnum * $perPage;
@@ -167,7 +186,7 @@
         </span>
         <span>Froggy<span class="brand-suffix">—BLC</span></span>
     </a>
-    <a class="home-link" href="./">На главную <span aria-hidden="true">↗</span></a>
+    <a class="home-link" href="./">На главную <svg class="arrow-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 19 19 5M5 5h14v14" /></svg></a>
 </header>
 <main class="search-layout">
     <section class="search-hero" aria-labelledby="search-title">
@@ -185,9 +204,9 @@
                    value="<?= $escape($searchValue) ?>"
                    placeholder="Какие страницы вы ищете?" minlength="<?= $searchMinLength ?>" maxlength="<?= $searchMaxLength ?>" required
                    aria-describedby="search-hint" />
-            <button type="submit">Найти <span aria-hidden="true">→</span></button>
+            <button type="submit">Найти <svg class="arrow-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 12h16m-6-6 6 6-6 6" /></svg></button>
         </div>
-        <p class="search-hint" id="search-hint"><span>От <?= $searchMinLength ?> до <?= $searchMaxLength ?> символов</span><span>Все слова из запроса · В любом порядке</span></p>
+        <p class="search-hint" id="search-hint"><span>От <?= $searchMinLength ?> до <?= $searchMaxLength ?> символов</span><span>Слова — в любом порядке · В кавычках — точная фраза</span></p>
     </form>
 
     <section class="search-results" id="search-results" aria-label="Результаты поиска" tabindex="-1">
@@ -200,7 +219,7 @@
                 <article class="search-result">
                     <span class="result-number" aria-hidden="true"><?= str_pad((string)($start + $index + 1), 2, '0', STR_PAD_LEFT) ?></span>
                     <div class="result-content">
-                        <h3><a href="./?<?= $result['id'] ?>&amp;permalink=1"><span><?= $highlight($result['title']) ?></span> <span class="result-arrow" aria-hidden="true">↗</span></a></h3>
+                        <h3><a href="./?<?= $result['id'] ?>&amp;permalink=1"><span><?= $highlight($result['title']) ?></span> <svg class="arrow-icon result-arrow" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 19 19 5M5 5h14v14" /></svg></a></h3>
                         <p><?= $highlight($result['snippet']) ?></p>
                     </div>
                 </article>
@@ -209,13 +228,13 @@
             <?php if($pageCount > 1): ?>
                 <nav class="pagination" aria-label="Страницы результатов">
                     <?php if($pgnum > 0): ?>
-                        <a class="page-link page-prev" href="<?= $escape($pageBase . ($pgnum - 1)) ?>" rel="prev"><span aria-hidden="true">←</span> Назад</a>
+                        <a class="page-link page-prev" href="<?= $escape($pageBase . ($pgnum - 1)) ?>" rel="prev"><svg class="arrow-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20 12H4m6-6-6 6 6 6" /></svg> Назад</a>
                     <?php else: ?>
                         <span class="pagination-spacer" aria-hidden="true"></span>
                     <?php endif; ?>
                     <p class="page-position">Страница <strong><?= $pgnum + 1 ?></strong> из <?= $pageCount ?></p>
                     <?php if($end < $pgcount): ?>
-                        <a class="page-link page-next" href="<?= $escape($pageBase . ($pgnum + 1)) ?>" rel="next">Далее <span aria-hidden="true">→</span></a>
+                        <a class="page-link page-next" href="<?= $escape($pageBase . ($pgnum + 1)) ?>" rel="next">Далее <svg class="arrow-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 12h16m-6-6 6 6-6 6" /></svg></a>
                     <?php else: ?>
                         <span class="pagination-spacer" aria-hidden="true"></span>
                     <?php endif; ?>
@@ -223,7 +242,7 @@
             <?php endif; ?>
         <?php else: ?>
             <?php [$symbol, $title, $text] = $notices[$view]; ?>
-            <div class="empty-state"<?= in_array($view, ['too-long', 'limited', 'unavailable'], true) ? ' role="alert"' : '' ?>>
+            <div class="empty-state"<?= in_array($view, ['too-long', 'quotes-error', 'limited', 'unavailable'], true) ? ' role="alert"' : '' ?>>
                 <span class="empty-symbol" aria-hidden="true"><?= $escape($symbol) ?></span>
                 <h2><?= $escape($title) ?></h2>
                 <p><?= $escape($text) ?></p>
