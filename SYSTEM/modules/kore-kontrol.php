@@ -157,7 +157,7 @@ if(    is_file("DATABASE/DB/DB-TOC-Cache.txt")
     $file->setFlags(SplFileObject::READ_AHEAD); // Для лучшей производительности, позволяет "заглядывать" в файл
 
     $mCACHE = $out = "<ul id='sitemenu'>
-    <li><a href='search.php' target='_blank'>🔎 Поиск по Сайту…</a></li>";
+    <li><a href='search.php' target='_blank'>Поиск по Сайту 🔎…</a></li>";
 
     // while(!$file->eof()) {
 

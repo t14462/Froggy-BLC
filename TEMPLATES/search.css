@@ -203,3 +203,4 @@ mark { padding: .05em .12em; border-radius: 3px; background: var(--mark); color:
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { transition: none !important; }
 }
+

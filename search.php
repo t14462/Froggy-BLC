@@ -3,8 +3,7 @@
     $searchMaxLength = 200;
     $searchTooLong = mb_check_encoding($searchValue, 'UTF-8')
         && mb_strlen($searchValue, 'UTF-8') > $searchMaxLength;
-?>
-<!DOCTYPE html>
+?><!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="utf-8" />
@@ -247,3 +246,4 @@
 </footer>
 </body>
 </html>
+
