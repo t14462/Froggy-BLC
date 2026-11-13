@@ -3,7 +3,8 @@
     $searchMinLength = 3;
     $searchMaxLength = 200;
     $perPage = 15;
-    $context = 255;
+    $context = 255; // Запас контекста с каждой стороны делится между фрагментами.
+    $snippetMaxFragments = 3;
     $searchRequestLimit = 15;
     $searchRequestWindow = 60;
 
@@ -77,30 +78,12 @@
                 };
 
                 $parseArticle = static function(string $line) use ($plainText): ?array {
-                    $parts = explode("<!2!><br!>", $line, 2);
+                    $parts = explode("<!2!>", $line, 2);
                     if(count($parts) !== 2 || !mb_check_encoding($line, 'UTF-8')
                         || preg_match('~\A([a-f0-9]{40})<head([1-6])>(.*?)</head\2>~i', $parts[0], $header) !== 1) {
                         return null;
                     }
                     return [$plainText($header[3]), $plainText($parts[1]), $header[1]];
-                };
-
-                $makeSnippet = static function(string $body) use ($pattern, $context): string {
-                    $position = false;
-                    $matchLength = 0;
-                    if(preg_match($pattern, $body, $match, PREG_OFFSET_CAPTURE) === 1) {
-                        // PCRE возвращает байты; для обрезки переводим позицию в символы.
-                        $position = mb_strlen(substr($body, 0, $match[0][1]), 'UTF-8');
-                        $matchLength = mb_strlen($match[0][0], 'UTF-8');
-                    }
-                    $start = $position === false ? 0 : max(0, $position - $context);
-                    $length = $position === false ? $context * 2 : $position - $start + $matchLength + $context;
-                    $fragment = mb_substr($body, $start, $length + 1, 'UTF-8');
-                    $hasMore = mb_strlen($fragment, 'UTF-8') > $length;
-
-                    return ($start > 0 ? '…' : '')
-                        . ($hasMore ? mb_substr($fragment, 0, $length, 'UTF-8') : $fragment)
-                        . ($hasMore ? '…' : '');
                 };
 
                 $highlight = static function(string $text) use ($pattern, $escape): string {
@@ -111,6 +94,59 @@
                         $html .= $index % 2 ? '<mark>'.$part.'</mark>' : $part;
                     }
                     return $html;
+                };
+
+                $renderSnippet = static function(string $body) use ($patterns, $context, $snippetMaxFragments, $highlight): string {
+                    $matches = [];
+                    $minContext = max(1, intdiv($context, $snippetMaxFragments));
+                    foreach($patterns as $segmentPattern) {
+                        if(preg_match($segmentPattern, $body, $match, PREG_OFFSET_CAPTURE) !== 1) continue;
+                        // PCRE возвращает байты; для обрезки переводим позицию в символы.
+                        $start = mb_strlen(substr($body, 0, $match[0][1]), 'UTF-8');
+                        $end = $start + mb_strlen($match[0][0], 'UTF-8');
+                        foreach($matches as [$left, $right]) {
+                            if($start >= $left - $minContext && $end <= $right + $minContext) continue 2;
+                        }
+                        $matches[] = [$start, $end];
+                        if(count($matches) >= $snippetMaxFragments) break;
+                    }
+
+                    // Если совпадения есть только в заголовке, показываем начало статьи.
+                    $bodyLength = mb_strlen($body, 'UTF-8');
+                    if($matches === []) $matches[] = [0, min($bodyLength, $context)];
+                    $radius = max(1, intdiv($context, count($matches)));
+                    $ranges = [];
+                    foreach($matches as [$start, $end]) {
+                        $start = max(0, $start - $radius);
+                        $end = min($bodyLength, $end + $radius);
+                        // До 32 символов на целое слово; длинные строки без пробелов остаются ограниченными.
+                        preg_match('/\S*\z/u', mb_substr($body, max(0, $start - 32), min(32, $start), 'UTF-8'), $edge);
+                        $start -= mb_strlen($edge[0], 'UTF-8');
+                        preg_match('/\A\S*/u', mb_substr($body, $end, 32, 'UTF-8'), $edge);
+                        $end += mb_strlen($edge[0], 'UTF-8');
+                        $ranges[] = [$start, $end];
+                    }
+                    usort($ranges, static fn($a, $b) => $a[0] <=> $b[0]);
+
+                    // Соседние совпадения показываем одним непрерывным фрагментом.
+                    $merged = [];
+                    foreach($ranges as $range) {
+                        $last = count($merged) - 1;
+                        if($last >= 0 && $range[0] <= $merged[$last][1]) {
+                            $merged[$last][1] = max($merged[$last][1], $range[1]);
+                        } else {
+                            $merged[] = $range;
+                        }
+                    }
+
+                    $fragments = [];
+                    foreach($merged as [$start, $end]) {
+                        // Подсвечиваем только исходный текст: многоточия не участвуют в поиске.
+                        $fragments[] = $highlight(trim(mb_substr($body, $start, $end - $start, 'UTF-8')));
+                    }
+
+                    return ($merged[0][0] > 0 ? '…' : '') . implode(' … ', $fragments)
+                        . ($merged[count($merged) - 1][1] < $bodyLength ? '…' : '');
                 };
 
                 $requestedPage = abs((int)($_GET['pgnum'] ?? '0'));
@@ -127,14 +163,15 @@
                         if(preg_match($segmentPattern, $text) !== 1) continue 2;
                     }
 
-                    // В памяти одна страница: при слишком большом pgnum останется последняя.
+                    // В памяти тексты одной страницы; выдержки строятся только при выводе.
+                    // При слишком большом pgnum останется последняя страница.
                     $resultPage = intdiv($pgcount, $perPage);
                     if($resultPage <= $requestedPage) {
                         if($resultPage !== $pgnum) {
                             $results = [];
                             $pgnum = $resultPage;
                         }
-                        $results[] = ['title' => $title, 'snippet' => $makeSnippet($body), 'id' => $articleId];
+                        $results[] = ['title' => $title, 'body' => $body, 'id' => $articleId];
                     }
                     $pgcount++;
                 }
@@ -206,7 +243,7 @@
                    aria-describedby="search-hint" />
             <button type="submit">Найти <svg class="arrow-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 12h16m-6-6 6 6-6 6" /></svg></button>
         </div>
-        <p class="search-hint" id="search-hint"><span>От <?= $searchMinLength ?> до <?= $searchMaxLength ?> символов</span><span>Слова — в любом порядке · В кавычках — точная фраза</span></p>
+        <p class="search-hint" id="search-hint"><span>От <?= $searchMinLength ?> до <?= $searchMaxLength ?> символов</span><span>Слова — в любом порядке ··· В кавычках — точная фраза</span></p>
     </form>
 
     <section class="search-results" id="search-results" aria-label="Результаты поиска" tabindex="-1">
@@ -220,7 +257,7 @@
                     <span class="result-number" aria-hidden="true"><?= str_pad((string)($start + $index + 1), 2, '0', STR_PAD_LEFT) ?></span>
                     <div class="result-content">
                         <h3><a href="./?<?= $result['id'] ?>&amp;permalink=1"><span><?= $highlight($result['title']) ?></span> <svg class="arrow-icon result-arrow" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 19 19 5M5 5h14v14" /></svg></a></h3>
-                        <p><?= $highlight($result['snippet']) ?></p>
+                        <p><?= $renderSnippet($result['body']) ?></p>
                     </div>
                 </article>
             <?php endforeach; ?>
