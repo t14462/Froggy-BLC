@@ -237,7 +237,7 @@
         <label class="visually-hidden" for="search-query">Поисковый запрос</label>
         <div class="search-field">
             <svg class="search-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" /><path d="m16 16 4.5 4.5" /></svg>
-            <input type="search" id="search-query" name="search"
+            <input type="text" id="search-query" name="search"
                    value="<?= $escape($searchValue) ?>"
                    placeholder="Какие страницы вы ищете?" minlength="<?= $searchMinLength ?>" maxlength="<?= $searchMaxLength ?>" required
                    aria-describedby="search-hint" />
