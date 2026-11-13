@@ -3,8 +3,8 @@
     $searchMinLength = 3;
     $searchMaxLength = 200;
     $perPage = 15;
-    $context = 255; // Запас контекста с каждой стороны делится между фрагментами.
-    $snippetMaxFragments = 3;
+    $context = 300; // Запас контекста с каждой стороны делится между фрагментами.
+    $snippetMaxFragments = 4;
     $searchRequestLimit = 15;
     $searchRequestWindow = 60;
 
