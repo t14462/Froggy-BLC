@@ -3,9 +3,10 @@
     $searchMinLength = 3;
     $searchMaxLength = 200;
     $perPage = 15;
+    $searchResultPages = 2; // Затем — страница с предложением уточнить запрос.
     $context = 300; // Запас контекста с каждой стороны делится между фрагментами.
     $snippetMaxFragments = 4;
-    $searchRequestLimit = 15;
+    $searchRequestLimit = 12;
     $searchRequestWindow = 60;
 
     $escape = static fn(string $text): string => htmlspecialchars($text, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
@@ -39,6 +40,8 @@
 
     $view = $searchTooLong ? 'too-long' : ($searchQuotesError ? 'quotes-error' : 'start');
     $results = [];
+    $searchTruncated = false;
+    $resultLimit = $perPage * $searchResultPages;
     $pgcount = $pageCount = $pgnum = $searchRetryAfter = 0;
 
     if($searchCanRun) {
@@ -59,6 +62,7 @@
                 $view = 'limited';
                 http_response_code(429);
             } else {
+                require_once __DIR__ . '/SYSTEM/modules/search-cache.php';
                 // Одни правила совпадений для отбора статей, фрагментов и подсветки.
                 usort($segments, static fn($a, $b) => mb_strlen($b, 'UTF-8') <=> mb_strlen($a, 'UTF-8'));
                 $expressions = array_values(array_unique(array_map(
@@ -149,12 +153,12 @@
                         . ($merged[count($merged) - 1][1] < $bodyLength ? '…' : '');
                 };
 
-                $requestedPage = abs((int)($_GET['pgnum'] ?? '0'));
-                $file = new SplFileObject(__DIR__ . '/DATABASE/DB/data.html', 'rb');
-                $file->setFlags(SplFileObject::READ_AHEAD);
-                foreach($file as $line) {
-                    $article = $parseArticle($line);
-                    if($article === null) continue;
+                $requestedPage = min(abs((int)($_GET['pgnum'] ?? '0')), $searchResultPages);
+                foreach(\Froggy\Search\cachedArticles(
+                    __DIR__ . '/DATABASE/DB/data.html',
+                    __DIR__ . '/DATABASE/DB/Search-Cache.txt',
+                    $parseArticle
+                ) as $article) {
                     [$title, $body, $articleId] = $article;
                     // Фраза не должна склеиваться из конца заголовка и начала текста.
                     $text = $title . "\n" . $body;
@@ -163,9 +167,14 @@
                         if(preg_match($segmentPattern, $text) !== 1) continue 2;
                     }
 
+                    // Первое совпадение за пределом выдачи подтверждает, что запрос слишком широкий.
+                    if(++$pgcount > $resultLimit) {
+                        $searchTruncated = true;
+                        break;
+                    }
                     // В памяти тексты одной страницы; выдержки строятся только при выводе.
                     // При слишком большом pgnum останется последняя страница.
-                    $resultPage = intdiv($pgcount, $perPage);
+                    $resultPage = intdiv($pgcount - 1, $perPage);
                     if($resultPage <= $requestedPage) {
                         if($resultPage !== $pgnum) {
                             $results = [];
@@ -173,11 +182,15 @@
                         }
                         $results[] = ['title' => $title, 'body' => $body, 'id' => $articleId];
                     }
-                    $pgcount++;
                 }
-                unset($file);
                 $pageCount = $pgcount > 0 ? intdiv($pgcount - 1, $perPage) + 1 : 0;
-                $view = $pgcount > 0 ? 'results' : 'empty';
+                if($searchTruncated && $requestedPage === $searchResultPages) {
+                    $pgnum = $searchResultPages;
+                    $results = [];
+                    $view = 'refine';
+                } else {
+                    $view = $pgcount > 0 ? 'results' : 'empty';
+                }
             }
         } catch(RuntimeException $exception) {
             $view = 'unavailable';
@@ -199,7 +212,9 @@
         'limited' => ['!', 'Слишком частые запросы', 'Повторите поиск через '.$searchRetryAfter.' сек.'],
         'unavailable' => ['!', 'Поиск временно недоступен', 'Попробуйте ещё раз немного позже.'],
         'empty' => ['∅', 'Ничего не нашлось', 'Попробуйте меньше слов или другую формулировку. Все слова и фразы запроса должны встречаться в одной статье.'],
+        'refine' => ['⌕', 'Уточните поисковый запрос', 'Слишком много совпадений. Расширьте набор ключевых слов, чтобы сузить диапазон результатов поиска.'],
     ];
+    $countLabel = $searchTruncated ? $resultLimit . '+' : (string)$pgcount;
     $pageBase = 'search.php?search=' . rawurlencode($search) . '&pgnum=';
     $start = $pgnum * $perPage;
     $end = min($start + $perPage, $pgcount);
@@ -249,8 +264,8 @@
     <section class="search-results" id="search-results" aria-label="Результаты поиска" tabindex="-1">
         <?php if($view === 'results'): ?>
             <div class="results-toolbar">
-                <h2>Найдено страниц <span class="results-count"><?= $pgcount ?></span></h2>
-                <p class="results-range"><?= $start + 1 ?>–<?= $end ?> из <?= $pgcount ?></p>
+                <h2>Найдено страниц <span class="results-count"><?= $countLabel ?></span></h2>
+                <p class="results-range"><?= $start + 1 ?>–<?= $end ?> из <?= $countLabel ?></p>
             </div>
             <?php foreach($results as $index => $result): ?>
                 <article class="search-result">
@@ -262,21 +277,6 @@
                 </article>
             <?php endforeach; ?>
 
-            <?php if($pageCount > 1): ?>
-                <nav class="pagination" aria-label="Страницы результатов">
-                    <?php if($pgnum > 0): ?>
-                        <a class="page-link page-prev" href="<?= $escape($pageBase . ($pgnum - 1)) ?>" rel="prev"><svg class="arrow-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20 12H4m6-6-6 6 6 6" /></svg> Назад</a>
-                    <?php else: ?>
-                        <span class="pagination-spacer" aria-hidden="true"></span>
-                    <?php endif; ?>
-                    <p class="page-position">Страница <strong><?= $pgnum + 1 ?></strong> из <?= $pageCount ?></p>
-                    <?php if($end < $pgcount): ?>
-                        <a class="page-link page-next" href="<?= $escape($pageBase . ($pgnum + 1)) ?>" rel="next">Далее <svg class="arrow-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 12h16m-6-6 6 6-6 6" /></svg></a>
-                    <?php else: ?>
-                        <span class="pagination-spacer" aria-hidden="true"></span>
-                    <?php endif; ?>
-                </nav>
-            <?php endif; ?>
         <?php else: ?>
             <?php [$symbol, $title, $text] = $notices[$view]; ?>
             <div class="empty-state"<?= in_array($view, ['too-long', 'quotes-error', 'limited', 'unavailable'], true) ? ' role="alert"' : '' ?>>
@@ -284,6 +284,21 @@
                 <h2><?= $escape($title) ?></h2>
                 <p><?= $escape($text) ?></p>
             </div>
+        <?php endif; ?>
+        <?php if($pageCount > 1): ?>
+            <nav class="pagination" aria-label="Страницы результатов">
+                <?php if($pgnum > 0): ?>
+                    <a class="page-link page-prev" href="<?= $escape($pageBase . ($pgnum - 1)) ?>" rel="prev"><svg class="arrow-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20 12H4m6-6-6 6 6 6" /></svg> Назад</a>
+                <?php else: ?>
+                    <span class="pagination-spacer" aria-hidden="true"></span>
+                <?php endif; ?>
+                <p class="page-position">Страница <strong><?= $pgnum + 1 ?></strong> из <?= $pageCount ?></p>
+                <?php if($end < $pgcount): ?>
+                    <a class="page-link page-next" href="<?= $escape($pageBase . ($pgnum + 1)) ?>" rel="next">Далее <svg class="arrow-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 12h16m-6-6 6 6-6 6" /></svg></a>
+                <?php else: ?>
+                    <span class="pagination-spacer" aria-hidden="true"></span>
+                <?php endif; ?>
+            </nav>
         <?php endif; ?>
     </section>
 </main>

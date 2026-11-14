@@ -2674,6 +2674,11 @@ function refreshCaches() {
         @unlink("DATABASE/DB/MenuCache.txt");
     }
 
+    if(is_file("DATABASE/DB/Search-Cache.txt")) {
+
+        @unlink("DATABASE/DB/Search-Cache.txt");
+    }
+
     if(is_file("sitemap.txt")) {
         // rename("sitemap.txt", "sitemap.txt.del");
 
