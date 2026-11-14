@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Froggy\Search;
 
 // При изменении формата или правил очистки текста увеличьте версию кэша.
-const SEARCH_CACHE_VERSION = 1;
+const SEARCH_CACHE_VERSION = 3;
 const SEARCH_CACHE_HEADER_BYTES = 256;
 
 /** @param resource|null $stream */

@@ -75,9 +75,48 @@
                 $pattern = '~(' . implode('|', $expressions) . ')~iu';
 
                 $plainText = static function(string $html): string {
+                    // Разметка статей уже очищена HTML Purifier.
+                    // XHTML 1.1: https://www.w3.org/TR/xhtml11/doctype.html
+                    // Строчные теги и пустые служебные элементы не разрывают слова.
+                    // u — совместимость с прежней разметкой, вне строгого XHTML 1.1.
+                    static $joinedTags = null;
+                    $joinedTags ??= array_fill_keys(explode(' ',
+                        'a abbr acronym b bdo big cite code del dfn em i ins kbd label map '
+                        . 'q rb rbc ruby samp small span strong sub sup tt var u '
+                        . 'area base col link meta param'
+                    ), true);
+
+                    // Остальные элементы разделяют текст: address blockquote body br div h1–h6
+                    // hr html p pre; dd dl dt li ol ul; caption colgroup table tbody td tfoot th thead tr;
+                    // button fieldset form input legend optgroup option select textarea; img object noscript.
+                    // Аннотации Ruby (rp rt rtc) отделяются от основного текста. Неизвестные теги — тоже.
                     $html = str_replace("<br!>", " ", $html);
-                    $html = preg_replace('~<[^>]*>~', ' ', $html) ?? $html;
-                    $text = html_entity_decode(strip_tags($html), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+                    // Читаем разметку и текст одним проходом: > в атрибуте не завершает тег,
+                    // а теги внутри комментариев и CDATA не меняют границы слов.
+                    $text = preg_replace_callback(<<<'REGEX'
+~ <!-- .*? (?: --> | \z )
+| <!\[CDATA\[ (?<cdata>.*?) \]\]>
+| <\? .*? (?: \?> | \z )
+| <! (?: [^<>"']++ | "[^"]*" | '[^']*' )*+ >
+| < /? (?:[a-z][a-z0-9_.-]*:)? (?<tag>[a-z][a-z0-9_.-]*)
+    (?=[\s/>]) (?: [^<>"']++ | "[^"]*" | '[^']*' )*+ >
+| [^<]+ | < ~six
+REGEX,
+                        static function(array $match) use ($joinedTags): string {
+                            $tag = strtolower($match['tag'] ?? '');
+                            if($tag !== '') {
+                                return isset($joinedTags[$tag]) ? '' : ' ';
+                            }
+                            if(strncasecmp($match[0], '<![CDATA[', 9) === 0) {
+                                // CDATA содержит буквальный текст, включая < и &.
+                                return htmlspecialchars($match['cdata'], ENT_NOQUOTES | ENT_SUBSTITUTE, 'UTF-8');
+                            }
+                            return $match[0][0] === '<' && $match[0] !== '<' ? '' : $match[0];
+                        },
+                        $html
+                    );
+                    if($text === null) throw new RuntimeException('Cannot normalize search text.');
+                    $text = html_entity_decode($text, ENT_QUOTES | ENT_HTML5, 'UTF-8');
                     return trim(preg_replace('/[\s\p{Z}]+/u', ' ', $text) ?? '');
                 };
 
