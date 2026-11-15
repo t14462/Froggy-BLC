@@ -41,6 +41,7 @@
     $view = $searchTooLong ? 'too-long' : ($searchQuotesError ? 'quotes-error' : 'start');
     $results = [];
     $searchTruncated = false;
+    $searchCacheWasCurrent = null;
     $resultLimit = $perPage * $searchResultPages;
     $pgcount = $pageCount = $pgnum = $searchRetryAfter = 0;
 
@@ -196,14 +197,14 @@ REGEX,
                 foreach(\Froggy\Search\cachedArticles(
                     __DIR__ . '/DATABASE/DB/data.html',
                     __DIR__ . '/DATABASE/DB/Search-Cache.txt',
-                    $parseArticle
+                    $parseArticle,
+                    $searchCacheWasCurrent
                 ) as $article) {
                     [$title, $body, $articleId] = $article;
-                    // Фраза не должна склеиваться из конца заголовка и начала текста.
-                    $text = $title . "\n" . $body;
-                    // Если хотя бы один сегмент отсутствует, переходим к следующей статье.
+                    // Каждый сегмент ищем в заголовке или тексте; фраза не пересекает их границу.
                     foreach($patterns as $segmentPattern) {
-                        if(preg_match($segmentPattern, $text) !== 1) continue 2;
+                        if(preg_match($segmentPattern, $title) !== 1
+                            && preg_match($segmentPattern, $body) !== 1) continue 2;
                     }
 
                     // Первое совпадение за пределом выдачи подтверждает, что запрос слишком широкий.
@@ -233,6 +234,7 @@ REGEX,
             }
         } catch(RuntimeException $exception) {
             $view = 'unavailable';
+            $searchCacheWasCurrent = null;
             $searchRetryAfter = 60;
             http_response_code(503);
             error_log('Search: ' . $exception->getMessage());
@@ -343,7 +345,14 @@ REGEX,
 </main>
 <footer class="site-footer">
     <span>Froggy-BLC</span>
-    <span>Книжная система сайта</span>
+    <span>Книжная система сайта
+        <?php if($searchCacheWasCurrent !== null): ?>
+            <?php $cacheStatusText = $searchCacheWasCurrent
+                ? 'В этом поиске кэш был актуален.'
+                : 'Кэш не был актуален или доступен.'; ?>
+            <span class="cache-indicator" role="img" title="<?= $escape($cacheStatusText) ?>" aria-label="<?= $escape($cacheStatusText) ?>"><?= $searchCacheWasCurrent ? '🟢' : '🔴' ?></span>
+        <?php endif; ?>
+    </span>
 </footer>
 </body>
 </html>

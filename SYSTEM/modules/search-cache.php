@@ -113,11 +113,13 @@ function rebuildSearchCache($cache, string $database, callable $parseArticle): v
  * Один файл с заголовком и строками «заголовок TAB текст TAB ID».
  * Блокировка удерживается до окончания итерации, включая досрочный break.
  * Если кэш недоступен, статьи читаются из исходной базы.
+ * $cacheWasCurrent сообщает, был ли кэш актуален при первой проверке.
  *
  * @return \Generator<int, array{string, string, string}>
  */
-function cachedArticles(string $database, string $filename, callable $parseArticle): \Generator
+function cachedArticles(string $database, string $filename, callable $parseArticle, ?bool &$cacheWasCurrent = null): \Generator
 {
+    $cacheWasCurrent = false;
     $cache = @fopen($filename, 'c+b');
     $writable = $cache !== false;
     if($cache === false) $cache = @fopen($filename, 'rb');
@@ -127,7 +129,8 @@ function cachedArticles(string $database, string $filename, callable $parseArtic
             if(!@flock($cache, LOCK_SH)) {
                 throw new \RuntimeException('Cannot lock search text cache.');
             }
-            if(!searchCacheIsCurrent($cache, searchSourceStamp($database))) {
+            $cacheWasCurrent = searchCacheIsCurrent($cache, searchSourceStamp($database));
+            if(!$cacheWasCurrent) {
                 if(!$writable || !@flock($cache, LOCK_UN) || !@flock($cache, LOCK_EX)) {
                     throw new \RuntimeException('Cannot lock search text cache for rebuilding.');
                 }
@@ -146,10 +149,13 @@ function cachedArticles(string $database, string $filename, callable $parseArtic
             error_log('Search cache: ' . $exception->getMessage());
             fclose($cache);
             $cache = false;
+            $cacheWasCurrent = false;
         }
     }
 
     if($cache !== false) {
+        // Читаем кэш порциями по 32 КиБ, сохраняя построчный разбор.
+        stream_set_chunk_size($cache, 32 * 1024);
         try {
             while(($line = @fgets($cache)) !== false) {
                 $article = explode("\t", rtrim($line, "\r\n"), 3);
