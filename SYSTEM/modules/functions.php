@@ -1047,101 +1047,122 @@ function filterUsername(string $username): bool {
     /// return true;
 }
 
-function repeatCaptcha($userInput) {
+/**
+ * Запоминает хеш CAPTCHA среди последних 32 значений для текущего IP.
+ * true — новый хеш сохранён; false — хеш уже использован.
+ * Ошибки чтения, структуры данных и записи вызывают исключение.
+ */
+function repeatCaptcha(string $userInput): bool {
     global $ip;
 
-    // Путь к директории для хранения файлов сессий
     $sessionDir = 'DATABASE/comments/capt/';
-
-    // Генерация имени файла на основе IP-адреса
     $sessionFile = $sessionDir . sha1($ip) . '.json';
-
-    // Максимальное количество сохраненных значений
     $maxEntries = 32;
+    $file = fopenOrDie($sessionFile, 'c+b');
 
-    // Проверка, существует ли файл сессии
-    if(is_file($sessionFile)) {
-        // Чтение данных из файла
-
-        $locktmp = fopenOrDie($sessionFile, 'rb');
-        if(!flock($locktmp, LOCK_SH)) {
-            fclose($locktmp);
-            die('Cannot lock file');
+    try {
+        // Блокировка охватывает чтение, проверку и запись одним дескриптором.
+        if(!flock($file, LOCK_EX)) {
+            throw new RuntimeException('Не удалось заблокировать историю CAPTCHA.');
         }
 
-        $sessionData = json_decode((string)stream_get_contents($locktmp), true);
-
-        /// flock($locktmp, LOCK_UN);
-        fclose($locktmp);
-
-        /// $sessionData = json_decode(getFileOrDie($sessionFile), true);
-
-        if(!is_array($sessionData)) {
-            $sessionData = ['captchas' => []];
+        $json = stream_get_contents($file);
+        if($json === false) {
+            throw new RuntimeException('Не удалось прочитать историю CAPTCHA.');
         }
 
-        // Проверка на совпадение с предыдущими вводами
-        if(in_array($userInput, $sessionData['captchas'] ?? [], true)) {
-            return false; // Совпадение найдено, возвращаем false
+        // Новый файл пуст. Непустой файл обязан содержать корректную историю.
+        $sessionData = $json === ''
+            ? ['captchas' => []]
+            : json_decode($json, true, 512, JSON_THROW_ON_ERROR);
+
+        if(!is_array($sessionData) || !isset($sessionData['captchas']) || !is_array($sessionData['captchas']) || !array_is_list($sessionData['captchas'])) {
+            throw new RuntimeException('Некорректная структура истории CAPTCHA.');
         }
-    } else {
-        // Если файл не существует, инициализируем новый массив
-        $sessionData = ['captchas' => []];
+
+        foreach($sessionData['captchas'] as $hash) {
+            if(!is_string($hash)) {
+                throw new RuntimeException('Некорректное значение в истории CAPTCHA.');
+            }
+        }
+
+        if(in_array($userInput, $sessionData['captchas'], true)) {
+            return false;
+        }
+
+        $sessionData['captchas'][] = $userInput;
+        $sessionData['captchas'] = array_slice($sessionData['captchas'], -$maxEntries);
+        $json = json_encode($sessionData, JSON_THROW_ON_ERROR);
+
+        if(!rewind($file)) {
+            throw new RuntimeException('Не удалось перейти к началу истории CAPTCHA.');
+        }
+
+        // Сначала записываем данные, затем убираем возможный старый хвост.
+        if(fwrite($file, $json) !== strlen($json) || !ftruncate($file, strlen($json)) || !fflush($file)) {
+            throw new RuntimeException('Не удалось полностью сохранить историю CAPTCHA.');
+        }
+
+        return true;
+    } finally {
+        // fclose() также освобождает блокировку, в том числе при return.
+        fclose($file);
     }
-
-    // Добавляем новое значение в массив
-    $sessionData['captchas'][] = $userInput;
-
-    // Если количество записей превышает максимальное, удаляем старейшую
-    if(count($sessionData['captchas']) > $maxEntries) {
-        array_shift($sessionData['captchas']); // Удаляем первое (старейшее) значение
-    }
-
-    // Сохраняем обновленные данные обратно в файл
-    putFileOrDie($sessionFile, json_encode($sessionData), LOCK_EX);
-
-    return true; // Ввод уникален, возвращаем true
 }
 
-function canProceed($datip) {
-    // Путь к директории для хранения временных меток
+/**
+ * Разрешает один вызов на IP раз в 180 секунд и сохраняет его время.
+ * Отказ не обновляет временную метку.
+ * Ошибки чтения, структуры данных и записи вызывают исключение.
+ */
+function canProceed(string $datip): bool {
     $lockDir = 'DATABASE/comments/lock/';
     $lockFile = $lockDir . sha1($datip) . '.json';
+    $interval = 180;
+    $file = fopenOrDie($lockFile, 'c+b');
 
-    // Проверяем, существует ли файл
-    if(is_file($lockFile)) {
-        // Читаем данные из файла
-
-        $locktmp = fopenOrDie($lockFile, 'rb');
-        if(!flock($locktmp, LOCK_SH)) {
-            fclose($locktmp);
-            die('Cannot lock file');
+    try {
+        // Проверка интервала и обновление метки выполняются под одной блокировкой.
+        if(!flock($file, LOCK_EX)) {
+            throw new RuntimeException('Не удалось заблокировать временную метку комментария.');
         }
 
-        $lockData = json_decode((string)stream_get_contents($locktmp), true);
-
-        /// flock($locktmp, LOCK_UN);
-        fclose($locktmp);
-
-        /// $lockData = json_decode(getFileOrDie($lockFile), true);
-        if(!is_array($lockData)) {
-            $lockData = [];
+        $json = stream_get_contents($file);
+        if($json === false) {
+            throw new RuntimeException('Не удалось прочитать временную метку комментария.');
         }
 
-        $lastCall = (int)($lockData['last_call'] ?? 0);
-        $currentTime = time();
+        $now = time();
 
-        // Проверяем, прошло ли меньше 180 секунд с последнего вызова
-        if(($currentTime - $lastCall) < 180) {
-            return false; // Время еще не прошло
+        // Новый файл пуст. Непустой файл обязан содержать корректную метку.
+        if($json !== '') {
+            $lockData = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
+
+            if(!is_array($lockData) || !isset($lockData['last_call']) || !is_int($lockData['last_call']) || $lockData['last_call'] < 0) {
+                throw new RuntimeException('Некорректная временная метка комментария.');
+            }
+
+            if(($now - $lockData['last_call']) < $interval) {
+                return false;
+            }
         }
+
+        $json = json_encode(['last_call' => $now], JSON_THROW_ON_ERROR);
+
+        if(!rewind($file)) {
+            throw new RuntimeException('Не удалось перейти к началу файла временной метки комментария.');
+        }
+
+        // Сначала записываем данные, затем убираем возможный старый хвост.
+        if(fwrite($file, $json) !== strlen($json) || !ftruncate($file, strlen($json)) || !fflush($file)) {
+            throw new RuntimeException('Не удалось полностью сохранить временную метку комментария.');
+        }
+
+        return true;
+    } finally {
+        // fclose() также освобождает блокировку, в том числе при return.
+        fclose($file);
     }
-
-    // Обновляем временную метку
-    $lockData = ['last_call' => time()];
-    putFileOrDie($lockFile, json_encode($lockData), LOCK_EX);
-
-    return true; // Можно продолжать
 }
 
 
