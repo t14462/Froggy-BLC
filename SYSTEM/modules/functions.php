@@ -2938,6 +2938,84 @@ function _typo_token($prefix)
 }
 
 /**
+ * Прячет содержимое <code> и <pre> целиком, сохраняя исходную HTML-разметку.
+ * null — ошибка разбора; вызывающий код должен вернуть исходный HTML.
+ *
+ * @param array<string, string> $blocks Токены и исходные фрагменты для strtr().
+ */
+function protect_code_blocks(string $html, array &$blocks): ?string
+{
+    $blocks = [];
+
+    if (stripos($html, '<code') === false && stripos($html, '<pre') === false) {
+        return $html;
+    }
+
+    // Комментарии и CDATA непрозрачны; > в кавычках не завершает тег.
+    $markupPattern = <<<'REGEX'
+~<!--.*?(?:-->|$)|<!\[CDATA\[.*?(?:\]\]>|$)|<\?.*?(?:\?>|$)|<[!/]?[A-Za-z](?:[^"'<>]|"[^"]*"|'[^']*')*>~s
+REGEX;
+    if (preg_match_all($markupPattern, $html, $matches, PREG_OFFSET_CAPTURE) === false) {
+        return null;
+    }
+
+    do {
+        $prefix = _typo_token('CODE');
+    } while (str_contains($html, $prefix));
+
+    $stack = [];
+    $out = '';
+    $cursor = 0;
+
+    foreach ($matches[0] as [$markup, $offset]) {
+        if (preg_match('~\A<(/?)(code|pre)(?=[\s/>])~i', $markup, $tag) !== 1) {
+            continue;
+        }
+
+        $name = strtolower($tag[2]);
+
+        if ($tag[1] === '') {
+            if (preg_match('~/\s*>\z~', $markup) === 1) {
+                continue;
+            }
+
+            if ($stack === []) {
+                $end = $offset + strlen($markup);
+                $out .= substr($html, $cursor, $end - $cursor);
+                $cursor = $end;
+            }
+
+            $stack[] = $name;
+            continue;
+        }
+
+        $level = array_search($name, array_reverse($stack, true), true);
+        if ($level === false) {
+            continue;
+        }
+
+        $stack = array_slice($stack, 0, $level);
+        if ($stack !== []) {
+            continue;
+        }
+
+        $token = $prefix . ':' . count($blocks);
+        $blocks[$token] = substr($html, $cursor, $offset - $cursor);
+        $out .= $token;
+        $cursor = $offset;
+    }
+
+    // Незакрытый блок защищаем до конца исходной строки.
+    if ($stack !== []) {
+        $token = $prefix . ':' . count($blocks);
+        $blocks[$token] = substr($html, $cursor);
+        return $out . $token;
+    }
+
+    return $out . substr($html, $cursor);
+}
+
+/**
  * 1) Перед типографом: прячет " -- " только внутри <code ...>...</code>
  *    Возвращает новый HTML, а уникальный токен кладёт в $ctx['ddash_token'].
  */
@@ -3326,12 +3404,12 @@ function restore_code_quotes($html, $ctx)
  */
 function ru_nbsp_typograf(string $text, bool $useHtmlNbsp = false): string
 {
-
-    $ctx = array();
-
-    $text = protect_code_double_hyphen($text, $ctx);
-
-    $text = protect_code_quotes($text, $ctx);   // новая: " -> токен
+    $codeBlocks = [];
+    $protected = protect_code_blocks($text, $codeBlocks);
+    if ($protected === null) {
+        return $text;
+    }
+    $text = $protected;
 
     // Неразрывный пробел и тире
     $nbsp  = $useHtmlNbsp ? '&nbsp;' : "\u{00A0}";
@@ -3344,8 +3422,7 @@ function ru_nbsp_typograf(string $text, bool $useHtmlNbsp = false): string
 REGEX;
     $parts = preg_split($markupPattern, $text, -1, PREG_SPLIT_DELIM_CAPTURE);
     if ($parts === false) {
-        $text = restore_code_double_hyphen($text, $ctx);
-        return restore_code_quotes($text, $ctx);
+        return strtr($text, $codeBlocks);
     }
 
     // ── 1) Устойчивые обороты, сокращения, тире ────────────────────
@@ -3516,11 +3593,7 @@ REGEX;
 
     $text = typograph_guillemets($text);             // «ёлочки»
 
-    $text = restore_code_double_hyphen($text, $ctx);
-
-    $text = restore_code_quotes($text, $ctx);
-
-    return $text;
+    return strtr($text, $codeBlocks);
 }
 
 /**
