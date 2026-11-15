@@ -2,7 +2,7 @@
     // Настройки поиска.
     $searchMinLength = 3;
     $searchMaxLength = 200;
-    $perPage = 15;
+    $perPage = 12;
     $searchResultPages = 2; // Затем — страница с предложением уточнить запрос.
     $context = 300; // Запас контекста с каждой стороны делится между фрагментами.
     $snippetMaxFragments = 4;
