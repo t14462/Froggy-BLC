@@ -2,7 +2,7 @@
 
 define('SECURE_ACCESS', true);
 
-require_once "../GetRootStandalone.php";
+require_once __DIR__ . "/../GetRootStandalone.php";
 
 
 function safeRequestUri(?string $uri): string

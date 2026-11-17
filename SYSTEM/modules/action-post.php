@@ -2,6 +2,8 @@
 
 if(!defined('SECURE_ACCESS')) { die('Direct access not permitted'); }
 
+const LOGIN_LOCKOUT_SECONDS = 600;
+
 ################################################
 ################################################
 ################################################
@@ -1865,86 +1867,85 @@ function loginPost() {
 
     global $safePost, $errmsg, $ip, $userAgent, $cred, $mySalt;
 
-    // require_once "SYSTEM/cred.php";
+    $username = $safePost['username'] ?? null;
+    $password = $safePost['password'] ?? null;
 
-
-
-    /*
-    $limit = function_exists('ini_get')
-    ? (int) ini_get('max_execution_time')
-    : 0;
-
-    sleep(max(0, $limit - 3));
-    */
-
-
-
-
-    if( !is_string($safePost["username"]) ||
-        !is_string($safePost["password"])) {
-
+    if(!is_string($username) || !is_string($password)) {
         $errmsg = "<h1>ОШИБКА.</h1><p class='big'>Неверные данные формы.</p>";
-
-    } elseif(!filterUsername($safePost["username"])) {
-
-        $errmsg = "<h1>ОШИБКА.</h1><p class='big'>Имя содержит недопустимые символы или пустое.</p>";
-
-    } elseif(strlen($safePost["password"]) < 8 || strlen($safePost["password"]) > 40) {
-
-        $errmsg = "<h1>ОШИБКА.</h1><p class='big'><strong>Размер пароля должен быть от 8 до 40 символов.</strong></p>";
-
-    } else {
-
-        $hashh = hash('sha512', $ip);
-
-        if(!is_file("DATABASE/lock/".$hashh)) {
-            @copy("SYSTEM/modules/null.txt", "DATABASE/lock/".$hashh);
-        }
-
-        /// $lasttime = (int)getFileOrDie("DATABASE/lock/".$hashh);
-
-        $locktmp = fopenOrDie("DATABASE/lock/".$hashh, 'rb');
-
-        if(!flock($locktmp, LOCK_SH)) {
-            fclose($locktmp);
-            die('Не удалось получить блокировку файла.');
-        }
-
-        $lasttime = (int)(string)stream_get_contents($locktmp);
-
-        fclose($locktmp);
-
-        // require_once "SYSTEM/salt.php";
-
-        $username = $safePost["username"];
-        $password = $safePost["password"];
-        $userhash = hash('sha512', $username."@".$password."@".generateSalt($username, $password).$mySalt);
-
-        if(array_key_exists($username, $cred)) {
-            $credParts = explode("<!!!>", $cred[$username], 2);
-        }
-
-        if((time() - $lasttime) > 600 && array_key_exists($username, $cred) && isset($credParts[1]) && hash_equals($credParts[1], $userhash)) {
-
-            session_regenerate_id(true);
-
-            $_SESSION["username"] = $username;
-            $_SESSION["userhash"] = hash('sha512', $userhash.$ip.$userAgent);
-            $_SESSION['csrf'] = random_int(0, 0xFFFFFFFFFFFFFFF);
-
-            mylog("<strong style='color:DarkGreen'>Вход в систему (".$_SESSION["username"].").</strong>");
-
-            refreshhandle(0, "?", false);
-
-        } else {
-
-            $errmsg = "<h1>ОШИБКА.</h1><p class='big'><strong>Неправильное сочетание логина и пароля. Ждите 10 минут.</strong></p>";
-
-            putFileOrDie("DATABASE/lock/".$hashh, time(), LOCK_EX);
-
-            mylog("<strong style='color:DarkRed'>Попытка авторизации. ".$ip."</strong>");
-        }
+        return;
     }
+
+    if(!filterUsername($username)) {
+        $errmsg = "<h1>ОШИБКА.</h1><p class='big'>Имя содержит недопустимые символы или пустое.</p>";
+        return;
+    }
+
+    $passwordLength = strlen($password);
+    if($passwordLength < 8 || $passwordLength > 40) {
+        $errmsg = "<h1>ОШИБКА.</h1><p class='big'><strong>Размер пароля должен быть от 8 до 40 байт.</strong></p>";
+        return;
+    }
+
+    $lockFile = "DATABASE/lock/".hash('sha512', $ip);
+    $locktmp = fopenOrDie($lockFile, 'c+b');
+
+    try {
+        // Одна блокировка защищает чтение, проверку и обновление времени.
+        if(!flock($locktmp, LOCK_EX)) {
+            throw new RuntimeException('Не удалось заблокировать файл попыток входа.');
+        }
+
+        $lockContents = stream_get_contents($locktmp);
+        if($lockContents === false) {
+            throw new RuntimeException('Не удалось прочитать время последней попытки входа.');
+        }
+
+        $lasttime = (int)$lockContents;
+        $now = time();
+        $userhash = hash('sha512', $username."@".$password."@".generateSalt($username, $password).$mySalt);
+        $credParts = array_key_exists($username, $cred)
+            ? explode("<!!!>", $cred[$username], 2)
+            : [];
+
+        $loginAllowed = ($now - $lasttime) > LOGIN_LOCKOUT_SECONDS
+            && isset($credParts[1])
+            && hash_equals($credParts[1], $userhash);
+
+        if(!$loginAllowed) {
+            // Каждая отклонённая попытка намеренно продлевает блокировку.
+            $timestamp = (string)$now;
+            if(!rewind($locktmp)) {
+                throw new RuntimeException('Не удалось перейти к началу файла попыток входа.');
+            }
+
+            if(fwrite($locktmp, $timestamp) !== strlen($timestamp)
+                || !ftruncate($locktmp, strlen($timestamp))
+                || !fflush($locktmp)) {
+                throw new RuntimeException('Не удалось полностью сохранить время попытки входа.');
+            }
+        }
+    } finally {
+        // Закрытие файла освобождает блокировку и при исключении.
+        fclose($locktmp);
+    }
+
+    if(!$loginAllowed) {
+        $errmsg = "<h1>ОШИБКА.</h1><p class='big'><strong>Неправильное сочетание логина и пароля. Ждите 10 минут.</strong></p>";
+        mylog("<strong style='color:DarkRed'>Попытка авторизации. ".$ip."</strong>");
+        return;
+    }
+
+    if(!session_regenerate_id(true)) {
+        $errmsg = "<h1>ОШИБКА.</h1><p class='big'>Не удалось обновить идентификатор сессии. Повторите вход.</p>";
+        return;
+    }
+
+    $_SESSION["username"] = $username;
+    $_SESSION["userhash"] = hash('sha512', $userhash.$ip.$userAgent);
+    $_SESSION['csrf'] = random_int(0, 0xFFFFFFFFFFFFFFF);
+
+    mylog("<strong style='color:DarkGreen'>Вход в систему (".$_SESSION["username"].").</strong>");
+    refreshhandle(0, "?", false);
 }
 
 function imageupload() {

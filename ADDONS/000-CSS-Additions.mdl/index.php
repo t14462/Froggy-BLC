@@ -15,7 +15,6 @@ require_once __DIR__ . "/../GetRelStandalone.php";
 ################################################
 
 
-// $cssTime1 = filemtime(relPath(__DIR__)."BgAnim.css");
 
 
-$head .= "\n<link rel='stylesheet' href='".skipCache(relPath(__DIR__).'BgAnim.css')."' />\n";
+$head .= "\n<link rel='stylesheet' href='".skipCache(relPath(__DIR__).'Additions.css')."' />\n";

@@ -7,6 +7,9 @@ if(!defined('SECURE_ACCESS')) { die('Direct access not permitted'); }
 ################################################
 
 function relPath($cdir) {
+
+    /*
+
     // Получаем SCRIPT_NAME и базовую поддиректорию (если она есть)
     $scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
     $baseUrl = dirname($scriptName);
@@ -35,4 +38,12 @@ function relPath($cdir) {
     }
 
     return ltrim($relativePath, "/");
+
+    */
+
+    $cdir = str_replace("\\", "/", $cdir);
+
+    $cdir = explode("/ADDONS/", $cdir)[1];
+
+    return "ADDONS/" . rtrim($cdir, '/') . '/';
 }
