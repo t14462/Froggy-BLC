@@ -2421,7 +2421,7 @@ function wrap_images_with_figure(simple_html_dom $html): simple_html_dom {
     $images = iterator_to_array($html->find('img'), false);
 
     foreach ($images as $img) {
-        $img->setAttribute('loading', 'lazy');
+        $img->setAttribute('loading', 'eager');
 
         $src = $img->getAttribute('src') ?? '';
 
@@ -2473,6 +2473,7 @@ function wrap_images_with_figure(simple_html_dom $html): simple_html_dom {
                         $size[0] > 0 &&
                         $size[1] > 0
                     ) {
+                        $img->setAttribute('loading', 'lazy');
                         $img->setAttribute('width', (string) $size[0]);
                         $img->setAttribute('height', (string) $size[1]);
 

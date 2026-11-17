@@ -4,7 +4,7 @@
     $searchMaxLength = 200;
     $perPage = 12;
     $searchResultPages = 2; // Затем — страница с предложением уточнить запрос.
-    $context = 300; // Запас контекста с каждой стороны делится между фрагментами.
+    $context = 360; // Запас контекста с каждой стороны делится между фрагментами.
     $snippetMaxFragments = 4;
     $searchRequestLimit = 12;
     $searchRequestWindow = 60;
@@ -66,12 +66,16 @@
                 require_once __DIR__ . '/SYSTEM/modules/search-cache.php';
                 // Одни правила совпадений для отбора статей, фрагментов и подсветки.
                 usort($segments, static fn($a, $b) => mb_strlen($b, 'UTF-8') <=> mb_strlen($a, 'UTF-8'));
-                $expressions = array_values(array_unique(array_map(
-                    static fn($segment) => strtr(preg_quote($segment, '~'), [
+                $expressions = [];
+                foreach($segments as $segment) {
+                    $expression = strtr(preg_quote($segment, '~'), [
                         'е' => '[её]', 'ё' => '[её]', 'Е' => '[её]', 'Ё' => '[её]',
-                    ]),
-                    $segments
-                )));
+                    ]);
+                    // Объединяем повторы без учёта регистра, сохраняя исходное выражение.
+                    $key = mb_convert_case($expression, MB_CASE_FOLD_SIMPLE, 'UTF-8');
+                    $expressions[$key] ??= $expression;
+                }
+                $expressions = array_values($expressions);
                 $patterns = array_map(static fn($expression) => '~'.$expression.'~iu', $expressions);
                 $pattern = '~(' . implode('|', $expressions) . ')~iu';
 
