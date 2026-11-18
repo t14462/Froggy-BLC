@@ -89,6 +89,14 @@ function savePage() {
 
         $pgtitle = normalize_entities_my($pgtitle);
 
+        // Удаляем квадратные скобки и их нормализованные HTML-сущности до формирования URL.
+        // Даже URL-кодированные [] превращают GET-параметр в массив в PHP.
+        $pgtitle = str_replace(
+            ['[', ']', '&#91;', '&#93;'],
+            '',
+            $pgtitle
+        );
+
         $pgtitle = mb_superTrim($pgtitle);
 
         // $pgtitle = htmlspecialchars($pgtitle, ENT_QUOTES | ENT_HTML401 | ENT_SUBSTITUTE, 'UTF-8', false);
@@ -131,7 +139,7 @@ function savePage() {
 
             $herror = 2;
 
-        } elseif(strstr($pgtitle, '/') !== false) {
+        } elseif(str_contains(html_entity_decode($pgtitle, ENT_QUOTES | ENT_HTML401, 'UTF-8'), '/')) {
 
             $herror = 3;
 
