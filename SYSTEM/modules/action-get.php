@@ -1987,6 +1987,11 @@ function deletePage() {
                     @unlink("DATABASE/comments/".$pageid.".count");
                 }
 
+                if(is_file("DATABASE/comments/".$pageid.".wait")) {
+
+                    @unlink("DATABASE/comments/".$pageid.".wait");
+                }
+
                 /*
                 if(is_file("DATABASE/comm.count/".$pageid.".bak")) {
 
