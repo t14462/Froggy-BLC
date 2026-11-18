@@ -89,14 +89,6 @@ function savePage() {
 
         $pgtitle = normalize_entities_my($pgtitle);
 
-        // Удаляем квадратные скобки и их нормализованные HTML-сущности до формирования URL.
-        // Даже URL-кодированные [] превращают GET-параметр в массив в PHP.
-        $pgtitle = str_replace(
-            ['[', ']', '&#91;', '&#93;'],
-            '',
-            $pgtitle
-        );
-
         $pgtitle = mb_superTrim($pgtitle);
 
         // $pgtitle = htmlspecialchars($pgtitle, ENT_QUOTES | ENT_HTML401 | ENT_SUBSTITUTE, 'UTF-8', false);
@@ -607,7 +599,10 @@ function savePage() {
 
         $textedit2 = escape_amp_txtarea($textedit);
 
-        $pgtitle2 = escape_amp_txtarea($pgtitle);
+
+        // На самом деле, эта строка не нужна, так-как в базу уже сохраняются
+        // специальные HTML-символы в виде сущностей, с помощью post-get-filter.php
+        // $pgtitle2 = escape_amp_txtarea($pgtitle);
 
         $queryString = $_SERVER['QUERY_STRING'] ?? '';
         $queryBase = explode('&', $queryString)[0];
@@ -627,7 +622,7 @@ function savePage() {
             <p>Для вставки Тире используйте \" -- \" (без кавычек, с пробелами по краям)</p>
             <p><strong>{{lambda}} FROG!!!</strong></p>
 
-            <input id='edpagetitle' type='text' name='title' value='".$pgtitle2."' />".$hsel.
+            <input id='edpagetitle' type='text' name='title' value='".$pgtitle."' />".$hsel.
             "<textarea rows='9' name='textedit' id='textedit'>"
             .$textedit2."</textarea><div class='el-in-line'> <input type='submit' value='💾 Отправить' />
 

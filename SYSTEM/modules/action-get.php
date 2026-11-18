@@ -1161,7 +1161,9 @@ function pageEdit() {
 
         // $line = protect_amp_entities_for_textarea($line);
 
-        $ptitle = escape_amp_txtarea($ptitle);
+        // На самом деле, эта строка не нужна, так-как в базу уже сохраняются
+        // специальные HTML-символы в виде сущностей, с помощью post-get-filter.php
+        // $ptitle = escape_amp_txtarea($ptitle);
 
         $line = escape_amp_txtarea($line);
         

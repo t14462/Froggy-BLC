@@ -1648,6 +1648,14 @@ function urlPrep(string $st): string
     foreach ($parts as &$part) {
         $part = mb_superTrim($part);
 
+        // Заменяем квадратные скобки до формирования URL.
+        // Даже URL-кодированные [] превращают GET-параметр в массив в PHP.
+        $part = str_replace(
+            ['[', ']'],
+            ['.lb.', '.rb.'],
+            $part
+        );
+
         // Пробелы -> _
         $part = preg_replace('/\s+/u', '_', $part);
 
