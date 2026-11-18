@@ -440,7 +440,7 @@ function pageload() {
         // Регулярное выражение для замены шаблона счётчика загрузок
         $content = preg_replace_callback($patternDLCNT, $replacementDLCNT, $content);
 
-        $content = str_replace("{{lambda}}", "<div style='font-family:monospace; white-space:nowrap; font-size:6rem; text-align:center'>&nbsp;<span class='a4'>&lambda;</span>++<br /><span class='a3'>&lambda;</span>&nbsp;<span class='a2'>&lambda;</span>&nbsp;</div>", $content);
+        $content = str_replace("{{lambda}}", "<div style='font-family:monospace; white-space:nowrap; font-size:6rem; text-align:center'>&nbsp;<span class='a4'>&lambda;</span>++<br /><span class='a3'>&lambda;</span>&nbsp;<span class='a2'>&lambda;</span>&nbsp;<div style='font-size:1rem; font-weight:bold;'>NERD REVENGE</div></div>", $content);
 
         /*
         $content = str_replace(

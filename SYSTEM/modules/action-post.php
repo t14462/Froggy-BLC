@@ -1268,7 +1268,7 @@ function commentReply() {
                 // Замена шаблона DailyMotion на iframe
                 $commpost = preg_replace_callback($patternDM, $replacementDM, $commpost);
 
-                $commpost = str_replace("{{lambda}}", "<div style='font-family:monospace; white-space:nowrap; font-size:6rem; text-align:center'>&nbsp;<span class='a4'>&lambda;</span>++<br /><span class='a3'>&lambda;</span>&nbsp;<span class='a2'>&lambda;</span>&nbsp;</div>", $commpost);
+                $commpost = str_replace("{{lambda}}", "<div style='font-family:monospace; white-space:nowrap; font-size:6rem; text-align:center'>&nbsp;<span class='a4'>&lambda;</span>++<br /><span class='a3'>&lambda;</span>&nbsp;<span class='a2'>&lambda;</span>&nbsp;<div style='font-size:1rem; font-weight:bold;'>NERD REVENGE</div></div>", $commpost);
 
                 /*
                 $commpost = str_replace(
@@ -1741,7 +1741,7 @@ function postComment() {
                 // Замена шаблона DailyMotion на iframe
                 $commpost = preg_replace_callback($patternDM, $replacementDM, $commpost);
 
-                $commpost = str_replace("{{lambda}}", "<div style='font-family:monospace; white-space:nowrap; font-size:6rem; text-align:center'>&nbsp;<span class='a4'>&lambda;</span>++<br /><span class='a3'>&lambda;</span>&nbsp;<span class='a2'>&lambda;</span>&nbsp;</div>", $commpost);
+                $commpost = str_replace("{{lambda}}", "<div style='font-family:monospace; white-space:nowrap; font-size:6rem; text-align:center'>&nbsp;<span class='a4'>&lambda;</span>++<br /><span class='a3'>&lambda;</span>&nbsp;<span class='a2'>&lambda;</span>&nbsp;<div style='font-size:1rem; font-weight:bold;'>NERD REVENGE</div></div>", $commpost);
 
                 /*
                 $commpost = str_replace(
