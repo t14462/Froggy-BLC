@@ -70,10 +70,6 @@ html {
     color: #444;
 }
 
-.nobr {
-    white-space: nowrap;
-}
-
 article {
     font-size: 1.15rem;
     margin: 0;
@@ -269,10 +265,6 @@ input {
 }
 
 
-
-.big {
-    font-size: xx-large;
-}
 
 
 body {
@@ -931,22 +923,6 @@ code[class^="language-"] {
 
 
 
-pre:has(code[class^="language-"]) {
-
-    width: 100%;
-    display: block;
-    overflow-x: auto;
-    padding: 0;
-    margin: 0;
-}
-
-code[class^="language-"] {
-
-    /* width: calc(100% - 2em);
-    display: block; */
-    border: none;
-}
-
 /*
 code[class^="language-"] * {
 
@@ -1337,23 +1313,6 @@ nav#TOC > ol {
 
 
 
-.vid-wrapper {
-    position: relative;
-    width: 100%;
-    max-width: calc(100% - 1rem);
-    aspect-ratio: 16 / 9;
-    margin: .5rem;
-}
-
-.vid-iframe {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    border: 0;
-}
-
 
 
 
@@ -1661,7 +1620,7 @@ header, main, aside, footer {
 
 
 
-.clearfix::after, main article section::after, #comm-section ul:not(.ul-fix) > li > div::after {
+main article section::after, #comm-section ul:not(.ul-fix) > li > div::after {
     content: "";
     display: table;
     clear: both;

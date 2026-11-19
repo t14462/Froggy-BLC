@@ -2198,7 +2198,8 @@ function pnotfound() {
 
     $mainPageTitle = "404. Страница не найдена.";
 
-    return "<h1>404.</h1><p class='big'><strong>Страница не найдена.</strong></p>";
+    return "<h1>404.</h1><p class='big'><strong>Страница не найдена.</strong></p>
+            <p><strong>Попробуйте ВОСПОЛЬЗОВАТЬСЯ <a href='search.php'>ПОИСКОМ ПО САЙТУ</a>.</strong></p>";
 }
 
 function pforbidden() {

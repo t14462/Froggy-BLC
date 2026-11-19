@@ -310,7 +310,7 @@ REGEX,
         <?php if($view === 'results'): ?>
             <div class="results-toolbar">
                 <h2>Найдено страниц <span class="results-count"><?= $countLabel ?></span></h2>
-                <p class="results-range"><?= $start + 1 ?>–<?= $end ?> из <?= $countLabel ?></p>
+                <p class="results-range"><?= $start + 1 ?>–<?= $end ?> / <?= $countLabel ?></p>
             </div>
             <?php foreach($results as $index => $result): ?>
                 <article class="search-result">
@@ -337,7 +337,7 @@ REGEX,
                 <?php else: ?>
                     <span class="pagination-spacer" aria-hidden="true"></span>
                 <?php endif; ?>
-                <p class="page-position">Страница <strong><?= $pgnum + 1 ?></strong> из <?= $pageCount ?></p>
+                <p class="page-position">Страница <strong><?= $pgnum + 1 ?></strong> / <?= $pageCount ?></p>
                 <?php if($end < $pgcount): ?>
                     <a class="page-link page-next" href="<?= $escape($pageBase . ($pgnum + 1)) ?>" rel="next">Далее <svg class="arrow-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 12h16m-6-6 6 6-6 6" /></svg></a>
                 <?php else: ?>
