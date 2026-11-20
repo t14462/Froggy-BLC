@@ -903,18 +903,18 @@ $replacementDLCNT = static function ($m) {
         
         if(isset($inlineExt[$ext])) {
 
-            $dlTable .= "<a href=\"{$href}\" onclick=\"DlIncrement('DLINC-$targetIframe')\" target='_blank'>Скачать <strong>{$safeName}</strong></a>";
+            $dlTable .= "<a href=\"{$href}\" onclick=\"DlIncrement('DLINC-$targetIframe')\" target='_blank' download='{$safeName}'>Скачать <strong>{$safeName}</strong></a>";
 
         } else {
 
-            $dlTable .= "<a href=\"{$href}\" onclick=\"DlIncrement('DLINC-$targetIframe')\" target='auxFrame-$targetIframe'>Скачать <strong>{$safeName}</strong></a>";
+            $dlTable .= "<a href=\"{$href}\" onclick=\"DlIncrement('DLINC-$targetIframe')\" target='auxFrame-$targetIframe' download='{$safeName}'>Скачать <strong>{$safeName}</strong></a>";
         }
         
         $dlTable .= "</td></tr>
 
         <tr><td class='a3'>Размер на диске: </td><td class='a4'>{$dlSize} КиБ</td></tr>
 
-        <tr><td class='a3'>Всего загрузок: </td><td class='a4'><span id='DLINC-$targetIframe'>{$dlcntFmt}</span><iframe name='auxFrame-$targetIframe' width='15' height='15' style='background: transparent'></iframe></td></tr>
+        <tr><td class='a3'>Всего загрузок: </td><td class='a4'><span id='DLINC-$targetIframe'>{$dlcntFmt}</span><iframe name='auxFrame-$targetIframe' src='about:blank' width='15' height='15' style='background: transparent'></iframe></td></tr>
 
         </tbody></table>";
 

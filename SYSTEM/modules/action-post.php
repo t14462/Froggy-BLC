@@ -1038,7 +1038,22 @@ function commentReply() {
 
         */
 
-        if($safePost['dbtimestamp'] !== filemtimeMy("DATABASE/comments/".$commaddr)) {
+        if(!$checkpermission && !canProceed($ip)) {
+
+            $errmsg = "<h1>ОШИБКА.</h1><p class='big'><strong>Временной интервал между комментариями Три Минуты.</strong></p>";
+            
+            $commRecov = $commpost;
+            $commRecov = str_ireplace("<textarea", "&lt;textarea", $commRecov);
+            $commRecov = str_ireplace("</textarea", "&lt;/textarea", $commRecov);
+            $commRecov = str_ireplace("textarea>", "textarea&gt;", $commRecov);
+            // $commRecov = str_ireplace("&", "&amp;", $commRecov);
+            // $commRecov = str_ireplace("&amp;amp;", "&amp;", $commRecov);
+            $commRecov = escape_amp_txtarea($commRecov);
+            $commRecov .= " ";
+            pageload();
+            return;
+
+        } elseif($safePost['dbtimestamp'] !== filemtimeMy("DATABASE/comments/".$commaddr)) {
 
             $errmsg = "<h1>ПРЕДУПРЕЖДЕНИЕ.</h1><p class='big'><strong>Во время написания комментария БД изменилась.</strong></p>";
             
@@ -1056,21 +1071,6 @@ function commentReply() {
         } elseif(substr_count($commdataline, "<$repcommid />") !== 1) {
 
             $rejectMissingReply($commpost);
-            return;
-
-        } elseif(!$checkpermission && !canProceed($ip)) {
-
-            $errmsg = "<h1>ОШИБКА.</h1><p class='big'><strong>Временной интервал между комментариями Три Минуты.</strong></p>";
-            
-            $commRecov = $commpost;
-            $commRecov = str_ireplace("<textarea", "&lt;textarea", $commRecov);
-            $commRecov = str_ireplace("</textarea", "&lt;/textarea", $commRecov);
-            $commRecov = str_ireplace("textarea>", "textarea&gt;", $commRecov);
-            // $commRecov = str_ireplace("&", "&amp;", $commRecov);
-            // $commRecov = str_ireplace("&amp;amp;", "&amp;", $commRecov);
-            $commRecov = escape_amp_txtarea($commRecov);
-            $commRecov .= " ";
-            pageload();
             return;
 
         } elseif(!isset($_SESSION['captcha']) || !$_SESSION['captcha'] || (!$checkpermission && hash_equals($_SESSION['captcha'], hash('sha256', $captcha.$mySalt.$ip.$userAgent.$today)) && !repeatCaptcha($_SESSION['captcha']))) {
@@ -1531,9 +1531,9 @@ function postComment() {
 
         $today = date('Y-m-d');
 
-        if($safePost['dbtimestamp'] !== filemtimeMy("DATABASE/comments/".$commaddr)) {
+        if(!$checkpermission && !canProceed($ip)) {
 
-            $errmsg = "<h1>ПРЕДУПРЕЖДЕНИЕ.</h1><p class='big'><strong>Во время написания комментария БД изменилась.</strong></p>";
+            $errmsg = "<h1>ОШИБКА.</h1><p class='big'><strong>Временной интервал между комментариями Три Минуты.</strong></p>";
             
             $commRecov = $commpost;
             $commRecov = str_ireplace("<textarea", "&lt;textarea", $commRecov);
@@ -1546,9 +1546,9 @@ function postComment() {
             pageload();
             return;
 
-        } elseif(!$checkpermission && !canProceed($ip)) {
+        } elseif($safePost['dbtimestamp'] !== filemtimeMy("DATABASE/comments/".$commaddr)) {
 
-            $errmsg = "<h1>ОШИБКА.</h1><p class='big'><strong>Временной интервал между комментариями Три Минуты.</strong></p>";
+            $errmsg = "<h1>ПРЕДУПРЕЖДЕНИЕ.</h1><p class='big'><strong>Во время написания комментария БД изменилась.</strong></p>";
             
             $commRecov = $commpost;
             $commRecov = str_ireplace("<textarea", "&lt;textarea", $commRecov);

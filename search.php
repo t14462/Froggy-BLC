@@ -271,7 +271,9 @@ REGEX,
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="color-scheme" content="light dark" />
     <title>Поиск по сайту</title>
-    <link rel="icon" href="favicon.ico" />
+    <link rel="icon" type="image/x-icon" sizes="16x16 32x32 48x48" href="favicon.ico" />
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png" />
     <link rel="stylesheet" href="TEMPLATES/search.css?<?= $cssVersion ?>" />
 </head>
 <body>

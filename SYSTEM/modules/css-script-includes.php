@@ -37,7 +37,9 @@ if($ispageexist) {
 // $jstime1 = filemtime("SYSTEM/JSLIB/main-script.js");
 
 $head .= '
-<link rel="icon" href="'.skipCache("favicon.ico").'" />
+<link rel="icon" type="image/x-icon" sizes="16x16 32x32 48x48" href="'.skipCache("favicon.ico").'" />
+<link rel="icon" type="image/png" sizes="32x32" href="'.skipCache("favicon-32.png").'" />
+<link rel="apple-touch-icon" sizes="180x180" href="'.skipCache("apple-touch-icon.png").'" />
 
 <script src="'.skipCache("SYSTEM/JSLIB/main-script.js").'"></script>
 
