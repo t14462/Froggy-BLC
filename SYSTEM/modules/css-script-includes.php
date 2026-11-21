@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 #phpinfo();
 
 if(!defined('SECURE_ACCESS')) { die('Direct access not permitted'); }

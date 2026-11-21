@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 define('SECURE_ACCESS', true);
 
 if(!function_exists('imagecreate') || !function_exists('imagettftext')) {

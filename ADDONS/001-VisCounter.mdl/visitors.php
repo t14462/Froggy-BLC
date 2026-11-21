@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 define('SECURE_ACCESS', true);
 
 require_once __DIR__ . "/../GetRootStandalone.php";

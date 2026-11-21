@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 if(!defined('SECURE_ACCESS')) { die('Direct access not permitted'); }
 
 const LOGIN_LOCKOUT_SECONDS = 600;
@@ -1055,8 +1057,8 @@ function formatCommentEntry(string $id, int $lineNumber, string $author, string 
 function commentReply() {
     global $safePost, $errmsg, $idcache, $ip, $checkpermission, $userAgent, $cred, $mySalt;
 
-    $pageId = $safePost['commaddr'] ?? 0;
-    $parentId = $safePost['repcommid'] ?? 0;
+    $pageId = $safePost['commaddr'] ?? '';
+    $parentId = $safePost['repcommid'] ?? '';
     validateHex40($pageId);
     validateHex40($parentId);
 
@@ -1148,16 +1150,21 @@ function commentReply() {
     $source = openFileOrDie($sourcePath, 'rb');
     $source->seekOrDie($lineNumber);
     $threadOffset = $source->ftell();
+    $source->fgetsOrDie();
+    $tailOffset = $source->ftell();
+    if($threadOffset === false || $tailOffset === false) {
+        $source = null;
+        cancelDatabaseWrite($filename);
+        return reportDatabaseWriteFailure($draft);
+    }
 
     $file = fopenOrDie($stagedPath, 'r+b');
     ftruncateOrDie($file, $threadOffset);
     fclose($file);
 
-    $source->fgetsOrDie();
     $destination = openFileOrDie($stagedPath, 'ab');
     $destination->fwriteOrDie($thread . "\n");
     if(catTailAvailable()) {
-        $tailOffset = $source->ftell();
         $destination->fflushOrDie();
         $destination = null;
         $source = null;
@@ -1730,7 +1737,7 @@ function saveUsers() {
         return;
     }
 
-    $php = "<?php\n\nif(!defined('SECURE_ACCESS')) { die('Direct access not permitted'); }\n\n";
+    $php = "<?php\n\ndeclare(strict_types=1);\n\nif(!defined('SECURE_ACCESS')) { die('Direct access not permitted'); }\n\n";
     foreach($users as $name => $value) {
         $php .= '$cred[' . var_export((string)$name, true) . '] = ' . var_export($value, true) . ";\n";
     }

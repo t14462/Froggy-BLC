@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 if(!defined('SECURE_ACCESS')) { die('Direct access not permitted'); }
 
 ################################################
@@ -96,7 +98,7 @@ function viewLog() {
         }
 
         $fsize = filesize("DATABASE/DB/sys.log");
-        $pcount = ceil($fsize / ($limit * 1024)) - 1;
+        $pcount = (int)ceil($fsize / ($limit * 1024)) - 1;
 
         // Обеспечиваем, что всегда есть хотя бы одна страница (индекс 0)
         $pcount = max(0, $pcount);
@@ -664,9 +666,9 @@ function commentRemove() {
         $remcommaddr = substr($remcommaddr, 0, 92);
         /// $remcommaddr = filter_filename($remcommaddr);
 
-        $commaddr  = explode("-", $remcommaddr)[0] ?? 0;
+        $commaddr  = explode("-", $remcommaddr)[0] ?? '';
         $pgcommnum = (int)(explode("-", $remcommaddr)[1] ?? 0);
-        $commid    = explode("-", $remcommaddr)[2] ?? 0;
+        $commid    = explode("-", $remcommaddr)[2] ?? '';
 
 
         validateHex40($commaddr);
@@ -710,12 +712,17 @@ function commentRemove() {
             $filesource->seekOrDie($pgcommnum);
 
             $firstChunkEnd = $filesource->ftell();
+            $filesource->fgetsOrDie();
+            $PosMark = $filesource->ftell();
+            if($firstChunkEnd === false || $PosMark === false) {
+                $filesource = null;
+                cancelDatabaseWrite("DATABASE/comments/".$commaddr);
+                return reportDatabaseWriteFailure('');
+            }
 
             $file = fopenOrDie("DATABASE/comments/".$commaddr.".new." . getmypid(), "r+b");
             ftruncateOrDie($file,$firstChunkEnd);
             fclose($file);
-
-            $filesource->fgetsOrDie();
 
             $filedest = openFileOrDie("DATABASE/comments/".$commaddr.".new." . getmypid(), 'ab');
 
@@ -723,8 +730,6 @@ function commentRemove() {
 
 
             if(catTailAvailable()) {
-
-                $PosMark = $filesource->ftell();
 
                 $filedest->fflushOrDie();
                 $filedest = null;
@@ -1527,7 +1532,7 @@ function gallery() {
     $galpg = (int)$safeGet["gallery"];
 
     // Рассчитываем количество страниц (с нумерацией с нуля)
-    $pcount = ceil($totimg / $limit) - 1; // Поскольку нумерация с нуля, последняя страница будет pcount - 1
+    $pcount = (int)ceil($totimg / $limit) - 1;
 
     // Обеспечиваем, что всегда есть хотя бы одна страница (индекс 0)
     $pcount = max(0, $pcount);
@@ -1665,7 +1670,7 @@ function dlFiles() {
     $galpg = (int)$safeGet["dlfiles"];
 
     // Рассчитываем количество страниц
-    $pcount = ceil($totimg / $limit) - 1; // Общее количество страниц (с учетом 0 как первой страницы)
+    $pcount = (int)ceil($totimg / $limit) - 1;
 
     // Обеспечиваем, что всегда есть хотя бы одна страница (индекс 0)
     $pcount = max(0, $pcount);
@@ -1995,13 +2000,13 @@ function editUsers() {
 
 
         $usersJson = htmlspecialchars(json_encode($users, JSON_INVALID_UTF8_SUBSTITUTE), ENT_QUOTES, 'UTF-8');
-        $content .= '<form method="post"><textarea name="saveusers" id="generatedUserArrayOutput" hidden="hidden">'.$usersJson.'</textarea>
+        $content .= '<form method="post"><input type="hidden" name="saveusers" id="generatedUserArrayOutput" value="'.$usersJson.'" />
 
         <input type="hidden" name="csrf" value="'.$csrf.'" />
         <input type="hidden" name="usersversion" value="'.$credentialsVersion.'" />
-        <p id="usersNeedAdmin" hidden="hidden">В списке должен остаться хотя бы один администратор.</p>
 
-        <input type="submit" id="UserFormBaseSubmit" value="💾" onclick="return confirm(\'Вы уверены?\');" /></form></div></div>
+        <input type="submit" id="UserFormBaseSubmit" value="💾" onclick="return confirm(\'Вы уверены?\');" /></form></div>
+        <p id="usersNeedAdmin" hidden="hidden">В списке должен остаться хотя бы один администратор.</p></div>
         <br /><br /><br />
         <iframe src="?uhcalc=1" style="width: 100%; height: 50vh; border: none;" onload="PseudoAJAX(this, \'admUserHashCalculator\')">Калькулятор Хэша Пользователя</iframe>
         <div id="admUserHashCalculator"></div>';

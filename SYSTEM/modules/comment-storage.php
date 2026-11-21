@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 if(!defined('SECURE_ACCESS')) { die('Direct access not permitted'); }
 
 function prepareCommentWrite(string $pageId, bool $create = false, ?int &$failureStatus = null, ?float $expectedVersion = null): bool {

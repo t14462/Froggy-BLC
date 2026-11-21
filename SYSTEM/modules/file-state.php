@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /** @return resource|false */
 function lockStateFile(string $path, int $mode, string $openMode = 'c+b') {
     $lock = @fopen($path, $openMode);

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 if(!defined('SECURE_ACCESS')) { die('Direct access not permitted'); }
 
 require_once __DIR__ . '/download-files.php';
@@ -991,7 +993,7 @@ function array_insert_m(&$array, $position, $insert) {
     if(is_int($position)) {
         array_splice($array, $position, 0, $insert);
     } else {
-        $pos   = array_search($position, array_keys($array), true);
+        $pos   = (int)array_search($position, array_keys($array), true);
         $array = array_merge(
             array_slice($array, 0, $pos),
             $insert,

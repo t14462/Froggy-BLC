@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 if(!defined('SECURE_ACCESS')) { die('Direct access not permitted'); }
 
 ################################################
@@ -149,7 +151,7 @@ if($menuCache !== false) {
 
     //  }
 
-        $numcache[]    = $mydump2[0 + $i]; #done
+        $numcache[]    = (int)$mydump2[0 + $i];
 
         $query[$addr]  = $mydump2[1 + $i];
 
@@ -208,7 +210,7 @@ if($menuCache !== false) {
             $articleSize = mb_strlen($line, '8bit');
             $byteId = $file->ftell() - $articleSize;
             $prev = $num;
-            $num = $line2[2];
+            $num = (int)$line2[2];
 
             $numcache[] = $num;
 
@@ -218,7 +220,7 @@ if($menuCache !== false) {
 
             $seoPgNum = $line2[4];
 
-            $seoPagesTimes[] = $line2[5];
+            $seoPagesTimes[] = (int)$line2[5];
 
             // $seoPageTime = $line2[5];
 
