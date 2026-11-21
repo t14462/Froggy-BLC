@@ -2,11 +2,17 @@ DATABASE/DB/DB-TOC-Cache.txt
 DATABASE/DB/MenuCache.txt
 DATABASE/DB/SEO-Cache.txt
 DATABASE/DB/Search-Cache.txt
+DATABASE/DB/DBLOCK
+DATABASE/DB/*.wait
+DATABASE/DB/.DBLOCK-*
+SYSTEM/.cred.php-*
 
 sitemap.txt
 sitemap.xml
 sitemap.txt.time
 sitemap.xml.time
+sitemap.txt.wait
+sitemap.xml.wait
 
 *.bak
 *.lock
@@ -16,6 +22,8 @@ DATABASE/lock/*
 
 DATABASE/comments/lock/*
 !DATABASE/comments/lock/.gitkeep
+DATABASE/comments/*.wait
+DATABASE/comments/*.count.pending
 
 DATABASE/comments/capt/*
 !DATABASE/comments/capt/.gitkeep

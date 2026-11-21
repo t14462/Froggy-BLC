@@ -12,22 +12,27 @@ if($mainPageTitle) {
     $mainPageTitle .= " — ";
 }
 
+$pageTitleHtml = htmlspecialchars($mainPageTitle, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8', false);
+$metaDescriptionHtml = htmlspecialchars($metaDescription, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8', false);
+$siteUrlHtml = htmlspecialchars($url, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+
 $head .= '
 <meta charset="UTF-8" />
 
 <!-- Настройка мобильной адаптивности -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-<title>'.$mainPageTitle.'Froggy-BLC</title>
+<title>'.$pageTitleHtml.'Froggy-BLC</title>
 
 <meta name="description" content="Авторский сайт с гайдами по программированию, скриптингу и моддингу. Туториалы по моддингу, скриптам и фиксам для популярных игр, включая Fallout New Vegas и Soul of Fallen Worlds (SFW). Ресурс о Linux, модах, а также CMS книжной системы Book-Like CMS. Здесь вы найдете полезную информацию, юмор и советы по созданию модов и скриптов. Также на сайте представлены мои авторские работы — готовые решения, скрипты и утилиты для различных задач, а также проекты, связанные с настройкой и оптимизацией систем. '
-.$metaDescription.'" />
+.$metaDescriptionHtml.'" />
 <meta name="keywords" content="Авторский сайт, программирование, скриптинг, моддинг, модификации для игр, скриптинг для Linux, кодинг, PHP, Bash, xNVSE, готовые скрипты, утилиты, патчи, фиксы, Fallout New Vegas, Soul of Fallen Worlds, SFW, инструкции, How-To, гайды, туториалы, создание модов, оптимизация систем, настройка Linux, CMS, Book-Like CMS, моды для игр, советы по программированию, скрипты для игр, решения для программирования, модификации для старых игр, программирование на скриптовых языках, открытые решения, создание скриптов, '
-.$metaDescription.'" />';
+.$metaDescriptionHtml.'" />';
 
-if($ispageexist) {
+if($ispageexist && isset($sitemaptxt[$pageMenuNum - 1])) {
 
-    $head .= "\n".'<link rel="canonical" href="'.$sitemaptxt[$pageMenuNum-1].'" />'."\n";
+    $canonical = htmlspecialchars($sitemaptxt[$pageMenuNum - 1], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+    $head .= "\n".'<link rel="canonical" href="'.$canonical.'" />'."\n";
 
 } else {
 
@@ -65,10 +70,10 @@ if(!empty($ProjIdRevisionMe)) {
 }
 
 $body .= "
-<header aria-label='Froggy-BLC'><strong><a href='".$url."' title='Book-Like CMS'>Froggy-BLC</a></strong><em>Книжная Система Сайта</em></header>";
+<header aria-label='Froggy-BLC'><strong><a href='".$siteUrlHtml."' title='Book-Like CMS'>Froggy-BLC</a></strong><em>Книжная Система Сайта</em></header>";
 
 $queryString = $_SERVER['QUERY_STRING'] ?? '';
-$queryBase = explode("&", $queryString)[0];
+$queryBase = htmlspecialchars(explode("&", $queryString)[0], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 $stoolbox = "<div id='system-links'><a target='_blank' href='?".$queryBase."&amp;print=1' rel='nofollow' title='Версия для печати'>🖨️</a> <a target='_blank' href='?gallery=-1' title='Галерея'>🖼️</a> <a target='_blank' href='?dlfiles=-1' title='Файлы'>💾</a> ".logInOutLink('🔐', '🔚')." <a href='?".$queryBase."&amp;edit=1&amp;csrf=$csrf' rel='nofollow' title='Редактировать эту страницу' style='margin-left: .75em;'>✏️</a> <a target='_blank' href='?log=-1&amp;csrf=$csrf' rel='nofollow' title='Бортовой Журнал'>📄</a></div>".obyava();
 
 $menubar = '
@@ -112,6 +117,7 @@ if($checkpermission) {
 
     if(isDbLocked()) {
 
-        $footer .= "<strong title='Блокирующий Пользователь'>BLOCKER:<br />".readDBLock()."</strong>";
+        $owner = htmlspecialchars((string)readDBLock(), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8', false);
+        $footer .= "<strong title='Блокирующий Пользователь'>BLOCKER:<br />".$owner."</strong>";
     }
 }

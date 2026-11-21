@@ -10,7 +10,7 @@ const LOGIN_LOCKOUT_SECONDS = 600;
 
 function savePage() {
 
-    global $safePost, $numcache, $head, $body, $content, $errmsg, /* $apiKeyTinyMCE, */ $mainPageTitle, $checkpermission, $ispageexist, $url, $chTimeDB, $csrf;
+    global $safePost, $numcache, $head, $body, $content, $errmsg, /* $apiKeyTinyMCE, */ $mainPageTitle, $checkpermission, $ispageexist, $url, $chTimeDB, $csrf, $idcache;
 
     /*
     if( $checkpermission < 3 ) {
@@ -96,6 +96,13 @@ function savePage() {
         // $pgtitle = preg_replace("/&amp;(#?\w+);/i", "&$1;", $pgtitle);
 
         $herror = 0;
+        $database = 'DATABASE/DB/data.html';
+        $pageIndex = seoNumGet() - 1;
+        $pageId = $idcache[$pageIndex] ?? '';
+        $formPageId = $safePost['pageid'] ?? $pageId;
+        if(preg_match('/\A[a-f0-9]{40}\z/', $formPageId) !== 1) {
+            $formPageId = '';
+        }
 
         // $checknum = (int)explode("/", $_SERVER['QUERY_STRING'])[0];
 
@@ -103,7 +110,7 @@ function savePage() {
 
         // $checknum = seoNumGet() - 1;
 
-        if($safePost['dbtimestamp'] !== filemtimeMy("DATABASE/DB/data.html")) {
+        if($safePost['dbtimestamp'] !== filemtimeMy($database) || $formPageId !== $pageId) {
 
             $herror = 5;
 
@@ -139,7 +146,7 @@ function savePage() {
 
             $herror = 1;
 
-        } elseif(!sanCheckHor((seoNumGet() - 1), $htag)) {
+        } elseif(!sanCheckHor($pageIndex, $htag)) {
 
             $herror = 4;
 
@@ -593,7 +600,29 @@ function savePage() {
 
         $mainPageTitle = "Редактирование: ".$pgtitle;
 
-        $dbMtime = filemtimeMy("DATABASE/DB/data.html");
+        if($herror === 0) {
+            if($safePost['dbtimestamp'] !== $chTimeDB) {
+                $herror = 5;
+            } elseif(!dbprepApnd($database, $chTimeDB, failureStatus: $failureStatus)) {
+                if($failureStatus === 500) {
+                    return reportDatabaseWriteFailure($textedit3);
+                }
+                $herror = 5;
+            } else {
+                $source = @fopen($database . '.src.' . getmypid(), 'rb');
+                if($source === false) {
+                    cancelDatabaseWrite($database);
+                    return reportDatabaseWriteFailure($textedit3);
+                }
+                $page = pageInSnapshot($source, $pageIndex);
+                if($page === null) {
+                    fclose($source);
+                    cancelDatabaseWrite($database);
+                    $herror = 5;
+                }
+            }
+        }
+        $dbMtime = sprintf('%.4F', $safePost['dbtimestamp']);
 
         // $textedit2 = protect_amp_entities_for_textarea($textedit);
 
@@ -610,6 +639,7 @@ function savePage() {
         $dumpEdit = "<form method='post'>
 
             <input type='hidden' name='dbtimestamp' value='$dbMtime' />
+            <input type='hidden' name='pageid' value='$formPageId' />
 
             <input type='hidden' name='csrf' value='$csrf' />
 
@@ -627,7 +657,7 @@ function savePage() {
             .$textedit2."</textarea><div class='el-in-line'> <input type='submit' value='💾 Отправить' />
 
             <a href='?".$queryBase."&amp;leaveedit=1&amp;csrf=$csrf'>Отменить ⬅️</a>
-            <a href='?".$queryBase."&amp;pagedel=1&amp;csrf=$csrf' id='pagedelbutton'>❌ Удалить страницу</a>
+            <a href='?".$queryBase."&amp;pagedel=1&amp;pageid=$formPageId&amp;csrf=$csrf' id='pagedelbutton'>❌ Удалить страницу</a>
 
             </div></fieldset></form>";
 
@@ -655,58 +685,21 @@ function savePage() {
                 // moved
                 // $textedit = '<head'.$htag.'>'.$pgtitle.'</head'.$htag.'><br!>'.$textedit;
 
-                $pagenum = seoNumGet() - 1;
-
-                dbprepApnd("DATABASE/DB/data.html");
-
-                $filesource = openFileOrDie("DATABASE/DB/data.html.src." . getmypid(), 'rb');
-
-                $filesource->seekOrDie($pagenum);
-
-                $firstChunkEnd = $filesource->ftell();
-
-                $file = fopenOrDie("DATABASE/DB/data.html.new." . getmypid(), "r+b");
-                ftruncateOrDie($file,$firstChunkEnd);
-                fclose($file);
-
-                $pageid = $filesource->freadOrDie(40);
-
-                $tmpLine = mb_substr($filesource->fgetsOrDie(), 0, 300);
-
-                preg_match('~</head[1-6]>(\d+)<!1!>~', $tmpLine, $matches);
-                $seoPgNum = $matches[1];
-
-                $textedit = '<head'.$htag.'>'.$pgtitle.'</head'.$htag.'>'.$seoPgNum.'<!1!>'.time().'<!2!><br!>'.$textedit;
-
-                $filedest = openFileOrDie("DATABASE/DB/data.html.new." . getmypid(), 'ab');
-
-                $filedest->fwriteOrDie($pageid.$textedit."\n");
-
-
-                if(catTailAvailable()) {
-
-                    $PosMark = $filesource->ftell();
-
-                    $filedest = null;
-                    
-                    $filesource = null;
-
-                    concater("DATABASE/DB/data.html.new." . getmypid(), "DATABASE/DB/data.html.src." . getmypid(), $PosMark);
-
-                } else {
-
-                    while($line = $filesource->freadOrDie(256*1024)) {
-
-                        $filedest->fwriteOrDie($line);
-                    }
-
-                    $filedest = null;
-                        
-                    $filesource = null;
+                $replacement = $page['id'].'<head'.$htag.'>'.$pgtitle.'</head'.$htag.'>'.$page['seo']
+                    .'<!1!>'.time().'<!2!><br!>'.$textedit."\n";
+                $written = rewritePageSnapshot($source, $page['start'], $page['end'],
+                    static fn($target): bool => @fwrite($target, $replacement) === strlen($replacement));
+                fclose($source);
+                if(!$written) {
+                    cancelDatabaseWrite($database);
+                    reportPageWriteFailure(500);
+                    $head .= $headEd;
+                    $body .= $bodyEd;
+                    $content = $dumpEdit;
+                    return false;
                 }
 
-
-                if(!dbdone("DATABASE/DB/data.html", $textedit3)) return false;
+                if(!dbdone($database, $textedit3)) return false;
 
                 $queryString = $_SERVER['QUERY_STRING'] ?? '';
                 mylog("<em style='color:DarkOrange'>Страница сохранена. (" . explode("&", $queryString)[0] . " - " . $_SESSION["username"].").</em>");
@@ -796,10 +789,12 @@ function savePage() {
 
             case 5:
 
+                http_response_code(409);
                 $head .= $headEd;
                 $body .= $bodyEd;
 
                 $errmsg = "<h1>ОШИБКА 5.</h1><p class='big'><strong>База Данных была изменена внешним процессом.</strong></p>";
+                $errmsg .= "<p class='big'>Скопируйте свою правку из формы и откройте редактор статьи заново.</p>";
 
                 /// $errmsg .= $safePost['dbtimestamp'];
 
@@ -900,970 +895,371 @@ function savePage() {
     /// unlockByName($_SESSION['username'] ?? "");
 }
 
-function commentReply() {
-
-    global $safePost, $idcache, $errmsg, $ip, $checkpermission, $patternYT, $replacementYT, $patternVimeo, $replacementVimeo, $patternDM, $replacementDM, $commRecov, $userAgent, $cred, $mySalt, $waitFile;
-
-    // require_once "SYSTEM/cred.php";
-
-    $commaddr  = $safePost["commaddr" ] ?? 0; //[0];
-    $pgcommnum = (int)($safePost["pgcommnum"] ?? 0); //[1];
-    $repcommid = $safePost["repcommid"] ?? 0; //[2];
-    $commpost  = $safePost["commpost" ];
-    $visitor   = $safePost["visitor"  ];
-    $captcha   = $safePost["captcha"  ];
-
-
-    validateHex40($commaddr);
-
-    validateHex40($repcommid);
-
-    /// $commaddr = substr($commaddr, 0, 40);
-    
-
-    if(in_array($commaddr, $idcache, true) && is_file("DATABASE/comments/".$commaddr)) {
-
-/*
- *      $check = openFileOrDie("DATABASE/comments/".$commaddr, 'rb');
- *
- *      $check->seekOrDie($pgcommnum + 1);
- *
- *      $check = null;
- */
-
-        
-        /// $pgcommnum = abs($pgcommnum);
-
-        $commpost = mb_substr($commpost, 0, 2550);
-
-        $commpost = normalize_entities_my($commpost);
-
-        $commpost  = str_ireplace("<br!>", "\n", $commpost);
-
-        $commpost = mb_softTrim($commpost);
-
-        /// $commpost = str_replace("\r", "", $commpost);
-
-        $pgcommnum = (int)substr($pgcommnum, 0, 10);
-        
-        /// $repcommid = substr($repcommid, 0, 40);
-        /// $repcommid = filter_filename($repcommid);
-
-        $captcha = substr($captcha, 0, 6);
-
-        $visitor = mb_substr($visitor, 0, 50);
-
-        //// $visitor = normalize_entities_my($visitor);
-
-        
-        // $visitor = str_ireplace('<br!>', ' ', $visitor);
-        // $visitor = str_ireplace('&nbsp;', ' ', $visitor);
-
-        //// $visitor = mb_superTrim($visitor);
-
-        // $visitor = str_replace('...', '…', $visitor);
-
-        if(filterUsername($visitor) && /* strtolower($visitor) != "аноним" && */ !array_key_exists($visitor, $cred)) {
-            $_SESSION["visitor"] = $visitor;
-        }
-
-        
-        if($checkpermission) {
-
-            $visitor2 = "👤<strong class='a$checkpermission'> ".$_SESSION['username']."</strong>";
-
-        } elseif(!filterUsername($visitor) || array_key_exists($visitor, $cred)) {
-            
-            $visitor2 = "👤<b> Аноним</b>";
-
-        } else {
-
-            $visitor2 = "👤<b> $visitor</b>";
-        }
-
-        $commdataline = "";
-
-        $file = openFileOrDie("DATABASE/comments/".$commaddr, "rb");
-
-        // Переходим к нужной строке
-        $file->seekOrDie($pgcommnum);
-
-        /*
-        if($file->eof()) {
-            die();
-        }
-        */
-
-        // Получаем текущую строку и её номер
-        $commdataline = $file->current(); // Читаем строку
-
-        $file = null; // Закрываем файл
-
-        ####################
-
-        // require_once "SYSTEM/salt.php";
-
-        $today = date('Y-m-d');
-
-        $rejectMissingReply = static function(string $text) use (&$errmsg, &$commRecov): void {
-            $errmsg = "<h1>ОШИБКА.</h1><p class='big'><strong>Комментарий для ответа не найден. Ваш текст сохранён в форме.</strong></p>";
-            $commRecov = $text;
-            $commRecov = str_ireplace("<textarea", "&lt;textarea", $commRecov);
-            $commRecov = str_ireplace("</textarea", "&lt;/textarea", $commRecov);
-            $commRecov = str_ireplace("textarea>", "textarea&gt;", $commRecov);
-            // $commRecov = str_ireplace("&", "&amp;", $commRecov);
-            // $commRecov = str_ireplace("&amp;amp;", "&amp;", $commRecov);
-            $commRecov = escape_amp_txtarea($commRecov);
-            $commRecov .= " ";
-            pageload();
-        };
-
-        /*
-        if($commdataline === "") {
-
-            $errmsg = "<h1>ОШИБКА.</h1><p class='big'><strong>Недопустимый номер строки.</strong></p>";
-
-            $commRecov = $commpost;
-            $commRecov = str_ireplace("<textarea", "&lt;textarea", $commRecov);
-            $commRecov = str_ireplace("</textarea", "&lt;/textarea", $commRecov);
-            $commRecov = str_ireplace("textarea>", "textarea&gt;", $commRecov);
-            // $commRecov = str_ireplace("&", "&amp;", $commRecov);
-            // $commRecov = str_ireplace("&amp;amp;", "&amp;", $commRecov);
-            $commRecov = escape_amp_txtarea($commRecov);
-            $commRecov .= " ";
-            pageload();
-            return;
-
-        } elseif($safePost['dbtimestamp'] !== filemtimeMy("DATABASE/comments/".$commaddr)) {
-
-        */
-
-        if(!$checkpermission && !canProceed($ip)) {
-
-            $errmsg = "<h1>ОШИБКА.</h1><p class='big'><strong>Временной интервал между комментариями Три Минуты.</strong></p>";
-            
-            $commRecov = $commpost;
-            $commRecov = str_ireplace("<textarea", "&lt;textarea", $commRecov);
-            $commRecov = str_ireplace("</textarea", "&lt;/textarea", $commRecov);
-            $commRecov = str_ireplace("textarea>", "textarea&gt;", $commRecov);
-            // $commRecov = str_ireplace("&", "&amp;", $commRecov);
-            // $commRecov = str_ireplace("&amp;amp;", "&amp;", $commRecov);
-            $commRecov = escape_amp_txtarea($commRecov);
-            $commRecov .= " ";
-            pageload();
-            return;
-
-        } elseif($safePost['dbtimestamp'] !== filemtimeMy("DATABASE/comments/".$commaddr)) {
-
-            $errmsg = "<h1>ПРЕДУПРЕЖДЕНИЕ.</h1><p class='big'><strong>Во время написания комментария БД изменилась.</strong></p>";
-            
-            $commRecov = $commpost;
-            $commRecov = str_ireplace("<textarea", "&lt;textarea", $commRecov);
-            $commRecov = str_ireplace("</textarea", "&lt;/textarea", $commRecov);
-            $commRecov = str_ireplace("textarea>", "textarea&gt;", $commRecov);
-            // $commRecov = str_ireplace("&", "&amp;", $commRecov);
-            // $commRecov = str_ireplace("&amp;amp;", "&amp;", $commRecov);
-            $commRecov = escape_amp_txtarea($commRecov);
-            $commRecov .= " ";
-            pageload();
-            return;
-
-        } elseif(substr_count($commdataline, "<$repcommid />") !== 1) {
-
-            $rejectMissingReply($commpost);
-            return;
-
-        } elseif(!isset($_SESSION['captcha']) || !$_SESSION['captcha'] || (!$checkpermission && hash_equals($_SESSION['captcha'], hash('sha256', $captcha.$mySalt.$ip.$userAgent.$today)) && !repeatCaptcha($_SESSION['captcha']))) {
-
-            $errmsg = "<h1>ОШИБКА.</h1><p class='big'><strong>Повторный ввод CAPTCHA, или её отключение недопустимы.</strong></p>";
-            
-            $commRecov = $commpost;
-            $commRecov = str_ireplace("<textarea", "&lt;textarea", $commRecov);
-            $commRecov = str_ireplace("</textarea", "&lt;/textarea", $commRecov);
-            $commRecov = str_ireplace("textarea>", "textarea&gt;", $commRecov);
-            // $commRecov = str_ireplace("&", "&amp;", $commRecov);
-            // $commRecov = str_ireplace("&amp;amp;", "&amp;", $commRecov);
-            $commRecov = escape_amp_txtarea($commRecov);
-            $commRecov .= " ";
-            pageload();
-            return;
-
-        } elseif(!$checkpermission && (empty($captcha) || !hash_equals($_SESSION['captcha'], hash('sha256', $captcha.$mySalt.$ip.$userAgent.$today)))) {
-
-            $errmsg = "<h1>ОШИБКА.</h1><p class='big'><strong>Вы не ввели код подтверждения.</strong></p>";
-            
-            $commRecov = $commpost;
-            $commRecov = str_ireplace("<textarea", "&lt;textarea", $commRecov);
-            $commRecov = str_ireplace("</textarea", "&lt;/textarea", $commRecov);
-            $commRecov = str_ireplace("textarea>", "textarea&gt;", $commRecov);
-            // $commRecov = str_ireplace("&", "&amp;", $commRecov);
-            // $commRecov = str_ireplace("&amp;amp;", "&amp;", $commRecov);
-            $commRecov = escape_amp_txtarea($commRecov);
-            $commRecov .= " ";
-            pageload();
-            return;
-
-        } elseif(mb_strlen($commpost) > 2500) {
-
-            $errmsg = "<h1>ОШИБКА.</h1><p class='big'><strong>Ваш комментарий слишком большой (больше 2500 символов).</strong></p>";
-            
-            $commRecov = $commpost;
-            $commRecov = str_ireplace("<textarea", "&lt;textarea", $commRecov);
-            $commRecov = str_ireplace("</textarea", "&lt;/textarea", $commRecov);
-            $commRecov = str_ireplace("textarea>", "textarea&gt;", $commRecov);
-            // $commRecov = str_ireplace("&", "&amp;", $commRecov);
-            // $commRecov = str_ireplace("&amp;amp;", "&amp;", $commRecov);
-            $commRecov = escape_amp_txtarea($commRecov);
-            $commRecov .= " ";
-            pageload();
-            return;
-
-        } elseif(mb_strlen(mb_superTrim(normalize_entities_my($commpost))) < 5) {
-
-            $errmsg = "<h1>ОШИБКА.</h1><p class='big'><strong>Ваш комментарий слишком мал.</strong></p>";
-            
-            $commRecov = $commpost;
-            $commRecov = str_ireplace("<textarea", "&lt;textarea", $commRecov);
-            $commRecov = str_ireplace("</textarea", "&lt;/textarea", $commRecov);
-            $commRecov = str_ireplace("textarea>", "textarea&gt;", $commRecov);
-            // $commRecov = str_ireplace("&", "&amp;", $commRecov);
-            // $commRecov = str_ireplace("&amp;amp;", "&amp;", $commRecov);
-            $commRecov = escape_amp_txtarea($commRecov);
-            $commRecov .= " ";
-            pageload();
-            return;
-
-        } elseif(strlen($commdataline) >= (100 * 1024)) {
-
-            $errmsg = "<h1>ОШИБКА.</h1><p class='big'><strong>Превышен лимит вложенных комментариев в ветке дискуссии.</strong></p>";
-            
-            $commRecov = $commpost;
-            $commRecov = str_ireplace("<textarea", "&lt;textarea", $commRecov);
-            $commRecov = str_ireplace("</textarea", "&lt;/textarea", $commRecov);
-            $commRecov = str_ireplace("textarea>", "textarea&gt;", $commRecov);
-            // $commRecov = str_ireplace("&", "&amp;", $commRecov);
-            // $commRecov = str_ireplace("&amp;amp;", "&amp;", $commRecov);
-            $commRecov = escape_amp_txtarea($commRecov);
-            $commRecov .= " ";
-            pageload();
-            return;
-
-        } else {
-
-            
-            $commpost2 = $commpost;
-
-            // unset($_SESSION['captcha']);
-
-            $commpost = str_replace("%QUERYSTRING%", "", $commpost);
-            // $commpost = str_ireplace("<id>", "", $commpost);
-
-            if($checkpermission) {
-
-                /*
-                $commpost = str_ireplace("<ul", "<ul class=\"ul-fix\"", $commpost);
-                $commpost = str_ireplace("<ul class=\"ul-fix\" class=\"", "<ul class=\"ul-fix ", $commpost);
-                $commpost = str_ireplace("<ul class=\"ul-fix\" class='", "<ul class='ul-fix ", $commpost);
-                */
-
-                //$commpost = str_replace("&", "&amp;", $commpost);
-                //$commpost = str_replace("&amp;amp;", "&amp;", $commpost);
-
-                ensure_html_purifier_loaded();
-
-                $config = HTMLPurifier_Config::createDefault();
-                $config->set('Core.Encoding', 'UTF-8');
-                $config->set('HTML.Doctype', 'XHTML 1.1');
-                $config->set('HTML.TidyLevel', 'heavy'); // all changes, minus...
-                $config->set('HTML.TidyRemove', 'br@clear');
-
-                $config->set('HTML.ForbiddenElements', 'h1,h2,h3,h4,h5,h6,b');
-
-                $purifier = new HTMLPurifier($config);
-                $commpost = $purifier->purify($commpost);
-
-                /// $commpost = str_replace("\n", "<br!>", $commpost);
-
-                
-
-                /* $commpost = str_ireplace(
-                    [
-                        // Именованные сущности
-                        '&lt;', '&gt;', '&quot;', '&#039;', '&apos;', '&amp;',
-                        
-                        // Десятичные числовые
-                        '&#60;',  // <
-                        '&#62;',  // >
-                        '&#34;',  // "
-                        '&#39;',  // '
-                        '&#38;',  // &
-                        
-                        // Шестнадцатеричные числовые
-                        '&#x3C;', '&#x3c;', // <
-                        '&#x3E;', '&#x3e;', // >
-                        '&#x22;',           // "
-                        '&#x27;',           // '
-                        '&#x26;'            // &
-                    ],
-                    [
-                        '&@lt;', '&@gt;', '&@quot;', '&@apos;', '&@apos;', '&@amp;',
-                        
-                        '&@lt;',
-                        '&@gt;',
-                        '&@quot;',
-                        '&@apos;',
-                        '&@amp;',
-                        
-                        '&@lt;', '&@lt;',
-                        '&@gt;', '&@gt;',
-                        '&@quot;',
-                        '&@apos;',
-                        '&@amp;'
-                    ],
-                    $commpost
-                ); */
-
-                /// $commpost = remEmptyLi($commpost);
-
-                $commpost = escape_amp_txtarea($commpost);
-
-                $html = str_get_html($commpost, false, true, "UTF-8", false) or die("XSS?.. Пустой или битый HTML.");
-
-                // Генератор Обёртки из Alt
-                $html = wrap_images_with_figure($html);
-
-                $html = replaceBr($html);
-
-                $html = replaceParagraphs($html);
-
-                /// $html = ulFix($html);
-                $html = addClassToAllUl($html, 'ul-fix');
-
-                $html = convert_infoboxes_to_aside($html);
-
-                $html = replaceSemanticSpans($html);
-
-                // Шаблон ЦИТАТА
-                $html = convertQuotBlocks($html);
-
-                $html = parseSpoilers($html);
-                
-                $commpost = $html->save();
-
-                $html->clear();  // чистим объект
-                unset($html);    // удаляем переменную
-
-                /* $commpost = str_ireplace(
-                    ['&@lt;', '&@gt;', '&@quot;', '&@apos;', '&@amp;'],
-                    ['&lt;',  '&gt;',  '&quot;',  '&#039;',   '&amp;'],
-                    $commpost
-                ); */
-
-                // Замена шаблона youtube на iframe
-                $commpost = preg_replace_callback($patternYT, $replacementYT, $commpost);
-
-                // Замена шаблона vimeo на iframe
-                $commpost = preg_replace_callback($patternVimeo, $replacementVimeo, $commpost);
-
-                // Замена шаблона DailyMotion на iframe
-                $commpost = preg_replace_callback($patternDM, $replacementDM, $commpost);
-
-                $commpost = str_replace("{{lambda}}", "<div style='font-family:monospace; white-space:nowrap; font-size:6rem; text-align:center'>&nbsp;<span class='a4'>&lambda;</span>++<br /><span class='a3'>&lambda;</span>&nbsp;<span class='a2'>&lambda;</span>&nbsp;<div style='font-size:1rem; font-weight:bold;'>NERD REVENGE</div></div>", $commpost);
-
-                /*
-                $commpost = str_replace(
-                    ["<p><figure", "<p><div", "<p><aside", "<p><details", "<p><table"],
-                    ["<figure", "<div", "<aside", "<details", "<table"],
-                    $commpost
-                );
-                */
-
-                /// $commpost = unwrapParagraphsBefore($commpost);
-
-                /// $commpost = unwrapParagraphsAfter($commpost);
-
-                $commpost = str_replace("/>", " />", $commpost);
-                $commpost = str_replace("  />", " />", $commpost);
-
-                /*
-                $commpost = preg_replace('~(?:[\p{Zs}\s]*<br />[\p{Zs}\s]*)+(<ul\b|<ol\b|</li>)~ui', '$1', $commpost);
-                $commpost = preg_replace('~(?:[\p{Zs}\s])+(<ul\b|<ol\b|</li>)~ui', '$1', $commpost);
-        
-                $commpost = str_ireplace('<li></li>', '', $commpost);
-                */
-
-                // $commpost = str_replace('<li><br /></li>', '', $commpost);
-                // $commpost = str_replace('<br /></li>', '</li>', $commpost);
-                ///
-
-                /// $commpost = str_replace("<p>{{clear}}</p>", "<br style='clear: both;' />", $commpost);
-
-                $commpost = str_replace("{{clear}}", "<br style='clear: both;' />", $commpost);
-
-                /// $commpost = str_replace("<br />", "<br!>", $commpost);
-
-                /// $commpost = preg_replace('/&(?!\w+;|#\d+;|#x[0-9a-fA-F]+;)/', '&amp;', $commpost);
-
-            } else {
-                
-                $commpost = htmlspecialchars($commpost, ENT_QUOTES | ENT_HTML401 | ENT_SUBSTITUTE, 'UTF-8', false);
-
-                // $commpost = str_ireplace("\n", "<br />\n", $commpost);
-            }
-
-            dbprepApnd("DATABASE/comments/".$commaddr);
-
-            $file = openFileOrDie("DATABASE/comments/".$commaddr
-            . ".new." . getmypid(), "rb");            
-            $file->seekOrDie($pgcommnum); // Переходим к нужной строке
-            $commdataline = $file->current(); // Читаем строку
-            $file = null; // Закрываем файл
-
-            /*
-            $commpost = str_replace("<br />\n", "<br />", $commpost);
-            $commpost = str_replace("\n<br />", "<br />", $commpost);
-            */
-            /// $commpost = str_replace("<br />"  , "<br!>", $commpost);
-            $commpost = str_replace("\n", "<br!>", $commpost);
-
-            $commdataline = rtrim($commdataline);
-
-            while(true) {
-
-                $commid = bin2hex(random_bytes(20)); // sha1(microtime().$ip.$userAgent);
-
-                /// $commtmp = str_replace("<$repcommid />", "<ul><li><$commid>$visitor2<d>$commpost</d><a href='?%QUERYSTRING%&amp;creply=<id>{$pgcommnum}-$commid#R'>rep.</a> <a href='?%QUERYSTRING%&amp;cmove=<id>{$pgcommnum}-$commid'>del.</a><$commid><$commid /></li></ul><$repcommid />", $commdataline);
-
-                /// $commarrtmp = explode("<$commid>", $commtmp);
-
-                /// $commarrtmp = explode("<$commid>", $commdataline);
-
-                /// if((string)$commid !== (string)$repcommid && count($commarrtmp) === 1) {
-
-                if(strpos($commdataline, '<'.$commid) === false) {
-
-                    break;
-                }
-            }
-
-            $now = date('Y-m-d H:i');
-
-            $commdataline = str_replace("<$repcommid />", "<ul><li><$commid>$visitor2<d>$commpost<br!><br!>$now</d><a href='?<QS>&amp;creply=<id>{$pgcommnum}-$commid#R'>rep.</a> <a href='?<QS>&amp;cmove=<id>{$pgcommnum}-$commid'>del.</a><$commid><$commid /></li></ul><$repcommid />", $commdataline, $replyReplacements);
-
-            // Повторная проверка по снимку: ветка могла измениться после валидации.
-            if($replyReplacements !== 1) {
-                @unlink("DATABASE/comments/".$commaddr.".new." . getmypid());
-                @unlink("DATABASE/comments/".$commaddr.".src." . getmypid());
-                fclose($waitFile);
-                $rejectMissingReply($commpost2);
-                return;
-            }
-
-            $commdataline = str_replace("</ul><ul>", "", $commdataline);
-            
-
-            $filesource = openFileOrDie("DATABASE/comments/".$commaddr . ".src." . getmypid(), 'rb');
-
-            $filesource->seekOrDie($pgcommnum);
-
-            $firstChunkEnd = $filesource->ftell();
-
-            $file = fopenOrDie("DATABASE/comments/".$commaddr.".new." . getmypid(), "r+b");
-            ftruncateOrDie($file,$firstChunkEnd);
-            fclose($file);
-
-            $filesource->fgetsOrDie();
-
-            $filedest = openFileOrDie("DATABASE/comments/".$commaddr.".new." . getmypid(), 'ab');
-
-            $filedest->fwriteOrDie($commdataline."\n");
-
-
-            if(catTailAvailable()) {
-
-                $PosMark = $filesource->ftell();
-
-                $filedest = null;
-                
-                $filesource = null;
-
-                concater("DATABASE/comments/".$commaddr.".new." . getmypid(), "DATABASE/comments/".$commaddr . ".src." . getmypid(), $PosMark);
-
-            } else {
-
-                while($line = $filesource->freadOrDie(128*1024)) {
-
-                    $filedest->fwriteOrDie($line);
-                }
-
-                $filedest = null;
-                    
-                $filesource = null;
-            }
-            
-
-            if(!dbdone("DATABASE/comments/".$commaddr, $commpost2)) return false;
-
-            ###############################################
-
-            ///$currentPage = ceil(($pgcommnum + 1) / 8) - 1;
-
-            /// То-же самое, но проще.
-            $currentPage = intdiv($pgcommnum, 8); // при 0-based индексе
-
-            $comTotalPages = calcTotPages($commaddr, 8);
-
-            if(!isset($safePost["commpage"]) || !is_int($safePost["commpage"])) {
-
-                $commpage = $currentPage;
-
-            } elseif($safePost["commpage"] > $comTotalPages || $safePost["commpage"] < 0) {
-
-                $commpage = $comTotalPages;
-
-            } else {
-
-                $commpage = $safePost["commpage"];
-            }
-
-            /*
-
-            if(!is_file("DATABASE/comm.count/".$commaddr)) {
-
-                copy("SYSTEM/modules/null.txt", "DATABASE/comm.count/".$commaddr);
-            }
-
-            dbprepCommCnt("DATABASE/comm.count/".$commaddr);
-
-            $commcnt = (int)getFileOrDie("DATABASE/comm.count/".$commaddr);
-
-            $commcnt++;
-
-            putFileOrDie("DATABASE/comm.count/".$commaddr.".new." . getmypid(), $commcnt, LOCK_EX);
-
-            dbdone("DATABASE/comm.count/".$commaddr);
-
-            */
-
-            ###############################################
-
-            atomicCounterIncrement("DATABASE/comments/".$commaddr.".count");
-
-            ###############################################
-
-            // mylog("<em style='color:DarkGreen'>Добавлен ответ на комментарий <a href='".$url."?".explode("&", $_SERVER['QUERY_STRING'])[0]."&commpage=".$commpage."'>".$commaddr."</a> ".$ip."</em>");
-
-            $queryString = $_SERVER['QUERY_STRING'] ?? '';
-            refreshhandle(0, "?".explode("&", $queryString)[0]."&ts=".microtime(true)."&commpage=".$commpage."#comm-section", false);
-
-        }
-
-        unset($_SESSION['captcha']);
-
-    } else {
-
-        $errmsg = pnotfound();
-
+function renderCommentDraft(string $draft, string $message, ?int $status = null): void {
+    global $errmsg, $commRecov, $content;
+
+    $errmsg = $message;
+    // Первый перенос после открывающего тега textarea браузер пропускает.
+    $commRecov = "\n" . htmlspecialchars($draft, ENT_NOQUOTES | ENT_SUBSTITUTE, 'UTF-8');
+    if($status !== null) {
+        http_response_code($status);
+    }
+    $commentFormRendered = pageload();
+
+    if($status === 503 && !$commentFormRendered) {
+        $errmsg = $message;
+        $content .= "<textarea rows='9' name='commpost'>" . $commRecov . "</textarea>";
+        http_response_code($status);
     }
 }
 
-function postComment() {
-
-    global $safePost, $errmsg, $idcache, $ip, $checkpermission, $patternYT, $replacementYT, $patternVimeo, $replacementVimeo, $patternDM, $replacementDM, $commRecov, $userAgent, $cred, $mySalt;
-
-    // require_once "SYSTEM/cred.php";
-
-    $commpost = $safePost["commpost"];
-    $commaddr = $safePost["commaddr"];
-    $visitor  = $safePost["visitor" ];
-    $captcha  = $safePost["captcha" ];
-
-    validateHex40($commaddr);
-
-    /// $commaddr = substr($commaddr, 0, 40);
-    /// $commaddr = filter_filename($commaddr);
-
-    if(in_array($commaddr, $idcache, true)) {
-
-        $commpost = mb_substr($commpost, 0, 2550);
-        
-        $commpost = normalize_entities_my($commpost);
-
-        $commpost  = str_ireplace("<br!>", "\n", $commpost);
-
-        $commpost = mb_softTrim($commpost);
-
-        /// $commpost = str_replace("\r", "", $commpost);
-
-        $captcha = substr($captcha, 0, 6);
-
-        $visitor = mb_substr($visitor, 0, 50);
-
-        //// $visitor = normalize_entities_my($visitor);
-
-        
-        // $visitor = str_ireplace('<br!>', ' ', $visitor);
-        // $visitor = str_ireplace('&nbsp;', ' ', $visitor);
-
-        //// $visitor = mb_superTrim($visitor);
-
-        // $visitor = str_replace('...', '…', $visitor);
-
-        if(filterUsername($visitor) && /* strtolower($visitor) != "аноним" && */ !array_key_exists($visitor, $cred)) {
-            $_SESSION["visitor"] = $visitor;
-        }
-
-        
-        if($checkpermission) {
-
-            $visitor2 = "👤<strong class='a$checkpermission'> ".$_SESSION['username']."</strong>";
-
-        } elseif(!filterUsername($visitor) || array_key_exists($visitor, $cred)) {
-
-            $visitor2 = "👤<b> Аноним</b>";
-
-        } else {
-
-            $visitor2 = "👤<b> $visitor</b>";
-        }
-
-        // require_once "SYSTEM/salt.php";
-
-        $today = date('Y-m-d');
-
-        if(!$checkpermission && !canProceed($ip)) {
-
-            $errmsg = "<h1>ОШИБКА.</h1><p class='big'><strong>Временной интервал между комментариями Три Минуты.</strong></p>";
-            
-            $commRecov = $commpost;
-            $commRecov = str_ireplace("<textarea", "&lt;textarea", $commRecov);
-            $commRecov = str_ireplace("</textarea", "&lt;/textarea", $commRecov);
-            $commRecov = str_ireplace("textarea>", "textarea&gt;", $commRecov);
-            // $commRecov = str_ireplace("&", "&amp;", $commRecov);
-            // $commRecov = str_ireplace("&amp;amp;", "&amp;", $commRecov);
-            $commRecov = escape_amp_txtarea($commRecov);
-            $commRecov .= " ";
-            pageload();
-            return;
-
-        } elseif($safePost['dbtimestamp'] !== filemtimeMy("DATABASE/comments/".$commaddr)) {
-
-            $errmsg = "<h1>ПРЕДУПРЕЖДЕНИЕ.</h1><p class='big'><strong>Во время написания комментария БД изменилась.</strong></p>";
-            
-            $commRecov = $commpost;
-            $commRecov = str_ireplace("<textarea", "&lt;textarea", $commRecov);
-            $commRecov = str_ireplace("</textarea", "&lt;/textarea", $commRecov);
-            $commRecov = str_ireplace("textarea>", "textarea&gt;", $commRecov);
-            // $commRecov = str_ireplace("&", "&amp;", $commRecov);
-            // $commRecov = str_ireplace("&amp;amp;", "&amp;", $commRecov);
-            $commRecov = escape_amp_txtarea($commRecov);
-            $commRecov .= " ";
-            pageload();
-            return;
-
-        } elseif(!isset($_SESSION['captcha']) || !$_SESSION['captcha'] || (!$checkpermission && hash_equals($_SESSION['captcha'], hash('sha256', $captcha.$mySalt.$ip.$userAgent.$today)) && !repeatCaptcha($_SESSION['captcha']))) {
-
-            $errmsg = "<h1>ОШИБКА.</h1><p class='big'><strong>Повторный ввод CAPTCHA, или её отключение недопустимы.</strong></p>";
-            
-            $commRecov = $commpost;
-            $commRecov = str_ireplace("<textarea", "&lt;textarea", $commRecov);
-            $commRecov = str_ireplace("</textarea", "&lt;/textarea", $commRecov);
-            $commRecov = str_ireplace("textarea>", "textarea&gt;", $commRecov);
-            // $commRecov = str_ireplace("&", "&amp;", $commRecov);
-            // $commRecov = str_ireplace("&amp;amp;", "&amp;", $commRecov);
-            $commRecov = escape_amp_txtarea($commRecov);
-            $commRecov .= " ";
-            pageload();
-            return;
-
-        } elseif(!$checkpermission && (empty($captcha) || !hash_equals($_SESSION['captcha'], hash('sha256', $captcha.$mySalt.$ip.$userAgent.$today)))) {
-
-            $errmsg = "<h1>ОШИБКА.</h1><p class='big'><strong>Вы не ввели код подтверждения.</strong></p>";
-            
-            $commRecov = $commpost;
-            $commRecov = str_ireplace("<textarea", "&lt;textarea", $commRecov);
-            $commRecov = str_ireplace("</textarea", "&lt;/textarea", $commRecov);
-            $commRecov = str_ireplace("textarea>", "textarea&gt;", $commRecov);
-            // $commRecov = str_ireplace("&", "&amp;", $commRecov);
-            // $commRecov = str_ireplace("&amp;amp;", "&amp;", $commRecov);
-            $commRecov = escape_amp_txtarea($commRecov);
-            $commRecov .= " ";
-            pageload();
-            return;
-
-        } elseif(mb_strlen($commpost) > 2500) {
-
-            $errmsg = "<h1>ОШИБКА.</h1><p class='big'><strong>Ваш комментарий слишком большой (больше 2500 символов).</strong></p>";
-            
-            $commRecov = $commpost;
-            $commRecov = str_ireplace("<textarea", "&lt;textarea", $commRecov);
-            $commRecov = str_ireplace("</textarea", "&lt;/textarea", $commRecov);
-            $commRecov = str_ireplace("textarea>", "textarea&gt;", $commRecov);
-            // $commRecov = str_ireplace("&", "&amp;", $commRecov);
-            // $commRecov = str_ireplace("&amp;amp;", "&amp;", $commRecov);
-            $commRecov = escape_amp_txtarea($commRecov);
-            $commRecov .= " ";
-            pageload();
-            return;
-
-        } elseif(mb_strlen(mb_superTrim(normalize_entities_my($commpost))) < 5) {
-
-            $errmsg = "<h1>ОШИБКА.</h1><p class='big'><strong>Ваш комментарий слишком мал.</strong></p>";
-            
-            $commRecov = $commpost;
-            $commRecov = str_ireplace("<textarea", "&lt;textarea", $commRecov);
-            $commRecov = str_ireplace("</textarea", "&lt;/textarea", $commRecov);
-            $commRecov = str_ireplace("textarea>", "textarea&gt;", $commRecov);
-            // $commRecov = str_ireplace("&", "&amp;", $commRecov);
-            // $commRecov = str_ireplace("&amp;amp;", "&amp;", $commRecov);
-            $commRecov = escape_amp_txtarea($commRecov);
-            $commRecov .= " ";
-            pageload();
-            return;
-
-        } else {
-
-            
-            $commpost2 = $commpost;
-
-            // unset($_SESSION['captcha']);
-
-            $commpost = str_replace("%QUERYSTRING%", "", $commpost);
-            // $commpost = str_ireplace("<id>", "", $commpost);
-
-            if($checkpermission) {
-
-                /*
-                $commpost = str_ireplace("<ul", "<ul class=\"ul-fix\"", $commpost);
-                $commpost = str_ireplace("<ul class=\"ul-fix\" class=\"", "<ul class=\"ul-fix ", $commpost);
-                $commpost = str_ireplace("<ul class=\"ul-fix\" class='", "<ul class='ul-fix ", $commpost);
-                */
-
-                //$commpost = str_replace("&", "&amp;", $commpost);
-                //$commpost = str_replace("&amp;amp;", "&amp;", $commpost);
-
-                ensure_html_purifier_loaded();
-
-                $config = HTMLPurifier_Config::createDefault();
-                $config->set('Core.Encoding', 'UTF-8');
-                $config->set('HTML.Doctype', 'XHTML 1.1');
-                $config->set('HTML.TidyLevel', 'heavy'); // all changes, minus...
-                $config->set('HTML.TidyRemove', 'br@clear');
-
-                $config->set('HTML.ForbiddenElements', 'h1,h2,h3,h4,h5,h6,b');
-
-                $purifier = new HTMLPurifier($config);
-                $commpost = $purifier->purify($commpost);
-
-                /// $commpost = str_replace("\n", "<br!>", $commpost);
-                
-
-                /* $commpost = str_ireplace(
-                    [
-                        // Именованные сущности
-                        '&lt;', '&gt;', '&quot;', '&#039;', '&apos;', '&amp;',
-                        
-                        // Десятичные числовые
-                        '&#60;',  // <
-                        '&#62;',  // >
-                        '&#34;',  // "
-                        '&#39;',  // '
-                        '&#38;',  // &
-                        
-                        // Шестнадцатеричные числовые
-                        '&#x3C;', '&#x3c;', // <
-                        '&#x3E;', '&#x3e;', // >
-                        '&#x22;',           // "
-                        '&#x27;',           // '
-                        '&#x26;'            // &
-                    ],
-                    [
-                        '&@lt;', '&@gt;', '&@quot;', '&@apos;', '&@apos;', '&@amp;',
-                        
-                        '&@lt;',
-                        '&@gt;',
-                        '&@quot;',
-                        '&@apos;',
-                        '&@amp;',
-                        
-                        '&@lt;', '&@lt;',
-                        '&@gt;', '&@gt;',
-                        '&@quot;',
-                        '&@apos;',
-                        '&@amp;'
-                    ],
-                    $commpost
-                ); */
-
-                /// $commpost = remEmptyLi($commpost);
-
-                $commpost = escape_amp_txtarea($commpost);
-
-                $html = str_get_html($commpost, false, true, "UTF-8", false) or die("XSS?.. Пустой или битый HTML.");
-
-                // Генератор Обёртки из Alt
-                $html = wrap_images_with_figure($html);
-
-                $html = replaceBr($html);
-
-                $html = replaceParagraphs($html);
-
-                /// $html = ulFix($html);
-                $html = addClassToAllUl($html, 'ul-fix');
-
-                $html = convert_infoboxes_to_aside($html);
-
-                $html = replaceSemanticSpans($html);
-
-                // Шаблон ЦИТАТА
-                $html = convertQuotBlocks($html);
-
-                $html = parseSpoilers($html);
-
-                $commpost = $html->save();
-
-                $html->clear();  // чистим объект
-                unset($html);    // удаляем переменную
-
-                /* $commpost = str_ireplace(
-                    ['&@lt;', '&@gt;', '&@quot;', '&@apos;', '&@amp;'],
-                    ['&lt;',  '&gt;',  '&quot;',  '&#039;',   '&amp;'],
-                    $commpost
-                ); */
-                
-
-                // Замена шаблона youtube на iframe
-                $commpost = preg_replace_callback($patternYT, $replacementYT, $commpost);
-
-                // Замена шаблона vimeo на iframe
-                $commpost = preg_replace_callback($patternVimeo, $replacementVimeo, $commpost);
-
-                // Замена шаблона DailyMotion на iframe
-                $commpost = preg_replace_callback($patternDM, $replacementDM, $commpost);
-
-                $commpost = str_replace("{{lambda}}", "<div style='font-family:monospace; white-space:nowrap; font-size:6rem; text-align:center'>&nbsp;<span class='a4'>&lambda;</span>++<br /><span class='a3'>&lambda;</span>&nbsp;<span class='a2'>&lambda;</span>&nbsp;<div style='font-size:1rem; font-weight:bold;'>NERD REVENGE</div></div>", $commpost);
-
-                /*
-                $commpost = str_replace(
-                    ["<p><figure", "<p><div", "<p><aside", "<p><details", "<p><table"],
-                    ["<figure", "<div", "<aside", "<details", "<table"],
-                    $commpost
-                );
-                */
-
-                /// $commpost = unwrapParagraphsBefore($commpost);
-
-                /// $commpost = unwrapParagraphsAfter($commpost);
-
-                $commpost = str_replace("/>", " />", $commpost);
-                $commpost = str_replace("  />", " />", $commpost);
-
-                /*
-                $commpost = preg_replace('~(?:[\p{Zs}\s]*<br />[\p{Zs}\s]*)+(<ul\b|<ol\b|</li>)~ui', '$1', $commpost);
-                $commpost = preg_replace('~(?:[\p{Zs}\s])+(<ul\b|<ol\b|</li>)~ui', '$1', $commpost);
-        
-                $commpost = str_ireplace('<li></li>', '', $commpost);
-                */
-
-                // $commpost = str_replace('<li><br /></li>', '', $commpost);
-                // $commpost = str_replace('<br /></li>', '</li>', $commpost);
-                ///
-
-                /// $commpost = str_replace("<p>{{clear}}</p>", "<br style='clear: both;' />", $commpost);
-
-                $commpost = str_replace("{{clear}}", "<br style='clear: both;' />", $commpost);
-
-                /// $commpost = str_replace("<br />", "<br!>", $commpost);
-
-                /// $commpost = preg_replace('/&(?!\w+;|#\d+;|#x[0-9a-fA-F]+;)/', '&amp;', $commpost);
-                
-            } else {
-                
-                $commpost = htmlspecialchars($commpost, ENT_QUOTES | ENT_HTML401 | ENT_SUBSTITUTE, 'UTF-8', false);
-
-                // $commpost = str_ireplace("\n", "<br />\n", $commpost);
-            }
-
-            // Создаём отсутствующий файл, не обнуляя его при параллельной отправке.
-            $file = fopenOrDie("DATABASE/comments/".$commaddr, 'c+b');
-            fclose($file);
-
-            dbprepApnd("DATABASE/comments/".$commaddr);
-
-            $lastLineNumber = 0;
-            $bufferSize = 128 * 1024; // 128 КБ
-
-            $file = openFileOrDie("DATABASE/comments/".$commaddr
-            . ".new." . getmypid(), "rb");
-
-            while($data = $file->freadOrDie($bufferSize)) {
-
-                // Читаем блок данных
-                // Подсчитываем количество переносов строк в блоке
-                $lastLineNumber += substr_count($data, "\n");
-            }
-
-            $file = null;
-
-            /*
-            $commpost = str_replace("<br />\n", "<br />", $commpost);
-            $commpost = str_replace("\n<br />", "<br />", $commpost);
-            */
-            /// $commpost = str_replace("<br />"  , "<br!>", $commpost);
-            $commpost = str_replace("\n", "<br!>", $commpost);
-
-            $commid = bin2hex(random_bytes(20)); // sha1(microtime().$ip.$userAgent);
-
-            $now = date('Y-m-d H:i');
-
-            $commpost = "<li><$commid>$visitor2<d>$commpost<br!><br!>$now</d><a href='?<QS>&amp;creply=<id>{$lastLineNumber}-$commid#R'>rep.</a> <a href='?<QS>&amp;cmove=<id>{$lastLineNumber}-$commid'>del.</a><$commid><$commid /></li>";
-
-            $file = fopenOrDie("DATABASE/comments/".$commaddr.".new." . getmypid(), "ab");
-            fwriteOrDie($file, $commpost."\n");
-            fclose($file);
-            
-
-            if(!dbdone("DATABASE/comments/".$commaddr, $commpost2)) return false;
-
-            $comTotalPages = calcTotPages2($lastLineNumber + 1, $commaddr, 8, true);
-
-            /*
-
-            if(!is_file("DATABASE/comm.count/".$commaddr)) {
-
-                copy("SYSTEM/modules/null.txt", "DATABASE/comm.count/".$commaddr);
-            }
-
-            dbprepCommCnt("DATABASE/comm.count/".$commaddr);
-
-            $commcnt = (int)getFileOrDie("DATABASE/comm.count/".$commaddr);
-
-            $commcnt++;
-
-            putFileOrDie("DATABASE/comm.count/".$commaddr.".new." . getmypid(), $commcnt, LOCK_EX);
-
-            dbdone("DATABASE/comm.count/".$commaddr);
-
-            */
-
-            ##########################
-
-            atomicCounterIncrement("DATABASE/comments/".$commaddr.".count");
-
-            ##########################
-            // mylog("<em style='color:DarkGreen'>Добавлен комментарий <a href='".$url."?".explode("&", $_SERVER['QUERY_STRING'])[0]."&commpage=".$comTotalPages."'>".$commaddr."</a> ".$ip."</em>");
-
-            $queryString = $_SERVER['QUERY_STRING'] ?? '';
-            refreshhandle(0, "?".explode("&", $queryString)[0]."&ts=".microtime(true)."&commpage=".$comTotalPages."#comm-section", false);
-
-        }
-
-        unset($_SESSION['captcha']);
-
-    } else {
-
-        $errmsg = pnotfound();
+function reportCommentVersionConflict(string $draft): void {
+    renderCommentDraft($draft,
+        "<h1>ПРЕДУПРЕЖДЕНИЕ.</h1><p class='big'><strong>Во время написания комментария БД изменилась.</strong></p>",
+        409
+    );
+}
+
+function reportCommentCheckFailure(Throwable $error): bool {
+    global $safePost;
+
+    error_log('Froggy-BLC: ошибка проверки комментария. ' . $error->getMessage());
+    renderCommentDraft(mb_substr($safePost['commpost'], 0, 2550),
+        "<h1>ОШИБКА.</h1><p class='big'><strong>Проверка комментария временно недоступна. Ваш текст сохранён.</strong></p>",
+        503
+    );
+    return false;
+}
+
+function checkCommentRate(string $ip, string $draft): bool {
+    try {
+        $allowed = canProceed($ip);
+    } catch(JsonException|RuntimeException $error) {
+        return reportCommentCheckFailure($error);
     }
+
+    if(!$allowed) {
+        renderCommentDraft($draft,
+            "<h1>ОШИБКА.</h1><p class='big'><strong>Временной интервал между комментариями Три Минуты.</strong></p>"
+        );
+    }
+    return $allowed;
+}
+
+function checkCommentCaptcha(string $captcha, string $expectedHash, string $draft): bool {
+    $savedHash = $_SESSION['captcha'] ?? '';
+    $matches = $savedHash && hash_equals($savedHash, $expectedHash);
+    try {
+        $missingOrUsed = !$savedHash || ($matches && !repeatCaptcha($savedHash));
+    } catch(JsonException|RuntimeException $error) {
+        return reportCommentCheckFailure($error);
+    }
+
+    if($missingOrUsed) {
+        $message = 'Повторный ввод CAPTCHA, или её отключение недопустимы.';
+    } elseif(empty($captcha) || !$matches) {
+        $message = 'Вы не ввели код подтверждения.';
+    } else {
+        return true;
+    }
+
+    renderCommentDraft($draft, "<h1>ОШИБКА.</h1><p class='big'><strong>$message</strong></p>");
+    return false;
+}
+
+function normalizeCommentDraft(string $text): string {
+    $text = normalize_entities_my(mb_substr($text, 0, 2550));
+    return mb_softTrim(str_ireplace('<br!>', "\n", $text));
+}
+
+function commentAuthorMarkup(string $visitor, int $permission, array $credentials): string {
+    $visitor = mb_substr($visitor, 0, 50);
+    $validVisitor = filterUsername($visitor) && !array_key_exists($visitor, $credentials);
+    if($validVisitor) {
+        $_SESSION['visitor'] = $visitor;
+    }
+    if($permission) {
+        return "👤<strong class='a$permission'> " . $_SESSION['username'] . "</strong>";
+    }
+    return $validVisitor ? "👤<b> $visitor</b>" : "👤<b> Аноним</b>";
+}
+
+function checkCommentLength(string $draft): bool {
+    if(mb_strlen($draft) > 2500) {
+        $message = 'Ваш комментарий слишком большой (больше 2500 символов).';
+    } elseif(mb_strlen(mb_superTrim(normalize_entities_my($draft))) < 5) {
+        $message = 'Ваш комментарий слишком мал.';
+    } else {
+        return true;
+    }
+
+    renderCommentDraft($draft, "<h1>ОШИБКА.</h1><p class='big'><strong>$message</strong></p>");
+    return false;
+}
+
+function reportMissingCommentReply(string $draft): void {
+    renderCommentDraft($draft,
+        "<h1>ОШИБКА.</h1><p class='big'><strong>Комментарий для ответа не найден. Ваш текст сохранён в форме.</strong></p>"
+    );
+}
+
+function formatCommentForStorage(string $draft, bool $allowHtml): string {
+    global $patternYT, $replacementYT, $patternVimeo, $replacementVimeo, $patternDM, $replacementDM;
+
+    $text = str_replace('%QUERYSTRING%', '', $draft);
+    if(!$allowHtml) {
+        $text = htmlspecialchars($text, ENT_QUOTES | ENT_HTML401 | ENT_SUBSTITUTE, 'UTF-8', false);
+        return str_replace("\n", '<br!>', $text);
+    }
+
+    ensure_html_purifier_loaded();
+    $config = HTMLPurifier_Config::createDefault();
+    $config->set('Core.Encoding', 'UTF-8');
+    $config->set('HTML.Doctype', 'XHTML 1.1');
+    $config->set('HTML.TidyLevel', 'heavy');
+    $config->set('HTML.TidyRemove', 'br@clear');
+    $config->set('HTML.ForbiddenElements', 'h1,h2,h3,h4,h5,h6,b');
+
+    $purifier = new HTMLPurifier($config);
+    $text = escape_amp_txtarea($purifier->purify($text));
+    $html = str_get_html($text, false, true, 'UTF-8', false) or die('XSS?.. Пустой или битый HTML.');
+    $html = wrap_images_with_figure($html);
+    $html = replaceBr($html);
+    $html = replaceParagraphs($html);
+    $html = addClassToAllUl($html, 'ul-fix');
+    $html = convert_infoboxes_to_aside($html);
+    $html = replaceSemanticSpans($html);
+    $html = convertQuotBlocks($html);
+    $html = parseSpoilers($html);
+    $text = $html->save();
+    $html->clear();
+
+    $text = preg_replace_callback($patternYT, $replacementYT, $text);
+    $text = preg_replace_callback($patternVimeo, $replacementVimeo, $text);
+    $text = preg_replace_callback($patternDM, $replacementDM, $text);
+    $text = str_replace("{{lambda}}", "<div style='font-family:monospace; white-space:nowrap; font-size:6rem; text-align:center'>&nbsp;<span class='a4'>&lambda;</span>++<br /><span class='a3'>&lambda;</span>&nbsp;<span class='a2'>&lambda;</span>&nbsp;<div style='font-size:1rem; font-weight:bold;'>NERD REVENGE</div></div>", $text);
+    $text = str_replace('/>', ' />', $text);
+    $text = str_replace('  />', ' />', $text);
+    $text = str_replace('{{clear}}', "<br style='clear: both;' />", $text);
+
+    return str_replace("\n", '<br!>', $text);
+}
+
+function formatCommentEntry(string $id, int $lineNumber, string $author, string $text): string {
+    $time = date('Y-m-d H:i');
+    return "<li><$id>$author<d>$text<br!><br!>$time</d>"
+        . "<a href='?<QS>&amp;creply=<id>{$lineNumber}-$id#R'>rep.</a> "
+        . "<a href='?<QS>&amp;cmove=<id>{$lineNumber}-$id'>del.</a><$id><$id /></li>";
+}
+
+function commentReply() {
+    global $safePost, $errmsg, $idcache, $ip, $checkpermission, $userAgent, $cred, $mySalt;
+
+    $pageId = $safePost['commaddr'] ?? 0;
+    $parentId = $safePost['repcommid'] ?? 0;
+    validateHex40($pageId);
+    validateHex40($parentId);
+
+    $filename = 'DATABASE/comments/' . $pageId;
+    if(!in_array($pageId, $idcache, true) || !is_file($filename)) {
+        $errmsg = pnotfound();
+        return;
+    }
+
+    $draft = normalizeCommentDraft($safePost['commpost']);
+    $captcha = substr($safePost['captcha'], 0, 6);
+    $author = commentAuthorMarkup($safePost['visitor'], $checkpermission, $cred);
+    $lineNumber = (int)($safePost['pgcommnum'] ?? 0);
+    $lineNumber = (int)substr((string)$lineNumber, 0, 10);
+
+    $thread = '';
+    if($lineNumber >= 0) {
+        try {
+            $file = new SafeSplFileObject($filename, 'rb');
+            $file->seek($lineNumber);
+            $thread = (string)$file->current();
+        } catch(RuntimeException $e) {
+            // Строка могла исчезнуть после открытия формы.
+        } finally {
+            $file = null;
+        }
+    }
+
+    $today = date('Y-m-d');
+    if(!$checkpermission && !checkCommentRate($ip, $draft)) {
+        return;
+    }
+    if($safePost['dbtimestamp'] !== filemtimeMy($filename)) {
+        reportCommentVersionConflict($draft);
+        return;
+    }
+    $parentMarker = "<$parentId />";
+    if(substr_count($thread, $parentMarker) !== 1) {
+        reportMissingCommentReply($draft);
+        return;
+    }
+    if(!$checkpermission && !checkCommentCaptcha($captcha, hash('sha256', $captcha.$mySalt.$ip.$userAgent.$today), $draft)) {
+        return;
+    }
+    if(!checkCommentLength($draft)) {
+        return;
+    }
+    if(strlen($thread) >= 100 * 1024) {
+        renderCommentDraft($draft,
+            "<h1>ОШИБКА.</h1><p class='big'><strong>Превышен лимит вложенных комментариев в ветке дискуссии.</strong></p>"
+        );
+        return;
+    }
+
+    $text = formatCommentForStorage($draft, (bool)$checkpermission);
+    if(!prepareCommentWrite($pageId, failureStatus: $failureStatus, expectedVersion: $safePost['dbtimestamp'])) {
+        if($failureStatus === 500) {
+            return reportDatabaseWriteFailure($draft);
+        }
+        if($failureStatus === 409) {
+            reportCommentVersionConflict($draft);
+        } else {
+            reportMissingCommentReply($draft);
+        }
+        return;
+    }
+
+    $pid = getmypid();
+    $stagedPath = $filename . '.new.' . $pid;
+    $sourcePath = $filename . '.src.' . $pid;
+    $file = openFileOrDie($stagedPath, 'rb');
+    $file->seekOrDie($lineNumber);
+    $thread = rtrim($file->current());
+    $file = null;
+
+    do {
+        $commentId = bin2hex(random_bytes(20));
+    } while(str_contains($thread, '<' . $commentId));
+
+    $reply = formatCommentEntry($commentId, $lineNumber, $author, $text);
+    $thread = str_replace($parentMarker, "<ul>$reply</ul>" . $parentMarker, $thread, $replacements);
+    if($replacements !== 1) {
+        cancelDatabaseWrite($filename);
+        reportMissingCommentReply($draft);
+        return;
+    }
+    $thread = str_replace('</ul><ul>', '', $thread);
+
+    $source = openFileOrDie($sourcePath, 'rb');
+    $source->seekOrDie($lineNumber);
+    $threadOffset = $source->ftell();
+
+    $file = fopenOrDie($stagedPath, 'r+b');
+    ftruncateOrDie($file, $threadOffset);
+    fclose($file);
+
+    $source->fgetsOrDie();
+    $destination = openFileOrDie($stagedPath, 'ab');
+    $destination->fwriteOrDie($thread . "\n");
+    if(catTailAvailable()) {
+        $tailOffset = $source->ftell();
+        $destination->fflushOrDie();
+        $destination = null;
+        $source = null;
+        concater($stagedPath, $sourcePath, $tailOffset);
+    } else {
+        while($chunk = $source->freadOrDie(128 * 1024)) {
+            $destination->fwriteOrDie($chunk);
+        }
+        $destination->fflushOrDie();
+        $destination = null;
+        $source = null;
+    }
+
+    if(!publishComment($pageId, $commentId, $draft)) {
+        return false;
+    }
+
+    $currentPage = intdiv($lineNumber, 8);
+    $lastPage = calcTotPages($pageId, 8);
+    $requestedPage = $safePost['commpage'] ?? null;
+    if(!is_int($requestedPage)) {
+        $commentPage = $currentPage;
+    } elseif($requestedPage > $lastPage || $requestedPage < 0) {
+        $commentPage = $lastPage;
+    } else {
+        $commentPage = $requestedPage;
+    }
+
+    $queryBase = explode('&', $_SERVER['QUERY_STRING'] ?? '', 2)[0];
+    refreshhandle(0, '?' . $queryBase . '&ts=' . microtime(true) . '&commpage=' . $commentPage . '#comm-section', false);
+    unset($_SESSION['captcha']);
+}
+
+function postComment() {
+    global $safePost, $errmsg, $idcache, $ip, $checkpermission, $userAgent, $cred, $mySalt;
+
+    $pageId = $safePost['commaddr'];
+    validateHex40($pageId);
+    if(!in_array($pageId, $idcache, true)) {
+        $errmsg = pnotfound();
+        return;
+    }
+
+    $filename = 'DATABASE/comments/' . $pageId;
+    $draft = normalizeCommentDraft($safePost['commpost']);
+    $captcha = substr($safePost['captcha'], 0, 6);
+    $author = commentAuthorMarkup($safePost['visitor'], $checkpermission, $cred);
+    $today = date('Y-m-d');
+
+    if(!$checkpermission && !checkCommentRate($ip, $draft)) {
+        return;
+    }
+    if($safePost['dbtimestamp'] !== filemtimeMy($filename)) {
+        reportCommentVersionConflict($draft);
+        return;
+    }
+    if(!$checkpermission && !checkCommentCaptcha($captcha, hash('sha256', $captcha.$mySalt.$ip.$userAgent.$today), $draft)) {
+        return;
+    }
+    if(!checkCommentLength($draft)) {
+        return;
+    }
+
+    $text = formatCommentForStorage($draft, (bool)$checkpermission);
+    if(!prepareCommentWrite($pageId, create: true, failureStatus: $failureStatus, expectedVersion: $safePost['dbtimestamp'])) {
+        if($failureStatus === 500) {
+            return reportDatabaseWriteFailure($draft);
+        }
+        if($failureStatus === 409) {
+            reportCommentVersionConflict($draft);
+            return;
+        }
+        $errmsg = pnotfound();
+        return;
+    }
+
+    $stagedPath = $filename . '.new.' . getmypid();
+    $lineNumber = 0;
+    $file = openFileOrDie($stagedPath, 'rb');
+    while($chunk = $file->freadOrDie(128 * 1024)) {
+        $lineNumber += substr_count($chunk, "\n");
+    }
+    $file = null;
+
+    $commentId = bin2hex(random_bytes(20));
+    $entry = formatCommentEntry($commentId, $lineNumber, $author, $text);
+    $file = fopenOrDie($stagedPath, 'ab');
+    fwriteOrDie($file, $entry . "\n");
+    fflushOrDie($file);
+    fclose($file);
+
+    $commentPage = 0;
+    $updatePages = static function () use ($lineNumber, $pageId, &$commentPage): void {
+        $commentPage = calcTotPages2($lineNumber + 1, $pageId, 8, true);
+    };
+    if(!publishComment($pageId, $commentId, $draft, $updatePages)) {
+        return false;
+    }
+
+    $queryBase = explode('&', $_SERVER['QUERY_STRING'] ?? '', 2)[0];
+    refreshhandle(0, '?' . $queryBase . '&ts=' . microtime(true) . '&commpage=' . $commentPage . '#comm-section', false);
+    unset($_SESSION['captcha']);
 }
 
 function loginPost() {
@@ -1889,16 +1285,15 @@ function loginPost() {
         return;
     }
 
-    $lockFile = "DATABASE/lock/".hash('sha512', $ip);
-    $locktmp = fopenOrDie($lockFile, 'c+b');
+    $stateFile = "DATABASE/lock/".hash('sha512', $ip);
+    $lock = lockStateFile($stateFile . '.lock', LOCK_EX);
+    if($lock === false) {
+        throw new RuntimeException('Не удалось заблокировать файл попыток входа.');
+    }
 
     try {
-        // Одна блокировка защищает чтение, проверку и обновление времени.
-        if(!flock($locktmp, LOCK_EX)) {
-            throw new RuntimeException('Не удалось заблокировать файл попыток входа.');
-        }
-
-        $lockContents = stream_get_contents($locktmp);
+        clearstatcache(true, $stateFile);
+        $lockContents = file_exists($stateFile) ? @file_get_contents($stateFile) : '';
         if($lockContents === false) {
             throw new RuntimeException('Не удалось прочитать время последней попытки входа.');
         }
@@ -1916,20 +1311,12 @@ function loginPost() {
 
         if(!$loginAllowed) {
             // Каждая отклонённая попытка намеренно продлевает блокировку.
-            $timestamp = (string)$now;
-            if(!rewind($locktmp)) {
-                throw new RuntimeException('Не удалось перейти к началу файла попыток входа.');
-            }
-
-            if(fwrite($locktmp, $timestamp) !== strlen($timestamp)
-                || !ftruncate($locktmp, strlen($timestamp))
-                || !fflush($locktmp)) {
+            if(!replaceFileContents($stateFile, (string)$now)) {
                 throw new RuntimeException('Не удалось полностью сохранить время попытки входа.');
             }
         }
     } finally {
-        // Закрытие файла освобождает блокировку и при исключении.
-        fclose($locktmp);
+        fclose($lock);
     }
 
     if(!$loginAllowed) {
@@ -1953,145 +1340,88 @@ function loginPost() {
 
 function imageupload() {
 
-    global $safePost, $errmsg, $content, $checkpermission;
+    global $errmsg, $content, $checkpermission;
 
-    if( $checkpermission < 3 ) {
-
+    if($checkpermission < 3) {
         $errmsg = pforbidden();
-
         $errmsg .= "<p class='big'>Только <strong>редакторы</strong> и <strong>администраторы</strong> это могут делать.</p>";
-
-    } else {
-
-        $errmsg = "<h1>Info.</h1><ol class='big'>";
-
-        if(
-            !isset($_FILES['fileToUpload']) ||
-            !is_array($_FILES['fileToUpload']) ||
-            empty($_FILES['fileToUpload']['name']) ||
-            !is_string($_FILES['fileToUpload']['name'])
-        ) {
-            $errmsg .= "<li>Файл не был передан.</li>";
-            mylog("<em style='color:DarkOrange'>Файл не был передан. (".$_SESSION["username"].").</em>");
-            $errmsg .= "</ol>";
-            $content = "";
-            refreshhandle(4, "?gallery=-1", false);
-            return;
-        }
-
-
-        if(($_FILES["fileToUpload"]['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
-
-            $errmsg .= "<li>Ошибка при загрузке файла.</li>";
-            mylog("<strong style='color:DarkRed'>Ошибка при загрузке файла. (".$_SESSION["username"].").</strong>");
-            $errmsg .= "</ol>";
-            $content = "";
-            refreshhandle(4, "?gallery=-1", false);
-            return;
-        }
-
-
-        $target_dir = "DATABASE/gallery/";
-        $target_file = filter_filename($_FILES["fileToUpload"]["name"]);
-        $uploadOk = 1;
-
-        /// $imageFileType = strtolower(pathinfo($target_file,PATHINFO_EXTENSION));
-        $imageFileType = pathinfo($target_file, PATHINFO_EXTENSION);
-
-        /// if($target_file == "") {
-
-        if(empty($target_file)) {
-
-            $errmsg .= "<li>Неправильное имя файла.</li>";
-            mylog("<em style='color:DarkOrange'>Неправильное имя файла. (".$_SESSION["username"].").</em>");
-
-        } else {
-
-            $target_file = $target_dir.$target_file;
-
-        
-            // Allow certain file formats
-            if(
-                $imageFileType !== "webp" &&
-                $imageFileType !== "jpg"  &&
-                $imageFileType !== "jpeg" &&
-                $imageFileType !== "png"  &&
-                $imageFileType !== "gif"
-            ) {
-                $errmsg .= "<li>Извините, только WEBP, JPG, JPEG, PNG и GIF файлы разрешены.</li>";
-                mylog("<em style='color:DarkOrange'>Извините, только WEBP, JPG, JPEG, PNG и GIF файлы разрешены. (".$_SESSION["username"].").</em>");
-                $uploadOk = 0;
-
-            } elseif(is_file($target_file)) { // Check if file already exists
-
-                $errmsg .= "<li>Извините, файл уже существует.</li>";
-                mylog("<em style='color:DarkOrange'>Извините, файл уже существует. (".$_SESSION["username"].").</em>");
-                $uploadOk = 0;
-
-            // Check file size
-            } elseif((int)($_FILES["fileToUpload"]["size"] ?? 0) > (3.5 * 1024 * 1024)) {
-
-                $errmsg .= "<li>Извините, ваш файл слишком большой. (&gt; 3.5 МиБ)</li>";
-                mylog("<em style='color:DarkOrange'>Извините, ваш файл слишком большой. (".$_SESSION["username"].").</em>");
-                $uploadOk = 0;
-
-            // Check if image file is a actual image or fake image
-            } elseif(is_uploaded_file($_FILES["fileToUpload"]["tmp_name"])) {
-
-                $check = getimagesize($_FILES["fileToUpload"]["tmp_name"]);
-
-                if($check !== false) {
-
-                    $errmsg .= "<li>Файл является изображением - " . $check["mime"] . ".</li>";
-                    mylog("<em style='color:DarkGreen'>Файл является изображением - " . $check["mime"] . ". (".$_SESSION["username"].").</em>");
-                    $uploadOk = 1;
-
-                } else {
-
-                    $errmsg .= "<li>Файл не является изображением.</li>";
-                    mylog("<em style='color:DarkRed'>Файл не является изображением. (".$_SESSION["username"].").</em>");
-                    $uploadOk = 0;
-                }
-
-            } else {
-
-                $uploadOk = 0;
-            }
-
-            // Check if $uploadOk is set to 0 by an error
-            if($uploadOk == 0) {
-
-                $errmsg .= "<li>Извините, ваш файл не загрузился.</li>";
-                mylog("<em style='color:DarkOrange'>Извините, ваш файл не загрузился. (".$_SESSION["username"].").</em>");
-                // if everything is ok, try to upload file
-
-            } else {
-
-                if(!is_uploaded_file($_FILES["fileToUpload"]["tmp_name"])) {
-
-                    $errmsg .= "<li>Временный файл загрузки недоступен.</li>";
-                    mylog("<em style='color:DarkRed'>Временный файл загрузки недоступен. (".$_SESSION["username"].").</em>");
-
-                } elseif(move_uploaded_file($_FILES["fileToUpload"]["tmp_name"], $target_file)) {
-
-                    $errmsg .= "<li>Файл ". htmlspecialchars( basename( $_FILES["fileToUpload"]["name"]), ENT_QUOTES | ENT_HTML401 | ENT_SUBSTITUTE, 'UTF-8', false). " был загружен.</li>";
-                    mylog("<em style='color:DarkGreen'>Файл ". htmlspecialchars( basename( $_FILES["fileToUpload"]["name"]), ENT_QUOTES | ENT_HTML401 | ENT_SUBSTITUTE, 'UTF-8', false). " был загружен. (".$_SESSION["username"].").</em>");
-
-                } else {
-
-                    $errmsg .= "<li>Извините, произошла ошибка при загрузке файла.</li>";
-                    mylog("<em style='color:DarkRed'>Извините, произошла ошибка при загрузке файла. (".$_SESSION["username"].").</em>");
-                }
-            }
-        }
-
-        $errmsg .= "</ol>";
-
-        $content = "";
-        
-        refreshhandle(4, "?gallery=-1", false);
-
+        return;
     }
+
+    $file = $_FILES['fileToUpload'] ?? null;
+    $error = is_array($file)
+        ? ($file['error'] ?? UPLOAD_ERR_NO_FILE)
+        : UPLOAD_ERR_NO_FILE;
+
+    $message = match ($error) {
+        UPLOAD_ERR_OK => null,
+        UPLOAD_ERR_NO_FILE => 'Файл не был передан.',
+        UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE => 'Файл превышает допустимый размер.',
+        UPLOAD_ERR_PARTIAL => 'Файл загрузился не полностью.',
+        default => 'Ошибка при загрузке файла.',
+    };
+
+    if($message === null) {
+        $name = $file['name'] ?? null;
+        $filename = is_string($name) ? filter_filename($name, failOnInvalid: false) : '';
+        $extension = pathinfo($filename, PATHINFO_EXTENSION);
+        $tmpName = $file['tmp_name'] ?? null;
+        $fileSize = (int)($file['size'] ?? 0);
+        $imageTypes = [
+            'webp' => 'image/webp',
+            'jpg' => 'image/jpeg',
+            'jpeg' => 'image/jpeg',
+            'png' => 'image/png',
+            'gif' => 'image/gif',
+        ];
+
+        if($filename === '') {
+            $message = 'Некорректное имя файла.';
+        } elseif(!isset($imageTypes[$extension])) {
+            $message = 'Разрешены только файлы WEBP, JPG, JPEG, PNG и GIF.';
+        } elseif($fileSize <= 0) {
+            $message = 'Файл пустой.';
+        } elseif($fileSize > (3.5 * 1024 * 1024)) {
+            $message = 'Файл больше 3.5 МиБ.';
+        } elseif(!is_string($tmpName) || !is_uploaded_file($tmpName)) {
+            $message = 'Временный файл загрузки недоступен.';
+        } elseif(!class_exists(finfo::class)) {
+            $message = 'Проверка формата изображения недоступна.';
+        } elseif((new finfo(FILEINFO_MIME_TYPE))->file($tmpName) !== $imageTypes[$extension]) {
+            $message = 'Содержимое файла не соответствует расширению.';
+        } elseif(@getimagesize($tmpName) === false) {
+            $message = 'Не удалось прочитать изображение.';
+        } else {
+            $targetFile = 'DATABASE/gallery/' . $filename;
+            $lock = lockStateFile('DATABASE/lock/gallery-upload.lock', LOCK_EX, 'c');
+
+            if($lock === false) {
+                $message = 'Не удалось получить доступ к галерее для записи.';
+            } else {
+                try {
+                    if(file_exists($targetFile) || is_link($targetFile)) {
+                        $message = 'Файл с таким именем уже существует.';
+                    } elseif(!storeUploadedFile($tmpName, $targetFile)) {
+                        $message = 'Не удалось сохранить изображение.';
+                    }
+                } finally {
+                    fclose($lock);
+                }
+            }
+        }
+    }
+
+    $success = $message === null;
+    if($success) {
+        $nameHtml = htmlspecialchars($filename, ENT_QUOTES | ENT_HTML401 | ENT_SUBSTITUTE, 'UTF-8', false);
+        $message = "Файл " . $nameHtml . " был загружен.";
+    }
+
+    $color = $success ? 'DarkGreen' : 'DarkRed';
+    $errmsg = "<h1>Info.</h1><ol class='big'><li>" . $message . "</li></ol>";
+    mylog("<strong style='color:" . $color . "'>" . $message . " (" . $_SESSION["username"] . ").</strong>");
+    $content = "";
+    refreshhandle(4, "?gallery=-1", false);
 }
 
 function fileDlUpload() {
@@ -2108,88 +1438,50 @@ function fileDlUpload() {
 
         $errmsg = "";
 
-        if(
-            !isset($_FILES['upfiledl']) ||
-            !is_array($_FILES['upfiledl']) ||
-            empty($_FILES['upfiledl']['name']) ||
-            !is_string($_FILES['upfiledl']['name'])
-        ) {
-            $errmsg = "<h1>Info.</h1><p class='big'>Файл не был передан.</p>";
+        $file = $_FILES['upfiledl'] ?? null;
+        $error = is_array($file)
+            ? ($file['error'] ?? UPLOAD_ERR_NO_FILE)
+            : UPLOAD_ERR_NO_FILE;
+
+        $message = match ($error) {
+            UPLOAD_ERR_OK => null,
+            UPLOAD_ERR_NO_FILE => 'Файл не был передан.',
+            UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE => 'Файл превышает допустимый размер.',
+            UPLOAD_ERR_PARTIAL => 'Файл загрузился не полностью.',
+            default => 'Ошибка при загрузке файла.',
+        };
+
+        if($message === null && (!is_string($file['name'] ?? null) || $file['name'] === '')) {
+            $message = 'Некорректное имя файла.';
+        }
+
+        if($message !== null) {
+            $errmsg = "<h1>Info.</h1><p class='big'>" . $message . "</p>";
+            mylog("<strong style='color:DarkRed'>" . $message . " (" . $_SESSION["username"] . ").</strong>");
             $content = "";
             refreshhandle(4, "?dlfiles=-1", false);
             return;
         }
 
-        $file = $_FILES['upfiledl'];
-
-        $srcFileName = filter_filename($file['name']);
+        $srcFileName = filter_filename($file['name'], failOnInvalid: false);
         $newFilePath = 'DATABASE/fupload/' . $srcFileName;
 
-        $allowedExtensions = [
+        if($srcFileName === '') {
 
-            // Текстовые и данные
-            'txt', 'csv', 'tsv', 'json', 'xml', 'md', 'log', 'ini', 'yaml', 'yml',
+            $errmsg = 'Некорректное имя файла.';
+            mylog("<em style='color:DarkOrange'>Некорректное имя файла. (".$_SESSION["username"].").</em>");
 
-            // Дополнительные безопасные текстовые форматы
-            'conf', 'cfg', 'toml', 'properties',
-            'rst', 'adoc', 'org',
-            'diff', 'patch', 'nfo',
-            'tex', 'bib',
-
-            // Документы и офисные файлы
-            'pdf', 'doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx', 'odt', 'ods', 'odp', 'rtf',
-
-            // Электронные книги
-            'epub', 'mobi', 'azw', 'azw3',
-
-            // Архивы и образы
-            'zip', 'rar', '7z', 'tar', 'gz', 'bz2', 'xz', 'lz', 'lzma', 'iso',
-
-            // Игровые и мод-ресурсы
-            'esp', 'esm',
-
-            // Субтитры и прочее медиасопровождение (без видео и изображений)
-            'srt', 'vtt', 'ass', 'ssa', 'sub',
-
-            // Шрифты (если нужны для фронта, но не исполняемы)
-            'ttf', 'otf', 'woff', 'woff2',
-
-            // Базы данных/дампы
-            'sql', 'sqlite', 'db', 'db3',
-        ];
-
-        /// $extension = strtolower(pathinfo($srcFileName, PATHINFO_EXTENSION));
-        $extension = pathinfo($srcFileName, PATHINFO_EXTENSION);
-
-        /// if($srcFileName == "") {
-
-        if(empty($srcFileName)) {
-
-            $errmsg = 'Имя файла пустое!';
-            mylog("<em style='color:DarkOrange'>Имя файла пустое! (".$_SESSION["username"].").</em>");
-
-        } elseif(!in_array($extension, $allowedExtensions, true)) {
+        } elseif(!isDownloadFilename($srcFileName)) {
 
             $errmsg = 'Загрузка файлов с таким расширением запрещена!';
             mylog("<strong style='color:DarkRed'>Загрузка файлов с таким расширением запрещена! (".$_SESSION["username"].").</strong>");
 
-        } elseif($file['error'] !== UPLOAD_ERR_OK) {
-
-            $errmsg = 'Неизвестная ошибка при загрузке файла.';
-            mylog("<strong style='color:DarkRed'>Неизвестная ошибка при загрузке файла. (".$_SESSION["username"].").</strong>");
-
         } else {
 
+            $tmpName = $file['tmp_name'] ?? null;
             $fileSize = (int)($file['size'] ?? 0);
 
-            /// $fileSize = is_uploaded_file($file['tmp_name']) ? (int)filesize($file['tmp_name']) : 0;
-
-            if(is_file($newFilePath)) {
-
-                $errmsg = 'Файл с таким именем уже существует.';
-                mylog("<em style='color:DarkOrange'>Файл с таким именем уже существует. (".$_SESSION["username"].").</em>");
-
-            } elseif(!is_uploaded_file($file['tmp_name'])) {
+            if(!is_string($tmpName) || !is_uploaded_file($tmpName)) {
 
                 $errmsg = 'Временный файл загрузки недоступен.';
                 mylog("<strong style='color:DarkRed'>Временный файл загрузки недоступен. (".$_SESSION["username"].").</strong>");
@@ -2204,15 +1496,30 @@ function fileDlUpload() {
                 $errmsg = 'Файл больше 3.5 МиБ.';
                 mylog("<em style='color:DarkMagenta'>Файл больше 3.5 МиБ. (".$_SESSION["username"].").</em>");
 
-            } elseif(!move_uploaded_file($file['tmp_name'], $newFilePath)) {
-
-                $errmsg = 'Ошибка при перемещении файла.';
-                mylog("<strong style='color:DarkRed'>Ошибка при перемещении файла. (".$_SESSION["username"].").</strong>");
-
             } else {
 
-                $errmsg = 'Успешно загружено.';
-                mylog("<strong style='color:DarkGreen'>Успешно загружен файл. (".$_SESSION["username"].").</strong>");
+                $lock = lockStateFile('DATABASE/lock/file-upload.lock', LOCK_EX, 'c');
+                $logColor = 'DarkRed';
+
+                if($lock === false) {
+                    $errmsg = 'Не удалось получить доступ к каталогу загрузок для записи.';
+                } else {
+                    try {
+                        if(file_exists($newFilePath) || is_link($newFilePath)) {
+                            $errmsg = 'Файл с таким именем уже существует.';
+                            $logColor = 'DarkOrange';
+                        } elseif(!storeUploadedFile($tmpName, $newFilePath)) {
+                            $errmsg = 'Ошибка при перемещении файла.';
+                        } else {
+                            $errmsg = 'Успешно загружено.';
+                            $logColor = 'DarkGreen';
+                        }
+                    } finally {
+                        fclose($lock);
+                    }
+                }
+
+                mylog("<strong style='color:" . $logColor . "'>" . $errmsg . " (" . $_SESSION["username"] . ").</strong>");
             }
         }
 
@@ -2365,7 +1672,11 @@ function pobyava() {
             }
         }
 
-        putFileOrDie("DATABASE/obyava.txt", $obstring, LOCK_EX);
+        if(!replaceFileContents("DATABASE/obyava.txt", $obstring)) {
+            http_response_code(500);
+            $errmsg = "<h1>ОШИБКА.</h1><p class='big'><strong>Не удалось сохранить объявление. Прежнее объявление доступно на сайте.</strong></p>";
+            return;
+        }
 
         mylog("<strong style='color:DarkRed'>Объявление изменено. (".$_SESSION["username"].").</strong>");
 
@@ -2379,45 +1690,86 @@ function saveUsers() {
     global $safePost, $checkpermission, $errmsg, $csrf;
 
     if($checkpermission < 4) {
-
         $errmsg = pforbidden();
-
-    } else {
-
-        $users = $safePost['saveusers'];
-
-        $users = str_replace("\r", "", $users);
-
-        $users = "<?php
-
-if(!defined('SECURE_ACCESS')) { die('Direct access not permitted'); }
-
-################################################
-################################################
-################################################
-
-/*
- * 0 dummy
- * 1 visitor
- * 2 moderator
- * 3 corrector
- * 4 admin
- *
- * UserName, как ключ массива, -- ДОЛЖЕН БЫТЬ В ОДИНАРНЫХ КАВЫЧКАХ!!!
- */
-
-
-
-$users
-";
-
-
-        putFileOrDie("SYSTEM/cred.php", $users, LOCK_EX);
-
-        mylog("<strong style='color:DarkRed'>Cred.php изменён. (".$_SESSION["username"].").</strong>");
-
-        refreshhandle(0, "?editusers=1&csrf=$csrf", false);
+        return;
     }
+
+    $payload = $safePost['saveusers'] ?? null;
+    $entries = is_string($payload) ? json_decode($payload, true) : null;
+    if(!is_array($entries) || !array_is_list($entries)) {
+        http_response_code(400);
+        $errmsg = "<h1>ОШИБКА.</h1><p class='big'>Не удалось прочитать список пользователей. Обновите форму и повторите сохранение.</p>";
+        return;
+    }
+
+    $users = [];
+    $hasAdmin = false;
+    foreach($entries as $entry) {
+        $rawName = $entry['name'] ?? null;
+        $level = $entry['level'] ?? null;
+        $hash = $entry['hash'] ?? null;
+        $name = is_string($rawName)
+            ? htmlspecialchars(trim($rawName), ENT_QUOTES | ENT_HTML401 | ENT_SUBSTITUTE, 'UTF-8', false)
+            : '';
+
+        if($name === 'dummy' || !filterUsername($name) || isset($users[$name])
+            || !is_int($level) || $level < 0 || $level > 4
+            || !is_string($hash) || preg_match('/\A[a-f0-9]{128}\z/', $hash) !== 1) {
+            http_response_code(400);
+            $errmsg = "<h1>ОШИБКА.</h1><p class='big'>В списке есть некорректная запись или повторяющееся имя.</p>";
+            return;
+        }
+
+        $users[$name] = $level . '<!!!>' . $hash;
+        $hasAdmin = $hasAdmin || $level === 4;
+    }
+
+    if(!$hasAdmin) {
+        http_response_code(400);
+        $errmsg = "<h1>ОШИБКА.</h1><p class='big'>В списке должен остаться хотя бы один администратор.</p>";
+        return;
+    }
+
+    $php = "<?php\n\nif(!defined('SECURE_ACCESS')) { die('Direct access not permitted'); }\n\n";
+    foreach($users as $name => $value) {
+        $php .= '$cred[' . var_export((string)$name, true) . '] = ' . var_export($value, true) . ";\n";
+    }
+
+    $expected = $safePost['usersversion'] ?? null;
+    $lock = lockStateFile('DATABASE/lock/credentials.lock', LOCK_EX);
+    if($lock === false) {
+        http_response_code(503);
+        $errmsg = "<h1>ОШИБКА.</h1><p class='big'>Список пользователей временно недоступен для записи.</p>";
+        return;
+    }
+
+    $path = dirname(__DIR__) . '/cred.php';
+    try {
+        $current = @hash_file('sha256', $path);
+        if($current === false) {
+            http_response_code(503);
+            $errmsg = "<h1>ОШИБКА.</h1><p class='big'>Не удалось прочитать текущий список пользователей.</p>";
+            return;
+        }
+        if(!is_string($expected) || !hash_equals($current, $expected)) {
+            http_response_code(409);
+            $errmsg = "<h1>КОНФЛИКТ.</h1><p class='big'>Список пользователей изменился. <a href='?editusers=1&amp;csrf=$csrf'>Откройте актуальный список</a> и повторите правку.</p>";
+            return;
+        }
+        if(!replaceFileContents($path, $php)) {
+            http_response_code(500);
+            $errmsg = "<h1>ОШИБКА.</h1><p class='big'>Не удалось сохранить список пользователей.</p>";
+            return;
+        }
+        if(function_exists('opcache_invalidate')) {
+            @opcache_invalidate($path, true);
+        }
+    } finally {
+        fclose($lock);
+    }
+
+    mylog("<strong style='color:DarkRed'>Cred.php изменён. (".$_SESSION["username"].").</strong>");
+    refreshhandle(0, "?editusers=1&csrf=$csrf", false);
 }
 
 

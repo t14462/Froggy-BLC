@@ -2,6 +2,11 @@
 
 define('SECURE_ACCESS', true);
 
+if(!function_exists('imagecreate') || !function_exists('imagettftext')) {
+    http_response_code(503);
+    exit('Captcha unavailable');
+}
+
 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
 header("Expires: Mon, 26 Jul 1997 05:00:00 GMT");
 header("Pragma: no-cache");
@@ -15,7 +20,12 @@ session_set_cookie_params([
     'httponly' => true,
     'samesite' => 'Strict' // Helps mitigate CSRF attacks
 ]);
-session_start();
+if(!@session_start(['use_strict_mode' => 1])) {
+    http_response_code(503);
+    exit('Captcha session unavailable');
+}
+
+require_once dirname(__DIR__) . '/salt.php';
 
 // You can customize your captcha settings here
 
@@ -27,18 +37,18 @@ $total_characters_on_image = 6;
 // The characters that can be used in the CAPTCHA code.
 // Avoid all confusing characters and numbers (for example: l, 1 and i)
 $possible_captcha_letters = 'bcdfghjkmnpqrstvwxyz23456789';
-$captcha_font = './monofont.ttf';
+$captcha_font = __DIR__ . '/monofont.ttf';
 
 $random_captcha_dots = 75;
 $random_captcha_lines = 46;
-$captcha_text_color = "0x142864";
-$captcha_noise_color = "0x142864";
+$captcha_text_color = "142864";
+$captcha_noise_color = "142864";
 
 $count = 0;
 while($count < $total_characters_on_image) {
     $captcha_code .= substr(
         $possible_captcha_letters,
-        mt_rand(0, strlen($possible_captcha_letters) - 1),
+        random_int(0, strlen($possible_captcha_letters) - 1),
         1
     );
     $count++;
@@ -116,8 +126,12 @@ if($text_box === false) {
     exit('Captcha font error');
 }
 
-$x = ($captcha_image_width - $text_box[4]) / 2;
-$y = ($captcha_image_height - $text_box[5]) / 2;
+$left = min($text_box[0], $text_box[2], $text_box[4], $text_box[6]);
+$right = max($text_box[0], $text_box[2], $text_box[4], $text_box[6]);
+$top = min($text_box[1], $text_box[3], $text_box[5], $text_box[7]);
+$bottom = max($text_box[1], $text_box[3], $text_box[5], $text_box[7]);
+$x = (int)round(($captcha_image_width - $left - $right) / 2);
+$y = (int)round(($captcha_image_height - $top - $bottom) / 2);
 $text_drawn = imagettftext(
     $captcha_image,
     $captcha_font_size,
@@ -152,8 +166,6 @@ if(isset($_SERVER['REMOTE_ADDR'])) {
     $ip = "0"; // Значение по умолчанию, если IP-адрес не установлен
 }
 */
-
-require_once "../salt.php";
 
 $ip = $_SERVER['REMOTE_ADDR'] ?? "0.0.0.0";
 

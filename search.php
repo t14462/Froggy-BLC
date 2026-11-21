@@ -198,34 +198,47 @@ REGEX,
                 };
 
                 $requestedPage = min(abs((int)($_GET['pgnum'] ?? '0')), $searchResultPages);
-                foreach(\Froggy\Search\cachedArticles(
-                    __DIR__ . '/DATABASE/DB/data.html',
-                    __DIR__ . '/DATABASE/DB/Search-Cache.txt',
-                    $parseArticle,
-                    $searchCacheWasCurrent
-                ) as $article) {
-                    [$title, $body, $articleId] = $article;
-                    // Каждый сегмент ищем в заголовке или тексте; фраза не пересекает их границу.
-                    foreach($patterns as $segmentPattern) {
-                        if(preg_match($segmentPattern, $title) !== 1
-                            && preg_match($segmentPattern, $body) !== 1) continue 2;
-                    }
-
-                    // Первое совпадение за пределом выдачи подтверждает, что запрос слишком широкий.
-                    if(++$pgcount > $resultLimit) {
-                        $searchTruncated = true;
-                        break;
-                    }
-                    // В памяти тексты одной страницы; выдержки строятся только при выводе.
-                    // При слишком большом pgnum останется последняя страница.
-                    $resultPage = intdiv($pgcount - 1, $perPage);
-                    if($resultPage <= $requestedPage) {
-                        if($resultPage !== $pgnum) {
-                            $results = [];
-                            $pgnum = $resultPage;
+                $scanResults = static function(iterable $articles) use ($requestedPage, $resultLimit, $perPage, $patterns): array {
+                    $results = [];
+                    $found = $page = 0;
+                    $truncated = false;
+                    foreach($articles as [$title, $body, $articleId]) {
+                        // Каждый сегмент ищем в заголовке или тексте; фраза не пересекает их границу.
+                        foreach($patterns as $segmentPattern) {
+                            if(preg_match($segmentPattern, $title) !== 1
+                                && preg_match($segmentPattern, $body) !== 1) continue 2;
                         }
-                        $results[] = ['title' => $title, 'body' => $body, 'id' => $articleId];
+
+                        // Первое совпадение за пределом выдачи подтверждает, что запрос слишком широкий.
+                        if(++$found > $resultLimit) {
+                            $truncated = true;
+                            break;
+                        }
+                        // В памяти тексты одной страницы; при слишком большом pgnum останется последняя.
+                        $resultPage = intdiv($found - 1, $perPage);
+                        if($resultPage <= $requestedPage) {
+                            if($resultPage !== $page) {
+                                $results = [];
+                                $page = $resultPage;
+                            }
+                            $results[] = ['title' => $title, 'body' => $body, 'id' => $articleId];
+                        }
                     }
+                    return [$results, $found, $page, $truncated];
+                };
+
+                $database = __DIR__ . '/DATABASE/DB/data.html';
+                try {
+                    [$results, $pgcount, $pgnum, $searchTruncated] = $scanResults(\Froggy\Search\cachedArticles(
+                        $database,
+                        __DIR__ . '/DATABASE/DB/Search-Cache.txt',
+                        $parseArticle,
+                        $searchCacheWasCurrent
+                    ));
+                } catch(\Froggy\Search\InvalidSearchCacheRecord $exception) {
+                    error_log('Search cache: ' . $exception->getMessage());
+                    $searchCacheWasCurrent = false;
+                    [$results, $pgcount, $pgnum, $searchTruncated] = $scanResults(\Froggy\Search\sourceArticles($database, $parseArticle));
                 }
                 $pageCount = $pgcount > 0 ? intdiv($pgcount - 1, $perPage) + 1 : 0;
                 if($searchTruncated && $requestedPage === $searchResultPages) {

@@ -7,11 +7,11 @@ if(!defined('SECURE_ACCESS')) { die('Direct access not permitted'); }
 ################################################
 
 $admpgctl = "";
+$addlasth1 = "";
+$numcache = $query = $idcache = $sitemaptxt = $txtnamebuf = $pgaddrcache = [];
+$seoNumEncode = $mydump = [];
 
-#$idcache    = Array();
-#$sitemaptxt = Array();
 #$count = 1;
-#$mydump = Array();
 #$mydump2 = "";
 
 $chTimeTOC       = filemtimeMy("DATABASE/DB/DB-TOC-Cache.txt");
@@ -22,22 +22,20 @@ $chTimeSitemap1  = filemtimeMy("sitemap.txt");
 
 $chTimeSitemap2  = filemtimeMy("sitemap.xml");
 
-if( $chTimeTOC      !== $chTimeDB ||
-    $chTimeSEO      !== $chTimeDB ||
-    $chTimeSitemap1 !== $chTimeDB ||
-    $chTimeSitemap2 !== $chTimeDB) {
+$canWriteNavigationCache = is_resource($navigationCacheLock ?? null);
+$cacheIsCurrent = $chTimeTOC === $chTimeDB && $chTimeSEO === $chTimeDB
+    && $chTimeSitemap1 === $chTimeDB && $chTimeSitemap2 === $chTimeDB;
+if(!$cacheIsCurrent && $canWriteNavigationCache) {
 
     refreshCaches();
 }
 
 $chTimeMenu = filemtimeMy("DATABASE/DB/MenuCache.txt");
+$menuMtime = @filemtime("DATABASE/DB/MenuCache.txt");
+$menuIsCurrent = $chTimeMenu >= $chTimeDB && $menuMtime !== false && time() - $menuMtime <= 10799;
 
-if( $chTimeMenu < $chTimeDB && is_file("DATABASE/DB/MenuCache.txt")) {
-
-    // rename("DATABASE/DB/MenuCache.txt", "DATABASE/DB/MenuCache.txt.del");
-
+if(!$menuIsCurrent && $canWriteNavigationCache && $menuMtime !== false) {
     @unlink("DATABASE/DB/MenuCache.txt");
-    
 }
 
 /*
@@ -49,25 +47,65 @@ if (file_exists("DATABASE/DB/data.html.lock")) {
 }
 */
 
-if(    is_file("DATABASE/DB/DB-TOC-Cache.txt")
-    /// && !is_file("DATABASE/DB/DB-TOC-Cache.txt.lock")
-    && is_file("DATABASE/DB/MenuCache.txt")
-    /// && !is_file("DATABASE/DB/MenuCache.txt.lock")
-    && is_file("DATABASE/DB/SEO-Cache.txt")
-    /// && !is_file("DATABASE/DB/SEO-Cache.txt.lock")
-    && $checkpermission < 2 /* && getFileOrDie('DATABASE/fingerprint.txt') == $url."\n".PHP_OS."\n".$servIP */) {
+$menuCache = false;
+
+function isValidNavigationCache(mixed $toc, mixed $seo): bool {
+    if(!is_array($toc) || !array_is_list($toc) || count($toc) % 6 !== 0 || !is_array($seo)) {
+        return false;
+    }
+
+    $expectedSeo = [];
+    for($offset = 0, $page = 1, $size = count($toc); $offset < $size; $offset += 6, $page++) {
+        $level = $toc[$offset];
+        $position = $toc[$offset + 1];
+        $id = $toc[$offset + 2];
+        $address = $toc[$offset + 3];
+        $path = $toc[$offset + 4];
+        if((!is_int($level) && !is_string($level)) || !in_array((string)$level, ['1', '2', '3', '4', '5', '6'], true)
+            || !is_int($position) || $position < 0
+            || !is_string($id) || preg_match('/\A[a-f0-9]{40}\z/', $id) !== 1
+            || !is_string($address) || strlen($address) < 2 || $address[0] !== '?'
+            || !is_array($path) || !array_is_list($path) || count($path) < 2
+            || !is_string($toc[$offset + 5])) {
+            return false;
+        }
+
+        $seoNumber = $path[0];
+        if((!is_int($seoNumber) && !is_string($seoNumber)) || !ctype_digit((string)$seoNumber)) {
+            return false;
+        }
+        $expectedSeo[$seoNumber] = $page;
+        foreach($path as $part) {
+            if(!is_string($part) && !is_int($part)) {
+                return false;
+            }
+        }
+    }
+
+    return $seo === $expectedSeo;
+}
+
+if($checkpermission < 2 && $cacheIsCurrent && $menuIsCurrent
+    && is_file("DATABASE/DB/DB-TOC-Cache.txt") && is_file("DATABASE/DB/SEO-Cache.txt")) {
+    $mydump2 = @unserialize((string)@file_get_contents('DATABASE/DB/DB-TOC-Cache.txt'), ['allowed_classes' => false]);
+    $cachedSeo = @unserialize((string)@file_get_contents('DATABASE/DB/SEO-Cache.txt'), ['allowed_classes' => false]);
+
+    if(isValidNavigationCache($mydump2, $cachedSeo)) {
+        $menuCache = @file_get_contents('DATABASE/DB/MenuCache.txt');
+    }
+
+    if($menuCache === false || $menuCache === '') {
+        $menuCache = false;
+        if($canWriteNavigationCache) {
+            refreshCaches();
+        }
+    }
+}
+
+if($menuCache !== false) {
 
     $i = 0;
-
-    $mydump2 = getFileOrDie('DATABASE/DB/DB-TOC-Cache.txt');
-
-    $mydump2 = unserialize($mydump2, ['allowed_classes' => false]);
-    if(!is_array($mydump2)) $mydump2 = [];
-
-    $seoNumEncode = getFileOrDie('DATABASE/DB/SEO-Cache.txt');
-
-    $seoNumEncode = unserialize($seoNumEncode, ['allowed_classes' => false]);
-    if(!is_array($seoNumEncode)) $seoNumEncode = [];
+    $seoNumEncode = $cachedSeo;
 
     while($i < count($mydump2)) {
 
@@ -135,7 +173,7 @@ if(    is_file("DATABASE/DB/DB-TOC-Cache.txt")
         $ispageexist = false;
     }
 
-    $out = getFileOrDie('DATABASE/DB/MenuCache.txt');
+    $out = $menuCache;
 
     if($ispageexist) {
 
@@ -164,19 +202,17 @@ if(    is_file("DATABASE/DB/DB-TOC-Cache.txt")
     foreach($file as $line) {
 
         // $line = $file->fgets();
-        $line2 = mb_substr($line, 0, 300);
-        if(preg_grep('/\A[a-f0-9]{40}<head[1-6]/ui', explode("\n", $line2))) {
+        $header = mb_substr($line, 0, 300);
+        if(preg_match('#\A([a-f0-9]{40})<head([1-6])>(.+?)</head\2>(\d+)<!1!>(\d+)<!2!>#u', $header, $line2) === 1) {
 
             $articleSize = mb_strlen($line, '8bit');
             $byteId = $file->ftell() - $articleSize;
             $prev = $num;
-            $num = mb_substr($line2, 45, 1);
+            $num = $line2[2];
 
             $numcache[] = $num;
 
             $numdump    = $num;
-
-            preg_match('#\A([a-f0-9]{40})<head([1-6])>(.+?)</head\2>(\d+)<!1!>(\d+)<!2!>#u', $line2, $line2);
 
             $iddump    = $idcache[] = $line2[1];
 
@@ -213,17 +249,17 @@ if(    is_file("DATABASE/DB/DB-TOC-Cache.txt")
 
                 if($checkpermission) {
 
-                    $addpageafter = "<a href='$addr&amp;addpage=$count-$num&amp;csrf=$csrf' title='Создать текущ. уровень'>+</a> ";
+                    $addpageafter = "<a href='$addr&amp;addpage=$count-$num&amp;pageid=$iddump&amp;csrf=$csrf' title='Создать текущ. уровень'>+</a> ";
 
                     /// if($num < 6) {$addpageafter .= "<a href='$addr&addpage=$count-".($num+1)."&newlevel=1' title='Создать след. уровень'>N</a> ";}
 
-                    if($num < 6) {$addpageafter .= "<a href='$addr&amp;addpage=$count-".($num+1)."&amp;csrf=$csrf' title='Создать след. уровень'>N</a> ";}
+                    if($num < 6) {$addpageafter .= "<a href='$addr&amp;addpage=$count-".($num+1)."&amp;pageid=$iddump&amp;csrf=$csrf' title='Создать след. уровень'>N</a> ";}
 
-                    $pagemover = "<a href='?pgmovedown=$count&amp;csrf=$csrf' title='Переместить вниз'>D</a> <a href='?pgmoveup=$count&amp;csrf=$csrf' title='Переместить вверх'>U</a> ";
+                    $pagemover = "<a href='?pgmovedown=$iddump&amp;csrf=$csrf' title='Переместить вниз'>D</a> <a href='?pgmoveup=$iddump&amp;csrf=$csrf' title='Переместить вверх'>U</a> ";
 
                     $admpgctl = "<span class='admpgctl'>".$pagemover.$addpageafter."</span>";
 
-                    $addlasth1 = " <a class='menu-icon big addpglast' style='clear: both' href='$addr&amp;addpage=last&amp;csrf=$csrf' title='Добавить раздел'>+</a>";
+                    $addlasth1 = " <a class='menu-icon big addpglast' style='clear: both' href='$addr&amp;addpage=last&amp;pageid=$iddump&amp;csrf=$csrf' title='Добавить раздел'>+</a>";
                 }
 
                 $gCC = getCommCount($iddump);
@@ -254,17 +290,17 @@ if(    is_file("DATABASE/DB/DB-TOC-Cache.txt")
 
                 if($checkpermission) {
 
-                    $addpageafter = "<a href='$addr&amp;addpage=$count-$num&amp;csrf=$csrf' title='Создать текущ. уровень'>+</a> ";
+                    $addpageafter = "<a href='$addr&amp;addpage=$count-$num&amp;pageid=$iddump&amp;csrf=$csrf' title='Создать текущ. уровень'>+</a> ";
 
                     /// if($num < 6) {$addpageafter .= "<a href='$addr&addpage=$count-".($num+1)."&newlevel=1' title='Создать след. уровень'>N</a> ";}
 
-                    if($num < 6) {$addpageafter .= "<a href='$addr&amp;addpage=$count-".($num+1)."&amp;csrf=$csrf' title='Создать след. уровень'>N</a> ";}
+                    if($num < 6) {$addpageafter .= "<a href='$addr&amp;addpage=$count-".($num+1)."&amp;pageid=$iddump&amp;csrf=$csrf' title='Создать след. уровень'>N</a> ";}
 
-                    $pagemover = "<a href='?pgmovedown=$count&amp;csrf=$csrf' title='Переместить вниз'>D</a> <a href='?pgmoveup=$count&amp;csrf=$csrf' title='Переместить вверх'>U</a> ";
+                    $pagemover = "<a href='?pgmovedown=$iddump&amp;csrf=$csrf' title='Переместить вниз'>D</a> <a href='?pgmoveup=$iddump&amp;csrf=$csrf' title='Переместить вверх'>U</a> ";
 
                     $admpgctl = "<span class='admpgctl'>".$pagemover. $addpageafter."</span>";
 
-                    $addlasth1 = " <a class='menu-icon big addpglast' style='clear: both' href='$addr&amp;addpage=last&amp;csrf=$csrf' title='Добавить раздел'>+</a>";
+                    $addlasth1 = " <a class='menu-icon big addpglast' style='clear: both' href='$addr&amp;addpage=last&amp;pageid=$iddump&amp;csrf=$csrf' title='Добавить раздел'>+</a>";
                 }
 
                 switch ($i) {
@@ -343,45 +379,19 @@ if(    is_file("DATABASE/DB/DB-TOC-Cache.txt")
     ########################################
     ########################################
 
-    if(!is_file("DATABASE/DB/DB-TOC-Cache.txt")) {
-
-        $mydumptxt = serialize($mydump);
-
-        dbprepCache("DATABASE/DB/DB-TOC-Cache.txt");
-
-        putFileOrDie("DATABASE/DB/DB-TOC-Cache.txt.new." . getmypid(), $mydumptxt);
-
-        if(dbdone("DATABASE/DB/DB-TOC-Cache.txt", "")) {
-
-            touchMy("DATABASE/DB/DB-TOC-Cache.txt", $chTimeDB) or die("Не удалось обновить метку времени файла DATABASE/DB/DB-TOC-Cache.txt.");
-        }
+    if($canWriteNavigationCache && !is_file("DATABASE/DB/DB-TOC-Cache.txt")) {
+        writeNavigationCache("DATABASE/DB/DB-TOC-Cache.txt", serialize($mydump), $chTimeDB);
     }
 
-    if(!is_file("DATABASE/DB/SEO-Cache.txt")) {
-
-        $seodumptxt = serialize($seoNumEncode);
-
-        dbprepCache("DATABASE/DB/SEO-Cache.txt");
-
-        putFileOrDie("DATABASE/DB/SEO-Cache.txt.new." . getmypid(), $seodumptxt);
-
-        if(dbdone("DATABASE/DB/SEO-Cache.txt", "")) {
-
-            touchMy("DATABASE/DB/SEO-Cache.txt", $chTimeDB) or die("Не удалось обновить метку времени файла DATABASE/DB/SEO-Cache.txt.");
-        }
+    if($canWriteNavigationCache && !is_file("DATABASE/DB/SEO-Cache.txt")) {
+        writeNavigationCache("DATABASE/DB/SEO-Cache.txt", serialize($seoNumEncode), $chTimeDB);
     }
 
-    if(!is_file("DATABASE/DB/MenuCache.txt")) {
+    if($canWriteNavigationCache && !is_file("DATABASE/DB/MenuCache.txt")) {
 
         $mCACHE = "<nav itemscope='itemscope' itemtype='https://schema.org/SiteNavigationElement'>".$mCACHE."</nav>";
 
-        dbprepCache("DATABASE/DB/MenuCache.txt");
-
-        putFileOrDie("DATABASE/DB/MenuCache.txt.new." . getmypid(), $mCACHE);
-
-        dbdone("DATABASE/DB/MenuCache.txt", "");
-
-            /// touchMy("DATABASE/DB/MenuCache.txt", $chTimeDB);
+        writeNavigationCache("DATABASE/DB/MenuCache.txt", $mCACHE);
     }
 
     ########################################
@@ -421,28 +431,14 @@ function sitemapflush() {
 
     $sitemaptxtvar = join("\n", $sitemaptxt) . "\n";
 
-    dbprepCache("sitemap.txt");
-
-    /*
-    $filedest = fopenOrDie("sitemap.txt.new." . getmypid(), "r+");
-    fwriteOrDie($filedest, $sitemaptxtvar);
-    fclose($filedest);
-    */
-
-    putFileOrDie("sitemap.txt.new." . getmypid(), $sitemaptxtvar);
-
-    if(!dbdone("sitemap.txt", "")) return false;
-
-    touchMy("sitemap.txt", $chTimeDB) or die("Не удалось обновить метку времени файла sitemap.txt.");
-
-    // mylog("<strong style='color:DarkMagenta'>Карта сайта пересоздана.</strong>");
+    return writeNavigationCache("sitemap.txt", $sitemaptxtvar, $chTimeDB);
 }
 
 function sitemapflushXml() {
 
     global $sitemaptxt, $seoPagesTimes, $chTimeDB;
 
-    if(empty($seoPagesTimes)) return false;
+    if($sitemaptxt !== [] && count($seoPagesTimes) !== count($sitemaptxt)) return false;
 
     // Начало XML 
     $sitemapxmlvar  = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
@@ -454,7 +450,7 @@ function sitemapflushXml() {
     $count = count($sitemaptxt);
     for ($i = 0; $i < $count; $i++) {
 
-        $url     = $sitemaptxt[$i];
+        $url     = htmlspecialchars($sitemaptxt[$i], ENT_QUOTES | ENT_XML1 | ENT_SUBSTITUTE, 'UTF-8');
         $lastmod = date('c', $seoPagesTimes[$i]);
 
         $sitemapxmlvar .= "  <url>\n";
@@ -465,23 +461,7 @@ function sitemapflushXml() {
 
     $sitemapxmlvar .= "</urlset>\n";
 
-    // $sitemaptxtvar = join("\n", $sitemaptxt);
-
-    dbprepCache("sitemap.xml");
-
-    /*
-    $filedest = fopenOrDie("sitemap.xml.new." . getmypid(), "r+");
-    fwriteOrDie($filedest, $sitemapxmlvar);
-    fclose($filedest);
-    */
-    
-    putFileOrDie("sitemap.xml.new." . getmypid(), $sitemapxmlvar);
-
-    if(!dbdone("sitemap.xml", "")) return false;
-
-    touchMy("sitemap.xml", $chTimeDB) or die("Не удалось обновить метку времени файла sitemap.xml.");
-
-    // mylog("<strong style='color:DarkMagenta'>Карта сайта XML пересоздана.</strong>");
+    return writeNavigationCache("sitemap.xml", $sitemapxmlvar, $chTimeDB);
 }
 
 // $pageMenuNum = (int)explode("/",$_SERVER['QUERY_STRING'])[0];
@@ -543,7 +523,7 @@ function prevnextslider() {
 ##############################################################
 
 $queryString = $_SERVER['QUERY_STRING'] ?? '';
-if(explode("&", $queryString)[0] == "" || $queryString == "leaveedit=1&csrf=$csrf") {
+if(isset($sitemaptxt[0]) && (explode("&", $queryString)[0] === "" || $queryString === "leaveedit=1&csrf=$csrf")) {
     $mainlink = $sitemaptxt[0];
 
     header("Location: ".$mainlink,true,301);
@@ -551,12 +531,12 @@ if(explode("&", $queryString)[0] == "" || $queryString == "leaveedit=1&csrf=$csr
 
 }
 
-if(!is_file("sitemap.txt")) {
+if($canWriteNavigationCache && !is_file("sitemap.txt")) {
 
     sitemapflush();
 }
 
-if(!is_file("sitemap.xml")) {
+if($canWriteNavigationCache && !is_file("sitemap.xml")) {
 
     sitemapflushXml();
 }

@@ -312,18 +312,15 @@ function CountVisitors(): string
 
     $visitorID = getVisitorID();
 
-    // Создаём базу при необходимости, не обнуляя существующий файл.
-    $fVisCnt = fopenOrDie($dbfile, 'c+b');
-
-    // Блокировка охватывает чтение, изменение и запись базы.
-    if(!flock($fVisCnt, LOCK_EX)) {
-        fclose($fVisCnt);
+    $lock = lockStateFile($dbfile . '.lock', LOCK_EX);
+    if($lock === false) {
         return '0000';
     }
 
     try {
         $now = time();
-        $contents = stream_get_contents($fVisCnt);
+        clearstatcache(true, $dbfile);
+        $contents = file_exists($dbfile) ? @file_get_contents($dbfile) : '';
 
         if($contents === false) {
             die("Не удалось прочитать файл: $dbfile");
@@ -368,22 +365,11 @@ function CountVisitors(): string
             $databaseChanged = true;
         }
 
-        if($databaseChanged) {
-            $serializedData = serialize($data);
-
-            if(!rewind($fVisCnt)) {
-                die("Не удалось перейти к началу файла: $dbfile");
-            }
-
-            fwriteOrDie($fVisCnt, $serializedData);
-
-            // Удаляем остаток прежней базы, если новая запись короче.
-            if(!ftruncate($fVisCnt, strlen($serializedData)) || !fflush($fVisCnt)) {
-                die("Не удалось сохранить файл: $dbfile");
-            }
+        if($databaseChanged && !replaceFileContents($dbfile, serialize($data))) {
+            die("Не удалось сохранить файл: $dbfile");
         }
     } finally {
-        fclose($fVisCnt);
+        fclose($lock);
     }
 
     /*

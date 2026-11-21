@@ -1,203 +1,66 @@
 <?php
 declare(strict_types=1);
 
-if(function_exists('ignore_user_abort')) {
-    ignore_user_abort(true); // Установить игнорирование разрыва соединения
-}
+define('SECURE_ACCESS', true);
+require_once __DIR__ . '/download-files.php';
 
-function emojiToHtmlEntities(string $string): string {
+ignore_user_abort(true);
 
-    if(!mb_check_encoding($string, 'UTF-8')) {
-        throw new InvalidArgumentException('Invalid UTF-8');
-    }
-
-    return preg_replace_callback('/\X/u', static function ($m) {
-
-        $g = $m[0];
-
-        // Белый список обычных символов:
-        // Буквы, цифры, комбинируемые знаки,
-        // пунктуация, пробелы, математические,
-        // валютные и некоторые другие символы.
-        $ordinary = '/\A[\p{L}\p{N}\p{M}\p{P}\p{Zs}\p{Sc}\p{Sm}\p{Sk}№°©®™→∞]+\z/u';
-
-        // Обычные символы оставляем без изменений.
-        // Исключение: U+20E3 (составные emoji-клавиши).
-        if(
-            preg_match($ordinary, $g) === 1 &&
-            !str_contains($g, "\u{20E3}")
-        ) {
-            return $g;
-        }
-
-        // Всё остальное кодируем целым кластером.
-        return mb_encode_numericentity(
-            $g,
-            [0, 0x10FFFF, 0, 0x10FFFF],
-            'UTF-8'
-        );
-
-    }, $string);
-}
-
-function remove_entities(string $text): string {
-    // 1) именованные (&nbsp;)  2) десятичные (&#160;)  3) шестн. (&#xA0;)
-    $text = preg_replace('/&[a-z][a-z0-9]*;/i', '', $text);
-    $text = preg_replace('/&#\d+;/', '', $text);
-    $text = preg_replace('/&#x[0-9a-f]+;/i', '', $text);
-
-    // 4) Только формы без ';' и не продолжаемые буквой/цифрой/подчёркиванием
-    $text = preg_replace('/&(?:nbsp|thinsp|ensp|emsp|zwnj|zwj|lrm|rlm)(?!;)\b/i', '', $text);
-
-    // 5) «голые» & → подчеркивание, чтобы слова не слипались
-    $text = preg_replace('/&(?![a-z][a-z0-9]*;|#\d+;|#x[0-9a-f]+;)/i', '_', $text);
-
-    return $text;
-}
-
-function mb_superTrimLocal(string $text): string {
-
-    if(!mb_check_encoding($text, 'UTF-8')) {
-        throw new InvalidArgumentException('Invalid UTF-8');
-    }
-
-    // Заменяем управляющие, форматирующие, Unicode-пробелы
-    // и составные emoji-флаги одним пробелом.
-    $text = preg_replace(
-        '/(?:\x{1F3F4}[\x{E0030}-\x{E0039}\x{E0061}-\x{E007A}]+\x{E007F}|[\p{Cc}\p{Cf}\p{Z}])+/u',
-        ' ',
-        $text
-    );
-
-    if($text === null) {
-        throw new RuntimeException('PCRE error');
-    }
-
-    return trim($text, ' ');
-}
-
-function filter_filename(string $filename): string {
-
-    if(!mb_check_encoding($filename, 'UTF-8')) {
-
-        die("PANIC: Broken Encoding!");
-    }
-
-    $filename = basename(str_replace('\\', '/', $filename));
-
-    $filename = emojiToHtmlEntities($filename);
-    $filename = remove_entities($filename);
-    $filename = mb_superTrimLocal($filename);
-
-    $filename = preg_replace('~
-        [<>:"/\\\\|?*]      |  # reserved
-        [\x00-\x1F]         |  # control
-        [\x7F\xA0\xAD]      |  # DEL, NBSP, SHY
-        [#\[\]@!$&\'()+,;=] |  # URI reserved
-        [{}^\~`]               # URL-unsafe
-    ~xu', '-', $filename);
-
-    $filename = str_replace(' ', '_', $filename);
-    $filename = preg_replace(['/-{2,}/', '/\.{2,}/', '/_{2,}/'], ['-', '.', '_'], $filename);
-    $filename = trim($filename, ". \t\r\n\0\x0B-_");
-
-    $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
-
-    /// $ext  = pathinfo($filename, PATHINFO_EXTENSION);
-    $base = pathinfo($filename, PATHINFO_FILENAME);
-
-    $limit = ($ext !== '') ? max(1, 255 - (strlen($ext) + 1)) : 255;
-    $base  = mb_strcut($base, 0, $limit, 'UTF-8');
-
-    if($base === '' || strlen($ext) > 10) die("PANIC: Incorrect File Name!");
-
-    return ($ext !== '') ? ($base . '.' . $ext) : $base;
-}
-
-// ─── Пути ───────────────────────────────────────────────────────────
-$ROOT       = realpath(__DIR__ . '/../../') ?: dirname(__DIR__, 2);
-$UPLOAD_DIR = $ROOT . '/DATABASE/fupload';
-$COUNT_DIR  = $ROOT . '/DATABASE/dl.count';
-
-$UPLOAD_REAL = realpath($UPLOAD_DIR);
-$PUBLIC_BASE_URL = '../../DATABASE/fupload'; // ведущий / обязателен
-
-// ─── Имя файла ─────────────────────────────────────────────────────
-if(!isset($_GET['file']) || !is_string($_GET['file'])) {
+$requested = $_GET['file'] ?? null;
+if(!is_string($requested) || strlen($requested) > 8192 || !mb_check_encoding($requested, 'UTF-8')
+    || preg_match('/[\x00-\x1F\x7F]/', $requested) !== 0) {
     http_response_code(400);
     exit('Bad request: bad file parameter');
 }
 
-$file = $_GET['file'];
-/// $file = rawurldecode($file);
-// $file = str_replace('\\', '/', $file);
-// $file = basename($file);
-$file = filter_filename($file);
-
-if ($file === '') {
+// Старые ссылки могли передавать путь из шаблона {{download|...}}.
+$name = preg_replace('~\A(?:\.?/)?DATABASE/fupload/~i', '', str_replace('\\', '/', $requested), 1);
+if($name === null || str_contains($name, '/')) {
     http_response_code(400);
-    exit('Bad request: no file');
+    exit('Bad request: bad file parameter');
 }
 
-// ─── Проверка файла ────────────────────────────────────────────────
-$absFile = realpath($UPLOAD_DIR . '/' . $file);
-if (
-    !$absFile ||
-    !$UPLOAD_REAL ||
-    strpos($absFile, $UPLOAD_REAL . DIRECTORY_SEPARATOR) !== 0 ||
-    is_link($UPLOAD_REAL . '/' . $file) ||
-    !is_file($absFile) ||
-    !is_readable($absFile)
-) {
+$names = array_unique(array_filter([$name, filter_filename($name, failOnInvalid: false, trim: 'mb_superTrimLocal')], 'isDownloadFilename'));
+if($names === []) {
+    http_response_code(400);
+    exit('Bad request: bad file parameter');
+}
+
+$root = dirname(__DIR__, 2);
+$uploadDir = realpath($root . '/DATABASE/fupload');
+if($uploadDir === false) {
     http_response_code(404);
     exit('404: file not found');
 }
 
-// ─── Счётчик: считаем факт запроса ─────────────────────────────────
-if(!is_dir($COUNT_DIR)) {
-    @mkdir($COUNT_DIR, 0775, true);
+$file = null;
+foreach($names as $candidate) {
+    $path = $uploadDir . '/' . $candidate;
+    $realPath = realpath($path);
+    if($realPath !== false && dirname($realPath) === $uploadDir
+        && !is_link($path) && is_file($path) && is_readable($path)) {
+        $file = $candidate;
+        break;
+    }
+}
+if($file === null) {
+    http_response_code(404);
+    exit('404: file not found');
 }
 
-$cntTmp = filter_filename($file . '.dlcnt');
-
-$cntFile = $COUNT_DIR . '/' . $cntTmp;
-
-if(is_dir($COUNT_DIR) && is_writable($COUNT_DIR)) {
-
-    if(is_file($cntFile)) {
-        if(!is_writable($cntFile)) {
-            die('counter file is not writable');
-        }
+if(($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET') {
+    // Недоступная статистика не мешает скачать файл.
+    $countDir = $root . '/DATABASE/dl.count';
+    if(!is_dir($countDir)) {
+        @mkdir($countDir, 0775, true);
     }
 
-    $fp = @fopen($cntFile, 'c+b');
-    if($fp) {
-        if(flock($fp, LOCK_EX)) {
-            $val = 0;
-            rewind($fp);
-            $data = trim((string)stream_get_contents($fp));
-            if($data !== '' && ctype_digit($data)) $val = (int)$data;
-            $val++;
-
-            rewind($fp);
-            if(ftruncate($fp, 0) !== false && fwrite($fp, (string)$val) !== false) {
-                fflush($fp);
-            }
-            /// flock($fp, LOCK_UN);
-        }
-        fclose($fp);
+    $countPath = $countDir . '/' . downloadCounterName($file);
+    if(!is_link($countPath)) {
+        atomicCounterIncrement($countPath, logFailure: false);
     }
-
-} else {
-
-    die('counter dir is not writable');
 }
-
-// ─── Редирект ──────────────────────────────────────────────────────
-$base = rtrim($PUBLIC_BASE_URL, '/');
-$redirUrl = $base . '/' . rawurlencode($file);
 
 header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
 header('Pragma: no-cache');
-header('Location: ' . $redirUrl, true, 302);
-exit;
+header('Location: ../../DATABASE/fupload/' . rawurlencode($file), true, 302);

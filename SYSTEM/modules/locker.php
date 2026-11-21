@@ -21,147 +21,86 @@ function rawCsrfEquals(mixed $token): bool {
 
 
 /**
- * Проверяет, заблокирована ли база кем-либо
- * @return bool
+ * DBLOCK можно заменить или удалить. Все операции синхронизируются через постоянный .wait-файл.
  */
+function withEditorLock(int $mode, callable $operation): mixed {
+    $wait = lockStateFile(DBLOCK_FILE . '.wait', $mode);
+    if($wait === false) {
+        return null;
+    }
+
+    try {
+        clearstatcache(true, DBLOCK_FILE);
+        return $operation();
+    } finally {
+        fclose($wait);
+    }
+}
+
 function isDbLocked(): bool {
-    return is_file(DBLOCK_FILE);
+    return withEditorLock(LOCK_SH, static fn(): bool => is_file(DBLOCK_FILE)) ?? true;
 }
 
-/**
- * Проверяет, заблокировал ли текущий пользователь
- * @param string $username
- * @return bool
- */
 function isLockedBy(string $username): bool {
-    if(!isDbLocked()) return false;
-
-    $locktmp = @fopen(DBLOCK_FILE, 'rb');
-    if($locktmp === false) return false;
-
-    if(!flock($locktmp, LOCK_SH)) {
-        fclose($locktmp);
-        return false;
-    }
-
-    $lockedBy = trim((string)stream_get_contents($locktmp));
-
-    /// flock($locktmp, LOCK_UN);
-    fclose($locktmp);
-
-    /// $lockedBy = trim(@file_get_contents(DBLOCK_FILE));
-    return $lockedBy === $username;
+    $owner = readDBLock();
+    return $owner !== false && trim($owner) === $username;
 }
 
-/**
- * Блокирует базу для пользователя, если она не заблокирована
- * @param string $username
- * @return bool true, если успешно заблокировано, false — если уже заблокирована другим
- */
 function lockByName(string $username): bool {
-
-    if(isLockedBy($username)) {
-        return true;
-    }
-
-    $locktmp = @fopen(DBLOCK_FILE, 'xb'); // x = создать только если файла ещё нет
-
-    if($locktmp === false) {
-        return false;
-    }
-
-    if(!flock($locktmp, LOCK_EX)) {
-        fclose($locktmp);
-        @unlink(DBLOCK_FILE);
-        return false;
-    }
-
-    $ok = fwrite($locktmp, $username . "\n") !== false;
-    fflush($locktmp);
-
-    /// flock($locktmp, LOCK_UN);
-    fclose($locktmp);
-
-    if(!$ok) {
-        @unlink(DBLOCK_FILE);
-    }
-
-    return $ok;
-}
-
-/**
- * Снимает блокировку, если она принадлежит текущему пользователю
- * @param string $username
- * @return bool
- */
-function unlockByName(string $username): bool {
-
-    $locktmp = @fopen(DBLOCK_FILE, 'rb');
-
-    if($locktmp === false) {
-        return false;
-    }
-
-    if(!flock($locktmp, LOCK_EX)) {
-        fclose($locktmp);
-        return false;
-    }
-
-    $lockedBy = trim((string)stream_get_contents($locktmp));
-    $ok = false;
-
-    if($lockedBy === $username && is_file(DBLOCK_FILE)) {
-        $ok = @unlink(DBLOCK_FILE);
-    }
-
-    /// flock($locktmp, LOCK_UN);
-    fclose($locktmp);
-
-    return $ok;
-}
-
-if(isLockedBy($_SESSION['username'] ?? "dummy") && is_file(DBLOCK_FILE)) {
-
-    @touch(DBLOCK_FILE);
-}
-
-$last_executed3 = @filemtime(DBLOCK_FILE);
-
-$diff3 = time() - (int)$last_executed3; // $last_executed is the value from the server
-
-if($last_executed3 && $diff3 > 5400) { // 1.5 hours
-
-    if(is_file(DBLOCK_FILE)) {
-        @unlink(DBLOCK_FILE);
-    }
-}
-
-
-
-
-if(rawCsrfEquals($_GET['csrf'] ?? null) || rawCsrfEquals($_POST['csrf'] ?? null)) {
-
-    if(isset($_SESSION['username'], $cred[$_SESSION['username']]) && (
-        isset($_POST['title'], $_POST['h'], $_POST['textedit'], $_POST['dbtimestamp']) ||
-
-        isset($_GET['edit'])     ||
-
-        isset($_GET['addpage'])  ||
-        isset($_GET['pagedel'])  ||
-        isset($_GET['pgmoveup']) ||
-        isset($_GET['pgmovedown'])
-        )
-    ) {
-        $lockPermission = $cred[$_SESSION['username']];
-        $lockPermission = (int)explode("<!!!>", $lockPermission, 2)[0];
-
-        if(!isDbLocked() && $lockPermission > 2) {
-            lockByName($_SESSION['username']);
+    return withEditorLock(LOCK_EX, static function () use ($username): bool {
+        if(is_file(DBLOCK_FILE)) {
+            $owner = @file_get_contents(DBLOCK_FILE);
+            return $owner !== false && trim($owner) === $username;
         }
 
-    } elseif(isset($_GET['leaveedit'])) {
+        return replaceFileContents(DBLOCK_FILE, $username . "\n");
+    }) ?? false;
+}
 
-        unlockByName($_SESSION['username'] ?? "dummy");
+function unlockByName(string $username): bool {
+    return withEditorLock(LOCK_EX, static function () use ($username): bool {
+        $owner = @file_get_contents(DBLOCK_FILE);
+        return $owner !== false && trim($owner) === $username && @unlink(DBLOCK_FILE);
+    }) ?? false;
+}
+
+function maintainEditorLock(?string $username): void {
+    if(!is_file(DBLOCK_FILE)) {
+        return;
+    }
+
+    withEditorLock(LOCK_EX, static function () use ($username): void {
+        $mtime = @filemtime(DBLOCK_FILE);
+        if($mtime === false) {
+            return;
+        }
+
+        if(time() - $mtime > 5400) {
+            @unlink(DBLOCK_FILE);
+        } elseif($username !== null) {
+            $owner = @file_get_contents(DBLOCK_FILE);
+            if($owner !== false && trim($owner) === $username) {
+                @touch(DBLOCK_FILE);
+            }
+        }
+    });
+}
+
+$editor = $checkpermission >= 3 && is_string($_SESSION['username'] ?? null) ? $_SESSION['username'] : null;
+maintainEditorLock($editor);
+
+if($editor !== null && (rawCsrfEquals($_GET['csrf'] ?? null) || rawCsrfEquals($_POST['csrf'] ?? null))) {
+    if(
+        isset($_POST['title'], $_POST['h'], $_POST['textedit'], $_POST['dbtimestamp']) ||
+        isset($_GET['edit']) ||
+        isset($_GET['addpage']) ||
+        isset($_GET['pagedel']) ||
+        isset($_GET['pgmoveup']) ||
+        isset($_GET['pgmovedown'])
+    ) {
+        lockByName($editor);
+    } elseif(isset($_GET['leaveedit'])) {
+        unlockByName($editor);
     }
 }
 
@@ -181,24 +120,6 @@ function plocked() {
 
 
 
-function readDBLock(): string|false
-{
-    $file = @fopen(DBLOCK_FILE, 'rb');
-
-    if($file === false) {
-        return false;
-    }
-
-    try {
-        if(!flock($file, LOCK_SH)) {
-            return false;
-        }
-
-        // Читаем целиком, без обрезки пробелов и переводов строк.
-        return stream_get_contents($file);
-
-    } finally {
-        // Закрываем файл и одновременно снимаем блокировку.
-        fclose($file);
-    }
+function readDBLock(): string|false {
+    return withEditorLock(LOCK_SH, static fn(): string|false => @file_get_contents(DBLOCK_FILE)) ?? false;
 }

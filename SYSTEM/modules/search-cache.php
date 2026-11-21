@@ -8,6 +8,8 @@ namespace Froggy\Search;
 const SEARCH_CACHE_VERSION = 3;
 const SEARCH_CACHE_HEADER_BYTES = 256;
 
+final class InvalidSearchCacheRecord extends \RuntimeException {}
+
 /** @param resource|null $stream */
 function searchSourceStamp(string $filename, $stream = null): string
 {
@@ -161,7 +163,15 @@ function cachedArticles(string $database, string $filename, callable $parseArtic
                 $article = explode("\t", rtrim($line, "\r\n"), 3);
                 if(count($article) !== 3 || !mb_check_encoding($line, 'UTF-8')
                     || preg_match('~\A[a-f0-9]{40}\z~i', $article[2]) !== 1) {
-                    throw new \RuntimeException('Invalid search text cache record.');
+                    $end = @ftell($cache);
+                    if($writable && $end !== false && @flock($cache, LOCK_UN) && @flock($cache, LOCK_EX)
+                        && @fseek($cache, $end - strlen($line)) === 0 && @fgets($cache) === $line
+                        && @rewind($cache)) {
+                        // Проверьте ту же запись после смены блокировки: кэш могли уже пересоздать.
+                        @fwrite($cache, '!');
+                        @fflush($cache);
+                    }
+                    throw new InvalidSearchCacheRecord('Invalid search text cache record.');
                 }
                 yield $article;
             }
@@ -174,6 +184,12 @@ function cachedArticles(string $database, string $filename, callable $parseArtic
         return;
     }
 
+    yield from sourceArticles($database, $parseArticle);
+}
+
+/** @return \Generator<int, array{string, string, string}> */
+function sourceArticles(string $database, callable $parseArticle): \Generator
+{
     $source = new \SplFileObject($database, 'rb');
     $source->setFlags(\SplFileObject::READ_AHEAD);
     foreach($source as $line) {

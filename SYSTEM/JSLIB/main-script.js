@@ -653,26 +653,6 @@ function validateUserHash(input) {
 
 
 /*
- * Практический аналог PHP:
- *
- * htmlspecialchars($value, ENT_QUOTES, 'UTF-8', false)
- */
-function htmlspecialchars(value) {
-
-    return value
-        // Экранируем только &, не являющийся началом готовой сущности
-        .replace(
-            /&(?!(?:[A-Za-z][A-Za-z0-9]*|#\d+|#[xX][0-9A-Fa-f]+);)/g,
-            '&amp;'
-        )
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
-}
-
-
-/*
  * Проверка всего списка пользователей и генерация результата.
  */
 function evaluateUserList() {
@@ -742,11 +722,9 @@ function evaluateUserList() {
 
 
     /*
-     * Генерируем PHP-массив.
-     *
-     * Строка генерируется только для полностью корректной записи.
+     * Собираем данные полностью заполненных записей.
      */
-    const lines = [];
+    const users = [];
 
     for(const form of forms) {
 
@@ -766,23 +744,27 @@ function evaluateUserList() {
             continue;
         }
 
-        const name = htmlspecialchars(nameInput.value.trim());
-        const privileges = privilegesSelect.value;
-        const hash = hashInput.value.trim();
-
-        lines.push(
-            `$cred['${name}'] = "${privileges}<!!!>${hash}";`
-        );
+        users.push({
+            name: nameInput.value.trim(),
+            level: Number(privilegesSelect.value),
+            hash: hashInput.value.trim()
+        });
     }
 
 
-    output.value = lines.join('\n');
+    output.value = JSON.stringify(users);
+
+    const hasAdmin = users.some(user => user.level === 4);
+    const warning = document.getElementById('usersNeedAdmin');
+    if(warning) {
+        warning.hidden = hasAdmin;
+    }
 
     const submitButton = document.getElementById('UserFormBaseSubmit');
 
     if(submitButton) {
         submitButton.disabled =
-            forms.length === 0 ||
+            !hasAdmin ||
             document.querySelector('#admUserListGenerator .invalidField') !== null;
     }
 }
@@ -884,11 +866,6 @@ document.addEventListener('DOMContentLoaded', function() {
             evaluateUserList();
         }
     });
-
-    /*
-     * Удаляем первую (dummy) форму, если она существует.
-     */
-    document.querySelector('#admUserListGenerator .user-form')?.remove();
 
     evaluateUserList();
 });

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Froggy\Search;
 
+require_once __DIR__ . '/file-state.php';
+
 /**
  * Скользящее окно по IP. Возвращает 0 при разрешении или время ожидания в секундах.
  * Файл общий для PHP-процессов; чтение, проверка и запись выполняются под одной блокировкой.
@@ -19,22 +21,27 @@ function consumeRateLimit(string $filename, string $ip, int $limit, int $window,
     $key = hash('sha256', $address);
     $maxClients = 1024;
     $maxBytes = 512 * 1024;
-    $file = @fopen($filename, 'c+b');
-    if($file === false) {
-        throw new \RuntimeException('Cannot open search rate-limit storage.');
+    // JSON заменяется целиком. Блокировка должна переживать смену inode.
+    $lock = \lockStateFile($filename . '.lock', LOCK_EX);
+    if($lock === false) {
+        throw new \RuntimeException('Cannot lock search rate-limit storage.');
     }
 
     try {
-        if(!@flock($file, LOCK_EX)) {
-            throw new \RuntimeException('Cannot lock search rate-limit storage.');
-        }
-
-        $contents = @stream_get_contents($file, $maxBytes + 1);
+        clearstatcache(true, $filename);
+        $contents = file_exists($filename)
+            ? @file_get_contents($filename, false, null, 0, $maxBytes + 1)
+            : '';
         if($contents === false || strlen($contents) > $maxBytes) {
             throw new \RuntimeException('Cannot read search rate-limit storage.');
         }
 
         $clients = $contents === '' ? [] : json_decode($contents, true);
+        if($contents !== '' && json_last_error() !== JSON_ERROR_NONE) {
+            // Старый формат записи мог оставить неполный JSON после сбоя.
+            error_log('Search rate-limit: resetting damaged JSON state.');
+            $clients = [];
+        }
         if(!is_array($clients) || count($clients) > $maxClients) {
             throw new \RuntimeException('Invalid search rate-limit storage.');
         }
@@ -84,23 +91,11 @@ function consumeRateLimit(string $filename, string $ip, int $limit, int $window,
         if($encoded === false || strlen($encoded) > $maxBytes) {
             throw new \RuntimeException('Search rate-limit storage is too large.');
         }
-        if(!@rewind($file)) {
-            throw new \RuntimeException('Cannot rewind search rate-limit storage.');
-        }
-
-        $length = strlen($encoded);
-        for($written = 0; $written < $length;) {
-            $bytes = @fwrite($file, substr($encoded, $written));
-            if($bytes === false || $bytes === 0) {
-                throw new \RuntimeException('Cannot write search rate-limit storage.');
-            }
-            $written += $bytes;
-        }
-        if(!@ftruncate($file, $length) || !@fflush($file)) {
-            throw new \RuntimeException('Cannot flush search rate-limit storage.');
+        if(!\replaceFileContents($filename, $encoded)) {
+            throw new \RuntimeException('Cannot save search rate-limit storage.');
         }
     } finally {
-        fclose($file);
+        fclose($lock);
     }
 
     return 0;

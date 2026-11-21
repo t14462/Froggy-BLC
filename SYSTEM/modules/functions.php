@@ -2,6 +2,10 @@
 
 if(!defined('SECURE_ACCESS')) { die('Direct access not permitted'); }
 
+require_once __DIR__ . '/download-files.php';
+require_once __DIR__ . '/file-state.php';
+require_once __DIR__ . '/comment-storage.php';
+
 ################################################
 ################################################
 ################################################
@@ -57,15 +61,14 @@ if(isset($_SESSION["username"]) && isset($_SESSION["userhash"])) {
 
 
 /**
- * Обновляет mtime существующего файла и сохраняет метку в ПУТЬ_К_ФАЙЛУ.time в формате %.4F.
- * Если целевого файла нет — возвращает false, ничего не создавая.
+ * Обновляет mtime файла или снимка и атомарно сохраняет версию в файле .time.
  *
  * @param string $file Путь к целевому файлу
- * @param float|null $customTime Если указан — используется он вместо текущего времени
+ * @param float|null $customTime Версия вместо текущего времени
+ * @param string|null $stagedFile Снимок, который будет опубликован под блокировкой .wait
  * @return bool true, если mtime обновлён и метка полностью записана
  */
-function touchMy(string $file, ?float $customTime = null): bool {
-    $timeFile = $file . '.time';
+function touchMy(string $file, ?float $customTime = null, ?string $stagedFile = null): bool {
     $timeToWrite = $customTime ?? microtime(true);
 
     if(!is_finite($timeToWrite) || $timeToWrite < PHP_INT_MIN || $timeToWrite >= PHP_INT_MAX) {
@@ -73,17 +76,14 @@ function touchMy(string $file, ?float $customTime = null): bool {
     }
 
     $contents = sprintf('%.4F', $timeToWrite);
+    $target = $stagedFile ?? $file;
 
     clearstatcache();
-    if(!is_file($file)) {
+    if(!is_file($target) || !@touch($target, (int)(float)$contents)) {
         return false;
     }
 
-    if(!touch($file, (int)(float)$contents)) {
-        return false;
-    }
-
-    return file_put_contents($timeFile, $contents, LOCK_EX) === strlen($contents);
+    return replaceFileContents($file . '.time', $contents);
 }
 
 /**
@@ -93,42 +93,40 @@ function touchMy(string $file, ?float $customTime = null): bool {
  * Результат остаётся float; завершающие нули нужны только при выводе через sprintf().
  */
 function filemtimeMy(string $file): float {
-    $timeFile = $file . '.time';
+    global $waitFile;
 
-    // Файл мог измениться другим процессом после предыдущего чтения в этом запросе.
     clearstatcache();
-    $fileTime = @filemtime($file);
-
-    if($fileTime === false) {
+    if(!is_file($file)) {
         return 0.0;
     }
 
-    $time = (float)$fileTime;
+    $waitPath = $file . '.wait';
+    $alreadyLocked = is_resource($waitFile) && stream_get_meta_data($waitFile)['uri'] === $waitPath;
+    $reader = $alreadyLocked ? false : (lockStateFile($waitPath, LOCK_SH) ?: lockStateFile($waitPath, LOCK_SH, 'rb'));
 
-    if(is_file($timeFile)) {
-        $locktmp = @fopen($timeFile, 'rb');
+    try {
+        // Писатель успевает сохранить версию и заменить снимок до снятия .wait.
+        clearstatcache();
+        $fileTime = @filemtime($file);
+        if($fileTime === false) {
+            return 0.0;
+        }
 
-        if($locktmp !== false) {
-            try {
-                if(@flock($locktmp, LOCK_SH)) {
-                    $contents = @stream_get_contents($locktmp);
-
-                    if($contents !== false) {
-                        $contents = trim($contents);
-
-                        if(is_numeric($contents) && is_finite((float)$contents)) {
-                            $time = max($time, (float)$contents);
-                        }
-                    }
-                }
-            } finally {
-                // fclose() также освобождает блокировку.
-                fclose($locktmp);
+        $time = (float)$fileTime;
+        $contents = @file_get_contents($file . '.time', false, null, 0, 64);
+        if($contents !== false && strlen($contents) < 64) {
+            $contents = trim($contents);
+            if(is_numeric($contents) && is_finite((float)$contents)) {
+                $time = max($time, (float)$contents);
             }
         }
-    }
 
-    return (float)sprintf('%.4F', $time);
+        return (float)sprintf('%.4F', $time);
+    } finally {
+        if($reader !== false) {
+            fclose($reader);
+        }
+    }
 }
 
 # DO NOT DELETE
@@ -253,6 +251,68 @@ function fopenOrDie(string $filename, string $mode = 'r') {
     return $handle;
 }
 
+/**
+ * @param resource $file
+ * @return array{id:string, start:int, end:int, line:string, seo:string}|null
+ */
+function findPageRecord($file, string $pageId, int $offset): ?array {
+    if(preg_match('/\A[a-f0-9]{40}\z/', $pageId) !== 1) {
+        return null;
+    }
+
+    $match = static function (int $start, string $line) use ($pageId): ?array {
+        if(!str_starts_with($line, $pageId . '<head')
+            || preg_match('#\A[a-f0-9]{40}<head([1-6])>(.+?)</head\1>(\d+)<!1!>(\d+)<!2!>#u',
+                mb_substr($line, 0, 300), $parts) !== 1) {
+            return null;
+        }
+
+        return ['id' => $pageId, 'start' => $start, 'end' => $start + strlen($line), 'line' => $line, 'seo' => $parts[3]];
+    };
+
+    // Смещение из меню можно использовать только на границе записи.
+    if($offset >= 0 && ($offset === 0 || (@fseek($file, $offset - 1) === 0 && @fread($file, 1) === "\n"))
+        && @fseek($file, $offset) === 0) {
+        $line = fgetsOrDie($file);
+        if($line !== false && ($record = $match($offset, $line)) !== null) {
+            return $record;
+        }
+    }
+
+    if(@rewind($file)) {
+        $start = 0;
+        while(($line = fgetsOrDie($file)) !== false) {
+            $record = $match($start, $line);
+            if($record !== null) {
+                return $record;
+            }
+            $start += strlen($line);
+        }
+    }
+
+    return null;
+}
+
+function readPageRecord(string $pageId, int $offset): string|false {
+    $file = @fopen('DATABASE/DB/data.html', 'rb');
+    if($file === false) {
+        return false;
+    }
+
+    try {
+        $record = findPageRecord($file, $pageId, $offset);
+        return $record === null ? false : substr($record['line'], 40);
+    } finally {
+        fclose($file);
+    }
+}
+
+function pageInSnapshot($file, int $index): ?array {
+    global $idcache, $pgaddrcache, $query;
+
+    return findPageRecord($file, $idcache[$index] ?? '', $query[$pgaddrcache[$index] ?? ''] ?? -1);
+}
+
 function getFileOrDie(string $filename): string {
     $content = file_get_contents($filename);
     if($content === false) {
@@ -263,7 +323,7 @@ function getFileOrDie(string $filename): string {
 
 function putFileOrDie(string $filename, string $data, int $flags = 0): int {
     $result = file_put_contents($filename, $data, $flags);
-    if($result === false) {
+    if($result !== strlen($data)) {
         die("Не удалось записать в файл: $filename, проверьте права доступа к файлам и их владельца.");
     }
     return $result;
@@ -307,7 +367,7 @@ function fgetsOrDie($handle): string|false {
     }
 
     $line = fgets($handle);
-    if($line === false) {
+    if($line === false && !feof($handle)) {
         die("fgetsOrDie: ошибка чтения строки из потока ($context)");
     }
 
@@ -817,50 +877,28 @@ $replacementDM = static function ($matches) {
 // {{download|FILE}}
 $patternDLCNT = '/\{\{download\|([^\}\r\n]+?)\}\}/u';
 $replacementDLCNT = static function ($m) {
+    static $downloadNumber = 0;
 
     $raw = trim($m[1] ?? '');
-    // последний сегмент пути, без подкаталогов + ваша фильтрация
-    /// $file = basename(str_replace('\\', '/', $raw));
-    $file = filter_filename($raw);
+    $file = basename(str_replace('\\', '/', $raw));
+    if(!isDownloadFilename($file) || !is_file("DATABASE/fupload/$file")) {
+        $file = filter_filename($raw, failOnInvalid: false);
+    }
 
-    if (empty($file)) {
+    if (!isDownloadFilename($file)) {
         return "<div style='background:#F00; color:#FFF; font-size: 3rem;'>ERR: bad file</div>";
     }
 
-    $cntTmp = filter_filename($file . ".dlcnt");
-
     $pathFile = "DATABASE/fupload/$file";
-    $pathCnt  = "DATABASE/dl.count/$cntTmp";
-
-    if (is_file($pathFile)) {
+    if (is_file($pathFile) && !is_link($pathFile)) {
 
         $dlSize = ((int)@filesize($pathFile)) / 1024;
 
         $dlSize = round($dlSize, 2);
 
-        $dlcnt = 0;
-        if (is_file($pathCnt) && is_readable($pathCnt)) {
+        $dlcntFmt = number_format(readDownloadCount($file), 0, ',', ' ');
 
-            $ftmp = fopenOrDie($pathCnt, 'rb');
-            if(!flock($ftmp, LOCK_SH)) {
-                fclose($ftmp);
-                die('Cannot lock file');
-            }
-
-            $dlcnt = (int)(string)stream_get_contents($ftmp);
-
-            /// flock($ftmp, LOCK_UN);
-            fclose($ftmp);
-
-            /*
-            if ($val !== '' && ctype_digit($val)) {
-                $dlcnt = (int)$val;
-            }
-            */
-        }
-        $dlcntFmt = number_format($dlcnt, 0, ',', ' ');
-
-        $targetIframe = htmlPrepID($file);
+        $targetIframe = htmlPrepID($file) . '-' . ++$downloadNumber;
 
         $safeName = htmlspecialchars($file, ENT_QUOTES | ENT_HTML401 | ENT_SUBSTITUTE, 'UTF-8');
 
@@ -927,41 +965,6 @@ $replacementDLCNT = static function ($m) {
 
 // Применение:
 // $html = preg_replace_callback($patternDLCNT, $replacementDLCNT, $html);
-
-function emojiToHtmlEntities(string $string): string {
-
-    if(!mb_check_encoding($string, 'UTF-8')) {
-        throw new InvalidArgumentException('Invalid UTF-8');
-    }
-
-    return preg_replace_callback('/\X/u', static function ($m) {
-
-        $g = $m[0];
-
-        // Белый список обычных символов:
-        // Буквы, цифры, комбинируемые знаки,
-        // пунктуация, пробелы, математические,
-        // валютные и некоторые другие символы.
-        $ordinary = '/\A[\p{L}\p{N}\p{M}\p{P}\p{Zs}\p{Sc}\p{Sm}\p{Sk}№°©®™→∞]+\z/u';
-
-        // Обычные символы оставляем без изменений.
-        // Исключение: U+20E3 (составные emoji-клавиши).
-        if(
-            preg_match($ordinary, $g) === 1 &&
-            !str_contains($g, "\u{20E3}")
-        ) {
-            return $g;
-        }
-
-        // Всё остальное кодируем целым кластером.
-        return mb_encode_numericentity(
-            $g,
-            [0, 0x10FFFF, 0, 0x10FFFF],
-            'UTF-8'
-        );
-
-    }, $string);
-}
 
 function generateSalt($username, $password) {
     // Генерируем битовую маску соли на основе хэша имени пользователя
@@ -1058,15 +1061,14 @@ function repeatCaptcha(string $userInput): bool {
     $sessionDir = 'DATABASE/comments/capt/';
     $sessionFile = $sessionDir . sha1($ip) . '.json';
     $maxEntries = 32;
-    $file = fopenOrDie($sessionFile, 'c+b');
+    $lock = lockStateFile($sessionFile . '.lock', LOCK_EX);
+    if($lock === false) {
+        throw new RuntimeException('Не удалось заблокировать историю CAPTCHA.');
+    }
 
     try {
-        // Блокировка охватывает чтение, проверку и запись одним дескриптором.
-        if(!flock($file, LOCK_EX)) {
-            throw new RuntimeException('Не удалось заблокировать историю CAPTCHA.');
-        }
-
-        $json = stream_get_contents($file);
+        clearstatcache(true, $sessionFile);
+        $json = file_exists($sessionFile) ? @file_get_contents($sessionFile) : '';
         if($json === false) {
             throw new RuntimeException('Не удалось прочитать историю CAPTCHA.');
         }
@@ -1094,19 +1096,13 @@ function repeatCaptcha(string $userInput): bool {
         $sessionData['captchas'] = array_slice($sessionData['captchas'], -$maxEntries);
         $json = json_encode($sessionData, JSON_THROW_ON_ERROR);
 
-        if(!rewind($file)) {
-            throw new RuntimeException('Не удалось перейти к началу истории CAPTCHA.');
-        }
-
-        // Сначала записываем данные, затем убираем возможный старый хвост.
-        if(fwrite($file, $json) !== strlen($json) || !ftruncate($file, strlen($json)) || !fflush($file)) {
+        if(!replaceFileContents($sessionFile, $json)) {
             throw new RuntimeException('Не удалось полностью сохранить историю CAPTCHA.');
         }
 
         return true;
     } finally {
-        // fclose() также освобождает блокировку, в том числе при return.
-        fclose($file);
+        fclose($lock);
     }
 }
 
@@ -1117,17 +1113,16 @@ function repeatCaptcha(string $userInput): bool {
  */
 function canProceed(string $datip): bool {
     $lockDir = 'DATABASE/comments/lock/';
-    $lockFile = $lockDir . sha1($datip) . '.json';
+    $stateFile = $lockDir . sha1($datip) . '.json';
     $interval = 180;
-    $file = fopenOrDie($lockFile, 'c+b');
+    $lock = lockStateFile($stateFile . '.lock', LOCK_EX);
+    if($lock === false) {
+        throw new RuntimeException('Не удалось заблокировать временную метку комментария.');
+    }
 
     try {
-        // Проверка интервала и обновление метки выполняются под одной блокировкой.
-        if(!flock($file, LOCK_EX)) {
-            throw new RuntimeException('Не удалось заблокировать временную метку комментария.');
-        }
-
-        $json = stream_get_contents($file);
+        clearstatcache(true, $stateFile);
+        $json = file_exists($stateFile) ? @file_get_contents($stateFile) : '';
         if($json === false) {
             throw new RuntimeException('Не удалось прочитать временную метку комментария.');
         }
@@ -1149,19 +1144,13 @@ function canProceed(string $datip): bool {
 
         $json = json_encode(['last_call' => $now], JSON_THROW_ON_ERROR);
 
-        if(!rewind($file)) {
-            throw new RuntimeException('Не удалось перейти к началу файла временной метки комментария.');
-        }
-
-        // Сначала записываем данные, затем убираем возможный старый хвост.
-        if(fwrite($file, $json) !== strlen($json) || !ftruncate($file, strlen($json)) || !fflush($file)) {
+        if(!replaceFileContents($stateFile, $json)) {
             throw new RuntimeException('Не удалось полностью сохранить временную метку комментария.');
         }
 
         return true;
     } finally {
-        // fclose() также освобождает блокировку, в том числе при return.
-        fclose($file);
+        fclose($lock);
     }
 }
 
@@ -1245,45 +1234,7 @@ function refreshhandle($time, $link, $update = true) {
 
 
 
-function filter_filename(string $filename): string {
-
-    if(!mb_check_encoding($filename, 'UTF-8')) {
-
-        die("PANIC: Broken Encoding!");
-    }
-
-    $filename = basename(str_replace('\\', '/', $filename));
-
-    $filename = emojiToHtmlEntities($filename);
-    $filename = remove_entities($filename);
-    $filename = mb_superTrim($filename);
-
-    $filename = preg_replace('~
-        [<>:"/\\\\|?*]      |  # reserved
-        [\x00-\x1F]         |  # control
-        [\x7F\xA0\xAD]      |  # DEL, NBSP, SHY
-        [#\[\]@!$&\'()+,;=] |  # URI reserved
-        [{}^\~`]               # URL-unsafe
-    ~xu', '-', $filename);
-
-    $filename = str_replace(' ', '_', $filename);
-    $filename = preg_replace(['/-{2,}/', '/\.{2,}/', '/_{2,}/'], ['-', '.', '_'], $filename);
-    $filename = trim($filename, ". \t\r\n\0\x0B-_");
-
-    $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
-
-    /// $ext  = pathinfo($filename, PATHINFO_EXTENSION);
-    $base = pathinfo($filename, PATHINFO_FILENAME);
-
-    $limit = ($ext !== '') ? max(1, 255 - (strlen($ext) + 1)) : 255;
-    $base  = mb_strcut($base, 0, $limit, 'UTF-8');
-
-    if($base === '' || strlen($ext) > 10) die("PANIC: Incorrect File Name!");
-
-    return ($ext !== '') ? ($base . '.' . $ext) : $base;
-}
-
-function dbprepApnd($filename) {
+function dbprepApnd($filename, ?float $expectedVersion = null, ?callable $beforeCopy = null, ?int &$failureStatus = null): bool {
 
     global $waitFile;
 
@@ -1292,137 +1243,214 @@ function dbprepApnd($filename) {
         ignore_user_abort(true); // Установить игнорирование разрыва соединения
     }
 
-    $waitFile = fopenOrDie($filename . ".wait", 'c+b');
-    
-    if(!flock($waitFile, LOCK_EX)) {
-
-        fclose($waitFile);
-        die('Cannot lock file');
-    }
-            
-
-    $lockFile = $filename . ".lock";
-    $newFile = $filename . ".new." . getmypid();
-    $newFileSrc = $filename . ".src." . getmypid();
-
-    putFileOrDie($lockFile, getmypid(), LOCK_EX);
-
-    // Копируем оригинальный файл в новый dest
-    if(!copy($filename, $newFile)) {
-
-        die('<!DOCTYPE html><html><head><meta charset="utf-8" /><title>Ошибка</title></head><body><h1>ОШИБКА.</h1><p><strong>Не удалось создать новый файл.</strong></p></body></html>');
-    }
-
-    // Копируем оригинальный файл в новый src
-    if(!copy($filename, $newFileSrc)) {
-
-        die('<!DOCTYPE html><html><head><meta charset="utf-8" /><title>Ошибка</title></head><body><h1>ОШИБКА.</h1><p><strong>Не удалось создать новый файл.</strong></p></body></html>');
-    }
-
-    return true;
-}
-
-function dbprepCache($filename) {
-
-    global $waitFile;
-
-    if(function_exists('ignore_user_abort')) {
-
-        ignore_user_abort(true); // Установить игнорирование разрыва соединения
-    }
-
-    $waitFile = fopenOrDie($filename . ".wait", 'c+b');
-    
-    if(!flock($waitFile, LOCK_EX)) {
-
-        fclose($waitFile);
-        die('Cannot lock file');
-    }
-    
-
-    $lockFile = $filename . ".lock";
-
-    putFileOrDie($lockFile, getmypid(), LOCK_EX);
-
-    return true;
-}
-
-function dbdone($filename, $recovery) {
-
-    global $errmsg, $content, $safeGet, $safePost, $waitFile;
-
-    $locktmp = fopenOrDie($filename.".lock", 'rb');
-    if(!flock($locktmp, LOCK_SH)) {
-        fclose($locktmp);
-        die('Cannot lock file');
-    }
-
-    $lockvar = (int)(string)stream_get_contents($locktmp);
-
-    /// flock($locktmp, LOCK_UN);
-    /// fclose($locktmp);
-
-    if(is_file($filename.".src." . getmypid())) {
-        @unlink($filename.".src." . getmypid());
-    }
-
-    /// $lockvar = (int)@file_get_contents($filename.".lock");
-
-    if($lockvar === getmypid()) {
-
-        /// if(is_file($filename)) rename($filename, $filename.".bak");
-    
-        rename($filename.".new." . getmypid(), $filename) or die();
-
-        touchMy($filename) or die("Не удалось обновить метку времени файла: $filename. Проверьте права доступа и свободное место на диске.");
-
-        fclose($locktmp);
-
-        /// unlink($filename.".lock");
-
-        fclose($waitFile);
-
-        return true;
-
-    } else {
-
-        if(is_file($filename.".new." . getmypid())) {
-            @unlink($filename.".new." . getmypid());
-        }
-
-        if(!isset($safePost['commpost']) && !isset($safeGet["cmove"])) {
-
-            unlockByName($_SESSION['username'] ?? "dummy");
-        }
-
-        fclose($locktmp);
-
-        $recovery = $recovery ?: "ДАННЫЕ НЕ СОХРАНЕНЫ!";
-
-        $recovery = str_ireplace("<textarea", "&lt;textarea", $recovery);
-        $recovery = str_ireplace("</textarea", "&lt;/textarea", $recovery);
-        $recovery = str_ireplace("textarea>", "textarea&gt;", $recovery);
-
-        $recovery = escape_amp_txtarea($recovery);
-
-        $errmsg = "<h1>RECOVERY.</h1><p class='big'><strong>База Данных была изменена внешним процессом.</strong></p>";
-
-        $content = "<textarea style='width: 95%; min-height: 65vh; padding: 2%; resize: none;' readonly='readonly'>".$recovery."</textarea>";
-
-        /// return false;
-
-        fclose($waitFile);
-
+    $failureStatus = 500;
+    $waitFile = lockStateFile($filename . '.wait', LOCK_EX);
+    if($waitFile === false) {
         return false;
     }
+
+    if($expectedVersion !== null && filemtimeMy($filename) !== $expectedVersion) {
+        $failureStatus = 409;
+        fclose($waitFile);
+        return false;
+    }
+
+    if($beforeCopy !== null) {
+        try {
+            $canCopy = $beforeCopy();
+        } catch(Throwable $e) {
+            fclose($waitFile);
+            throw $e;
+        }
+        if(!$canCopy) {
+            $failureStatus = 404;
+            fclose($waitFile);
+            return false;
+        }
+    }
+
+    $pid = (string)getmypid();
+    $lockFile = $filename . '.lock';
+    $newFile = $filename . '.new.' . $pid;
+    $newFileSrc = $filename . '.src.' . $pid;
+
+    // Источник и приёмник должны содержать байты одной и той же версии.
+    if(@file_put_contents($lockFile, $pid, LOCK_EX) !== strlen($pid)
+        || !@copy($filename, $newFile) || !@copy($newFile, $newFileSrc)) {
+        cancelDatabaseWrite($filename);
+        return false;
+    }
+
+    $failureStatus = null;
+    return true;
+}
+
+function preparePageWrite(): bool {
+    global $chTimeDB;
+
+    if(dbprepApnd('DATABASE/DB/data.html', $chTimeDB, failureStatus: $failureStatus)) {
+        return true;
+    }
+
+    return reportPageWriteFailure($failureStatus);
+}
+
+function reportPageWriteFailure(int $status = 409): bool {
+    global $errmsg;
+
+    http_response_code($status);
+    $message = $status === 409
+        ? 'Страницы были изменены. Обновите страницу и повторите действие.'
+        : 'Не удалось сохранить изменения страниц.';
+    $errmsg = "<h1>ОШИБКА.</h1><p class='big'>$message</p>";
+    unlockByName($_SESSION['username'] ?? 'dummy');
+    return false;
+}
+
+/** Заменяет диапазон байтов в подготовленной копии базы, пока удерживается .wait. */
+function rewritePageSnapshot($source, int $start, int $end, callable $writeReplacement): bool {
+    $stat = @fstat($source);
+    if($stat === false || $start < 0 || $end < $start || $end > $stat['size']) {
+        return false;
+    }
+
+    $targetPath = 'DATABASE/DB/data.html.new.' . getmypid();
+    $target = @fopen($targetPath, 'r+b');
+    if($target === false) {
+        return false;
+    }
+
+    $hasTail = $end < $stat['size'];
+    $useConcater = $hasTail && catTailAvailable();
+    try {
+        $written = @ftruncate($target, $start)
+            && @fseek($target, $start) === 0
+            && $writeReplacement($target)
+            && (!$hasTail || $useConcater || (@fseek($source, $end) === 0
+                && @stream_copy_to_stream($source, $target) === $stat['size'] - $end))
+            && @fflush($target);
+    } finally {
+        fclose($target);
+    }
+
+    return $written && (!$useConcater
+        || concater($targetPath, stream_get_meta_data($source)['uri'], $end, failOnError: false));
+}
+
+function cancelDatabaseWrite(string $filename): void {
+    global $waitFile;
+
+    @unlink($filename . '.new.' . getmypid());
+    @unlink($filename . '.src.' . getmypid());
+    fclose($waitFile);
+}
+
+function dbprepCache(string $filename): bool {
+
+    global $waitFile;
+
+    if(function_exists('ignore_user_abort')) {
+
+        ignore_user_abort(true); // Установить игнорирование разрыва соединения
+    }
+
+    $waitFile = lockStateFile($filename . '.wait', LOCK_EX);
+    if($waitFile === false) {
+        return false;
+    }
+
+    $pid = (string)getmypid();
+    if(@file_put_contents($filename . '.lock', $pid, LOCK_EX) !== strlen($pid)) {
+        fclose($waitFile);
+        return false;
+    }
+
+    return true;
+}
+
+function writeNavigationCache(string $filename, string $data, ?float $version = null): bool {
+    if(!dbprepCache($filename)) {
+        return false;
+    }
+
+    $staged = $filename . '.new.' . getmypid();
+    if(@file_put_contents($staged, $data) !== strlen($data)) {
+        cancelDatabaseWrite($filename);
+        return false;
+    }
+
+    return dbdone($filename, '', version: $version, reportFailure: false);
+}
+
+function dbdone($filename, $recovery, ?callable $beforeUnlock = null, ?float $version = null, bool $reportFailure = true) {
+
+    global $waitFile;
+
+    $locktmp = lockStateFile($filename . '.lock', LOCK_SH, 'rb');
+    $pid = (string)getmypid();
+    $owner = '';
+    $published = false;
+    try {
+        if($locktmp !== false) {
+            $owner = trim((string)@stream_get_contents($locktmp), " \t\r\n");
+            if($owner === $pid) {
+                $staged = $filename . '.new.' . $pid;
+                $version ??= max(microtime(true), filemtimeMy($filename) + 0.0001);
+                // Сначала сохраняем версию. При сбое прежняя база остаётся целой.
+                $published = touchMy($filename, $version, $staged) && @rename($staged, $filename);
+            }
+            fclose($locktmp);
+        }
+
+        if($published && $beforeUnlock !== null) {
+            $beforeUnlock();
+        }
+    } finally {
+        if(is_resource($locktmp)) {
+            fclose($locktmp);
+        }
+        if($published) {
+            @unlink($filename . '.src.' . $pid);
+            fclose($waitFile);
+        } else {
+            cancelDatabaseWrite($filename);
+        }
+    }
+
+    if($published || !$reportFailure) {
+        return $published;
+    }
+
+    $status = ctype_digit($owner) && $owner !== $pid ? 409 : 500;
+    return reportDatabaseWriteFailure($recovery, $status);
+}
+
+function reportDatabaseWriteFailure($recovery, int $status = 500): bool {
+    global $errmsg, $content, $safeGet, $safePost;
+
+    if(!isset($safePost['commpost']) && !isset($safeGet['cmove'])) {
+        unlockByName($_SESSION['username'] ?? 'dummy');
+    }
+
+    http_response_code($status);
+    $message = $status === 409
+        ? 'База данных была изменена внешним процессом.'
+        : 'Не удалось сохранить изменения. Проверьте права доступа и свободное место на диске.';
+    $errmsg = "<h1>RECOVERY.</h1><p class='big'><strong>$message</strong></p>";
+    $recovery = (string)$recovery;
+    $recovery = htmlspecialchars($recovery === '' ? 'ДАННЫЕ НЕ СОХРАНЕНЫ!' : $recovery, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+    $content = "<textarea style='width: 95%; min-height: 65vh; padding: 2%; resize: none;' readonly='readonly'>".$recovery."</textarea>";
+    return false;
 }
 
 function mylog($line) {
 
     $datetime = new DateTime();
     $mydate = $datetime->format('Y-m-d H:i:s');
-
-    putFileOrDie("DATABASE/DB/sys.log", $mydate.": ".$line."<br />\n", FILE_APPEND | LOCK_EX);
+    $record = $mydate.": ".$line."<br />\n";
+    if(@file_put_contents("DATABASE/DB/sys.log", $record, FILE_APPEND | LOCK_EX) !== strlen($record)) {
+        error_log('Froggy-BLC: ' . trim(strip_tags($record)));
+    }
 }
 
 function stripFirstLine($text) {
@@ -2136,11 +2164,9 @@ function sanCheckAdd($check, $h) {
     }
 }
 
-function sanCheckDown() {
+function sanCheckDown(int $index) {
 
-    global $numcache, $safeGet, $errmsg;
-
-    $index = $safeGet["pgmovedown"] ? ((int)$safeGet["pgmovedown"] - 1) : "";
+    global $numcache, $errmsg;
 
     $sanCheckTable = $numcache;
 
@@ -2160,13 +2186,11 @@ function sanCheckDown() {
     }
 }
 
-function sanCheckUp() {
+function sanCheckUp(int $index) {
 
-    global $numcache, $safeGet, $errmsg;
+    global $numcache, $errmsg;
 
     $sanCheckTable = $numcache;
-
-    $index = $safeGet["pgmoveup"] ? ((int)$safeGet["pgmoveup"] - 1) : "";
 
     if(!is_int($index) /* || $index < 1 */ || !isset($sanCheckTable[$index], $sanCheckTable[$index - 1])) {
 
@@ -2224,8 +2248,7 @@ function calcTotPages(string $commaddr, int $limit, bool $update = false): int
 }
 
 /**
- * Как calcTotPages(), но использует известное число строк без чтения комментариев.
- * При $update = false корректный кэш имеет приоритет над $commcount.
+ * Как calcTotPages(), но принимает число строк, рассчитанное под блокировкой записи.
  */
 function calcTotPages2(int $commcount, string $commaddr, int $limit, bool $update = false): int
 {
@@ -2233,7 +2256,7 @@ function calcTotPages2(int $commcount, string $commaddr, int $limit, bool $updat
 }
 
 /**
- * Общий расчёт: null в $commcount означает, что строки нужно посчитать из файла.
+ * Читаем и обновляем кэш под той же .wait-блокировкой, что и файл комментариев.
  * Кэш хранит число строк, поэтому подходит для любого $limit.
  */
 function calcCommentLastPage(string $commaddr, int $limit, bool $update, ?int $commcount = null): int
@@ -2242,55 +2265,75 @@ function calcCommentLastPage(string $commaddr, int $limit, bool $update, ?int $c
         die('PANIC: bad $limit');
     }
 
+    global $waitFile;
+
     $commentsFile = "DATABASE/comments/" . $commaddr;
-    $cacheFile    = $commentsFile . ".pages-cache";
+    $cacheFile = $commentsFile . ".pages-cache";
+    $waitPath = $commentsFile . ".wait";
 
     if (!is_file($commentsFile)) {
         return 0;
     }
 
-    if (!$update && is_file($cacheFile)) {
-        $fh = @fopen($cacheFile, 'rb');
-        if ($fh !== false) {
-            $cached = null;
-            if (@flock($fh, LOCK_SH)) {
+    $hasWriteLock = is_resource($waitFile) && stream_get_meta_data($waitFile)['uri'] === $waitPath;
+    $readLock = $hasWriteLock ? false : lockStateFile($waitPath, LOCK_SH);
+    $source = false;
+
+    try {
+        $canWriteCache = $hasWriteLock || $readLock !== false;
+        $source = @fopen($commentsFile, 'rb');
+        if ($source === false) {
+            return 0;
+        }
+
+        // Версия файла выявляет устаревший кэш после сбоя между сохранением и обновлением кэша.
+        $stat = fstat($source);
+        $sourceVersion = $stat === false ? null : [
+            'dev' => $stat['dev'],
+            'ino' => $stat['ino'],
+            'size' => $stat['size'],
+            'mtime' => $stat['mtime'],
+            'ctime' => $stat['ctime'],
+        ];
+
+        if (!$update && $sourceVersion !== null && is_file($cacheFile)) {
+            $fh = lockStateFile($cacheFile, LOCK_SH, 'rb');
+            if ($fh !== false) {
                 $raw = stream_get_contents($fh);
-                if ($raw !== false) {
-                    $cached = json_decode($raw, true);
+                fclose($fh);
+                $cached = $raw === false ? null : json_decode($raw, true);
+
+                if (is_array($cached) && isset($cached['commcount'], $cached['source'])
+                    && $cached['source'] === $sourceVersion
+                    && is_int($cached['commcount']) && $cached['commcount'] >= 0) {
+                    return $cached['commcount'] > 0 ? intdiv($cached['commcount'] - 1, $limit) : 0;
                 }
             }
-            fclose($fh);
+        }
 
-            if (is_array($cached) && isset($cached['commcount'])
-                && is_int($cached['commcount']) && $cached['commcount'] >= 0) {
-                return $cached['commcount'] > 0
-                    ? intdiv($cached['commcount'] - 1, $limit)
-                    : 0;
+        // Готовый счётчик надёжен, только пока автор записи держит блокировку.
+        if ($commcount === null || !$hasWriteLock) {
+            $commcount = 0;
+            while (($buffer = freadOrDie($source, 128 * 1024)) !== false && $buffer !== '') {
+                $commcount += substr_count($buffer, "\n");
             }
-            // Старый числовой или повреждённый кэш заменяем новым.
+        }
+
+        $commcount = max(0, $commcount);
+        if ($canWriteCache && $sourceVersion !== null) {
+            $json = json_encode(['commcount' => $commcount, 'source' => $sourceVersion]);
+            replaceFileContents($cacheFile, $json);
+        }
+
+        return $commcount > 0 ? intdiv($commcount - 1, $limit) : 0;
+    } finally {
+        if ($source !== false) {
+            fclose($source);
+        }
+        if ($readLock !== false) {
+            fclose($readLock);
         }
     }
-
-    if ($commcount === null) {
-        $commcount = 0;
-        $bufferSize = 128 * 1024;
-        $file = openFileOrDie($commentsFile, 'rb');
-
-        // Каждая строка комментариев, включая последнюю, заканчивается \n.
-        while (($buffer = $file->freadOrDie($bufferSize)) !== false && $buffer !== '') {
-            $commcount += substr_count($buffer, "\n");
-        }
-        $file = null;
-    }
-
-    $commcount = max(0, $commcount);
-
-    $dir = dirname($cacheFile);
-    if (is_dir($dir) && is_writable($dir)) {
-        @file_put_contents($cacheFile, json_encode(['commcount' => $commcount]), LOCK_EX);
-    }
-
-    return $commcount > 0 ? intdiv($commcount - 1, $limit) : 0;
 }
 
 function loadTplSess() {
@@ -2686,65 +2729,36 @@ function replaceParagraphs(simple_html_dom $html): simple_html_dom
 
 
 
+/** @return resource|false */
+function lockNavigationCaches() {
+    $path = 'DATABASE/lock/navigation-cache.lock';
+    return lockStateFile($path, LOCK_EX) ?: lockStateFile($path, LOCK_EX, 'rb');
+}
+
 function refreshCaches() {
+    global $navigationCacheLock;
 
-    if(is_file("DATABASE/DB/DB-TOC-Cache.txt")) {
-        // rename("DATABASE/DB/DB-TOC-Cache.txt", "DATABASE/DB/DB-TOC-Cache.txt.del");
-
-        @unlink("DATABASE/DB/DB-TOC-Cache.txt");
+    $alreadyLocked = is_resource($navigationCacheLock);
+    $lock = $alreadyLocked ? $navigationCacheLock : lockNavigationCaches();
+    if($lock === false) {
+        return;
     }
 
-    if(is_file("DATABASE/DB/SEO-Cache.txt")) {
-        // rename("DATABASE/DB/SEO-Cache.txt", "DATABASE/DB/SEO-Cache.txt.del");
-
-        @unlink("DATABASE/DB/SEO-Cache.txt");
-    }
-
-    if(is_file("DATABASE/DB/MenuCache.txt")) {
-        // rename("DATABASE/DB/MenuCache.txt", "DATABASE/DB/MenuCache.txt.del");
-
-        @unlink("DATABASE/DB/MenuCache.txt");
-    }
-
-    /*
-    if(is_file("DATABASE/DB/Search-Cache.txt")) {
-
-        @unlink("DATABASE/DB/Search-Cache.txt");
-    }
-    */
-
-    if(is_file("sitemap.txt")) {
-        // rename("sitemap.txt", "sitemap.txt.del");
-
-        @unlink("sitemap.txt");
-    }
-
-    if(is_file("sitemap.xml")) {
-        // rename("sitemap.xml", "sitemap.xml.del");
-
-        @unlink("sitemap.xml");
+    try {
+        foreach(['DATABASE/DB/DB-TOC-Cache.txt', 'DATABASE/DB/SEO-Cache.txt', 'DATABASE/DB/MenuCache.txt',
+                 'sitemap.txt', 'sitemap.xml'] as $cache) {
+            @unlink($cache);
+        }
+    } finally {
+        if(!$alreadyLocked) {
+            fclose($lock);
+        }
     }
 }
 
 function getCommCount($commaddr) {
-
-    if(is_file("DATABASE/comments/".$commaddr.".count")) {
-
-        $locktmp = fopenOrDie("DATABASE/comments/".$commaddr.".count", 'rb');
-        if(!flock($locktmp, LOCK_SH)) {
-            fclose($locktmp);
-            die('Cannot lock file');
-        }
-        $contents = (string)stream_get_contents($locktmp);
-        /// flock($locktmp, LOCK_UN);
-        fclose($locktmp);
-
-        return "<span class='pgCommCnt' title='Комментарии'>&nbsp;(".(int)$contents.")</span>";
-
-    } else {
-
-        return "";
-    }
+    $count = loadCommentCount($commaddr);
+    return $count === null ? '' : "<span class='pgCommCnt' title='Комментарии'>&nbsp;(".$count.")</span>";
 }
 
 /*
@@ -2877,64 +2891,6 @@ function normalize_entities_my(string $text): string {
 function escape_amp_txtarea(string $text): string
 {
     return str_replace("&", "&amp;", $text);
-}
-
-function remove_entities(string $text): string {
-    // 1) именованные (&nbsp;)  2) десятичные (&#160;)  3) шестн. (&#xA0;)
-    $text = preg_replace('/&[a-z][a-z0-9]*;/i', '', $text);
-    $text = preg_replace('/&#\d+;/', '', $text);
-    $text = preg_replace('/&#x[0-9a-f]+;/i', '', $text);
-
-    // 4) Только формы без ';' и не продолжаемые буквой/цифрой/подчёркиванием
-    $text = preg_replace('/&(?:nbsp|thinsp|ensp|emsp|zwnj|zwj|lrm|rlm)(?!;)\b/i', '', $text);
-
-    // 5) «голые» & → подчеркивание, чтобы слова не слипались
-    $text = preg_replace('/&(?![a-z][a-z0-9]*;|#\d+;|#x[0-9a-f]+;)/i', '_', $text);
-
-    return $text;
-}
-
-function atomicCounterIncrement(string $path): void {
-
-    $fp = fopenOrDie($path, 'c+b');
-
-    // Эксклюзивная блокировка файла
-    if(!flock($fp, LOCK_EX)) {
-        die("atomicCounterIncrement: ошибка блокировки файла ($path)");
-    }
-
-    // Читаем текущее значение
-    fseekOrDie($fp, 0);
-
-    $data = stream_get_contents($fp);
-
-    if($data === false) {
-        die("atomicCounterIncrement: ошибка чтения файла ($path)");
-    }
-
-    $data = trim($data);
-
-    $val = 0;
-
-    if($data !== '' && ctype_digit($data)) {
-        $val = (int)$data;
-    }
-
-    // Увеличиваем счётчик
-    $val++;
-
-    // Перезаписываем файл
-    fseekOrDie($fp, 0);
-    ftruncateOrDie($fp, 0);
-    fwriteOrDie($fp, (string)$val);
-
-    // Сбрасываем буфер записи
-    fflushOrDie($fp);
-
-    // Закрытие автоматически освобождает flock()
-    if(!fclose($fp)) {
-        die("atomicCounterIncrement: ошибка закрытия файла ($path)");
-    }
 }
 
 // Небольшой генератор ASCII-токена (на случай старых PHP без random_bytes)
@@ -3641,7 +3597,7 @@ function obyava() {
                 die("Не удалось заблокировать файл для чтения: $obfile.");
             }
 
-            // Читаем под той же блокировкой, которую учитывает запись в pobyava().
+            // Сохранение публикует объявление целиком через rename().
             // Дополнительный байт позволяет обнаружить превышение лимита парсера.
             $obstring = stream_get_contents($fp, MAX_FILE_SIZE + 1);
             if($obstring === false) {
@@ -3806,23 +3762,17 @@ function validateHex40(string $hex): void {
 
 
 
-function concater(string $fname1, string $fname2, int $pos): void
+function concater(string $fname1, string $fname2, int $pos, bool $failOnError = true): bool
 {
     if(trim($fname1) === '' || trim($fname2) === '') {
-        die('<h1>CONCATER PANIC :: empty filename</h1>');
+        if($failOnError) die('<h1>CONCATER PANIC :: empty filename</h1>');
+        return false;
     }
 
-    $root = getcwd();
-
-    if($root === false) {
-        die('<h1>CONCATER PANIC :: getcwd failed</h1>');
-    }
-
-    $root = rtrim($root, '/');
-
-    $new    = $root . '/' . ltrim($fname1, '/') . '.tmp';
-    $fname1 = $root . '/' . ltrim($fname1, '/');
-    $fname2 = $root . '/' . ltrim($fname2, '/');
+    // Shell наследует рабочую папку. Относительные пути не зависят от кодировки её имени.
+    $fname1 = './' . ltrim($fname1, '/');
+    $fname2 = './' . ltrim($fname2, '/');
+    $new = $fname1 . '.tmp';
 
     $cleanup = static function() use ($new, $fname1, $fname2): void {
         @unlink($new);    // промежуточный .tmp
@@ -3830,31 +3780,28 @@ function concater(string $fname1, string $fname2, int $pos): void
         @unlink($fname2); // временный файл-источник хвоста
     };
 
-    $panic = static function(string $msg) use ($cleanup): never {
+    $fail = static function(string $msg) use ($cleanup, $failOnError): bool {
         $cleanup();
-        die('<h1>CONCATER PANIC :: ' . htmlspecialchars($msg, ENT_QUOTES | ENT_HTML401, 'UTF-8') . '</h1>');
+        if($failOnError) {
+            die('<h1>CONCATER PANIC :: ' . htmlspecialchars($msg, ENT_QUOTES | ENT_HTML401, 'UTF-8') . '</h1>');
+        }
+        return false;
     };
 
-    /*
-    if(!function_exists('exec')) {
-        $panic('exec disabled');
-    }
-    */
-
     if($pos < 0) {
-        $panic('bad byte position');
+        return $fail('bad byte position');
     }
 
     if(!is_file($fname1) || !is_readable($fname1)) {
-        $panic('fname1 is not readable');
+        return $fail('fname1 is not readable');
     }
 
     if(!is_file($fname2) || !is_readable($fname2)) {
-        $panic('fname2 is not readable');
+        return $fail('fname2 is not readable');
     }
 
     if(!is_writable(dirname($fname1))) {
-        $panic('target directory is not writable');
+        return $fail('target directory is not writable');
     }
 
     if(is_file($new)) {
@@ -3882,12 +3829,14 @@ function concater(string $fname1, string $fname2, int $pos): void
     exec($cmd, $shellOutput, $exitCode);
 
     if($exitCode !== 0 || !is_file($new)) {
-        $panic('cat/tail failed');
+        return $fail('cat/tail failed');
     }
 
     if(!@rename($new, $fname1)) {
-        $panic('rename failed');
+        return $fail('rename failed');
     }
+
+    return true;
 }
 
 

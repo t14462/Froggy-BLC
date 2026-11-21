@@ -57,12 +57,11 @@ function safeRequestUri(?string $uri): string
         return $fallback;
     }
 
-    // Браузеры могут интерпретировать backslash как обычный slash
-    /*
-    if(str_contains($uri, '\\')) {
+    // Браузеры могут интерпретировать обратный слэш в пути как обычный.
+    $path = substr($uri, 0, strcspn($uri, '?#'));
+    if(str_contains($path, '\\')) {
         return $fallback;
     }
-    */
 
     // Ограничение длины в байтах
     if(strlen($uri) > 8192) {
@@ -132,7 +131,10 @@ session_set_cookie_params([
     'httponly' => true,
     'samesite' => 'Strict' // Helps mitigate CSRF attacks
 ]);
-session_start();
+if(!@session_start(['use_strict_mode' => 1])) {
+    http_response_code(503);
+    exit('Session unavailable');
+}
 
 header('Cache-Control: no-store');
 
@@ -141,31 +143,41 @@ $csrf = $_SESSION['csrf'] ?? random_int(0, 0xFFFFFFFFFFFFFFF);
 
 # if( !defined( __DIR__ ) ) define( __DIR__, dirname(__FILE__) );
 
-require_once "SYSTEM/cred.php";
+require_once "SYSTEM/modules/file-state.php";
+$credentialsPath = __DIR__ . '/SYSTEM/cred.php';
+$credentialsVersion = false;
+$credentialsLock = isset($_GET['editusers'])
+    ? lockStateFile('DATABASE/lock/credentials.lock', LOCK_SH)
+    : false;
+try {
+    if($credentialsLock !== false) {
+        $credentialsVersion = @hash_file('sha256', $credentialsPath);
+    }
+    // Пустой фильтр читает cred.php с диска даже при включённом файловом OPcache.
+    require_once 'php://filter/read=/resource=' . $credentialsPath;
+} finally {
+    if($credentialsLock !== false) {
+        fclose($credentialsLock);
+    }
+}
 require_once "SYSTEM/salt.php";
-
-require_once "SYSTEM/modules/locker.php";
 
 require_once "SYSTEM/modules/mobile-detect.php";
 require_once "SYSTEM/modules/post-get-filter.php";
 require_once "SYSTEM/api-keys.php";
 require_once "SYSTEM/modules/init-libs.php";
 require_once "SYSTEM/modules/functions.php";
+require_once "SYSTEM/modules/locker.php";
 
-$last_executed2 = @filemtime("DATABASE/DB/MenuCache.txt");
-
-$diff2 = time() - (int)$last_executed2; // $last_executed is the value from the server
-
-if($last_executed2 && $diff2 > 10799) { // 3 hours
-
-    // rename("DATABASE/DB/MenuCache.txt", "DATABASE/DB/MenuCache.txt.del");
-
-    if(is_file("DATABASE/DB/MenuCache.txt")) {
-        @unlink("DATABASE/DB/MenuCache.txt");
+$navigationCacheLock = lockNavigationCaches();
+try {
+    $chTimeDB = filemtimeMy("DATABASE/DB/data.html");
+    require_once "SYSTEM/modules/kore-kontrol.php";
+} finally {
+    if(is_resource($navigationCacheLock)) {
+        fclose($navigationCacheLock);
     }
 }
-
-require_once "SYSTEM/modules/kore-kontrol.php";
 require_once "SYSTEM/modules/post-get-processor.php";
 require_once "SYSTEM/modules/css-script-includes.php";
 require_once "SYSTEM/modules/addons.php";

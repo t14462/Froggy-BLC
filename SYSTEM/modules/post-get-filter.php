@@ -13,6 +13,8 @@ if(!defined('FILTER_INITIALIZED')) {
 ################################################
 
 $methods = (string)($_SERVER['REQUEST_METHOD'] ?? '');
+$safeGet = [];
+$safePost = [];
 
 $_REQUEST = [];
 $_ENV = [];
@@ -75,6 +77,7 @@ if(in_array($methods, ['POST', 'GET'], true)) {
                 #"pagedel"   => FILTER_SANITIZE_FULL_SPECIAL_CHARS,
 
                 "textedit"  => FILTER_DEFAULT,
+                "pageid"    => FILTER_DEFAULT,
                 # "pageaddr"  => FILTER_SANITIZE_FULL_SPECIAL_CHARS,
                 "h"         => FILTER_VALIDATE_INT,
                 "title"     => FILTER_SANITIZE_FULL_SPECIAL_CHARS,
@@ -114,10 +117,11 @@ if(in_array($methods, ['POST', 'GET'], true)) {
                 "pobyava"  => FILTER_DEFAULT,
 
                 "saveusers" => FILTER_DEFAULT,
+                "usersversion" => FILTER_DEFAULT,
 
                 "csrf" => FILTER_VALIDATE_INT,
 
-            ]) ?? [];
+            ]) ?: [];
 
             htmlSpecialCharsField($safePost, 'username');
             htmlSpecialCharsField($safePost, 'rusername');
@@ -128,13 +132,15 @@ if(in_array($methods, ['POST', 'GET'], true)) {
 
         case 'GET':
 
-            $safeGet = filter_input_array(INPUT_GET, FILTER_SANITIZE_FULL_SPECIAL_CHARS) ?? [];
+            $safeGet = filter_input_array(INPUT_GET, FILTER_SANITIZE_FULL_SPECIAL_CHARS) ?: [];
 
             break;
     }
 
 } else {
 
-    die('<h1>ACCESS Exception :: method '. $methods .' blocked!</h1>');
+    http_response_code(405);
+    header('Allow: GET, POST');
+    exit('<h1>ACCESS Exception :: method blocked</h1>');
 
 }

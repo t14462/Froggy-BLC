@@ -1,16 +1,16 @@
 RewriteEngine On
 
 # --- Разрешаем конкретный файл ---
-RewriteCond %{REQUEST_URI} ^/DATABASE/DB/ryba\.jpg$
-RewriteRule ^ - [L]
+RewriteRule ^DATABASE/DB/ryba\.jpg$ - [H=default-handler,END]
 
-# --- Разрешаем подпапки внутри /DATABASE/ ---
-RewriteCond %{REQUEST_URI} ^/DATABASE/gallery/ [OR]
-RewriteCond %{REQUEST_URI} ^/DATABASE/fupload/
-RewriteRule ^ - [L]
+# --- Галерея: отдаём только изображения через обработчик статических файлов ---
+RewriteRule ^DATABASE/gallery/[^/]+\.(?:jpe?g|png|gif|webp)$ - [NC,H=default-handler,END]
+
+# --- Файлы для скачивания выдаются статически. Форматы см. в download-files.php ---
+RewriteRule ^DATABASE/fupload/[^/.][^/]*\.(?:txt|csv|tsv|json|xml|md|log|ini|yaml|yml|conf|cfg|toml|properties|rst|adoc|org|diff|patch|nfo|tex|bib|pdf|doc|docx|ppt|pptx|xls|xlsx|odt|ods|odp|rtf|epub|mobi|azw|azw3|zip|rar|7z|tar|gz|bz2|xz|lz|lzma|iso|esp|esm|srt|vtt|ass|ssa|sub|ttf|otf|woff|woff2|sql|sqlite|db|db3)$ - [NC,H=default-handler,T=application/octet-stream,E=FROGGY_DOWNLOAD:1,END]
 
 # --- Запрещаем всё остальное в /DATABASE/ ---
-RewriteRule ^DATABASE/ - [F,L]
+RewriteRule ^DATABASE(?:/|$) - [F,NC]
 
 # --- Разрешаем /SYSTEM/JSLIB/ и всё её содержимое ---
 RewriteRule ^SYSTEM/JSLIB/ - [L]
@@ -22,7 +22,7 @@ RewriteRule ^SYSTEM/modules/download\.php$ - [L]
 RewriteRule ^SYSTEM/modules/my-ck-ed\.css$ - [L]
 
 # --- Запрещаем всё остальное в /SYSTEM/ ---
-RewriteRule ^SYSTEM/ - [F,L]
+RewriteRule ^SYSTEM(?:/|$) - [F,NC]
 
 # --- Остальные блокировки ---
 RewriteRule ^cgi-bin/ - [F,L]
@@ -30,6 +30,9 @@ RewriteRule ^cgi-bin/ - [F,L]
 
 
 <IfModule mod_headers.c>
+    Header set Content-Disposition "attachment" env=FROGGY_DOWNLOAD
+    Header always set X-Content-Type-Options "nosniff" env=FROGGY_DOWNLOAD
+
     Header always set X-Frame-Options "SAMEORIGIN"
     Header always set Content-Security-Policy "frame-ancestors 'self';"
 

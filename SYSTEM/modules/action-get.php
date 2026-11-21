@@ -26,7 +26,7 @@ function permalink() {
 }
 
 function delimg() {
-    global $safeGet, $errmsg, $checkpermission;
+    global $errmsg, $checkpermission;
 
     if($checkpermission < 3) {
 
@@ -35,14 +35,17 @@ function delimg() {
 
     } else {
         
-        $filetodel = filter_filename($safeGet["delimg"] ?? '');
+        $filetodel = $_GET['delimg'] ?? null;
+        if(!is_string($filetodel) || !isStorageFilename($filetodel)
+            || !in_array(strtolower(pathinfo($filetodel, PATHINFO_EXTENSION)), ['jpg', 'jpeg', 'png', 'gif', 'webp'], true)) {
+            http_response_code(400);
+            $errmsg = "<h1>ОШИБКА.</h1><p class='big'>Некорректное имя изображения.</p>";
+            return;
+        }
 
-        if(is_file("DATABASE/gallery/".$filetodel)) {
-            // rename("DATABASE/gallery/".$filetodel, "DATABASE/gallery/img.del");
-            if(@unlink("DATABASE/gallery/".$filetodel)) {
-
-                mylog("<em style='color:DarkOrange'>Изображение ".$filetodel." успешно удалено. (".$_SESSION["username"].").</em>");
-            }
+        if(deleteStoredFile("DATABASE/gallery/".$filetodel, 'DATABASE/lock/gallery-upload.lock')) {
+            $name = htmlspecialchars($filetodel, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+            mylog("<em style='color:DarkOrange'>Изображение ".$name." успешно удалено. (".$_SESSION["username"].").</em>");
         }
 
         refreshhandle(0, "?gallery=-1", false);
@@ -50,7 +53,7 @@ function delimg() {
 }
 
 function delfile() {
-    global $safeGet, $errmsg, $checkpermission;
+    global $errmsg, $checkpermission;
 
     if($checkpermission < 3) {
 
@@ -59,14 +62,16 @@ function delfile() {
 
     } else {
 
-        $filetodel = filter_filename($safeGet["delfile"] ?? '');
+        $filetodel = $_GET['delfile'] ?? null;
+        if(!is_string($filetodel) || !isDownloadFilename($filetodel)) {
+            http_response_code(400);
+            $errmsg = "<h1>ОШИБКА.</h1><p class='big'>Некорректное имя файла.</p>";
+            return;
+        }
 
-        if(is_file("DATABASE/fupload/".$filetodel)) {
-            // rename("DATABASE/fupload/".$filetodel, "DATABASE/fupload/file.del");
-            if(@unlink("DATABASE/fupload/".$filetodel)) {
-
-                mylog("<em style='color:DarkOrange'>Файл ".$filetodel." успешно удалён. (".$_SESSION["username"].").</em>");
-            }
+        if(deleteStoredFile("DATABASE/fupload/".$filetodel, 'DATABASE/lock/file-upload.lock')) {
+            $name = htmlspecialchars($filetodel, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+            mylog("<em style='color:DarkOrange'>Файл ".$name." успешно удалён. (".$_SESSION["username"].").</em>");
         }
 
         refreshhandle(0, "?dlfiles=-1", false);
@@ -151,11 +156,19 @@ function purgelog() {
         $errmsg = pforbidden();
         $errmsg .= "<p class='big'>Только <strong>администраторы</strong> это могут делать.</p>";
     } else {
-        // dbprep("DATABASE/DB/sys.log");
-        // if(!dbdone("DATABASE/DB/sys.log", "ЛОГ БЫЛ ИЗМЕНЁН ИЛИ ЗАБЛОКИРОВАН ВНЕШНИМ ПРОЦЕССОМ")) return false;
-
-        if(is_file("DATABASE/DB/sys.log")) {
-            @unlink("DATABASE/DB/sys.log");
+        $log = @fopen("DATABASE/DB/sys.log", 'c+b');
+        $cleared = false;
+        if($log !== false) {
+            try {
+                $cleared = @flock($log, LOCK_EX) && @ftruncate($log, 0) && @fflush($log);
+            } finally {
+                fclose($log);
+            }
+        }
+        if(!$cleared) {
+            http_response_code(500);
+            $errmsg = "<h1>ОШИБКА.</h1><p class='big'>Не удалось очистить лог.</p>";
+            return;
         }
 
         mylog("<strong style='color:DarkRed'>Лог был очищен. (".$_SESSION["username"].").</strong>");
@@ -166,11 +179,12 @@ function purgelog() {
     }
 }
 
-function pageload() {
+/** Загружает страницу и возвращает true, если на ней выведена форма комментария. */
+function pageload(): bool {
 
     global $safeGet, $safePost, $content, $query, $txtnamebuf, $errmsg, $commmsg, $txtpath, $tplcomments, $mainPageTitle, $ispageexist, $checkpermission, $patternYT, $replacementYT, $patternVimeo, $replacementVimeo, $patternDM, $replacementDM, $commRecov, $metaDescription, $url, $idcache, $head, $patternDLCNT, $replacementDLCNT, $csrf;
 
-    // require_once "SYSTEM/cred.php";
+    $commentFormRendered = false;
 
     if(!$ispageexist) {
 
@@ -186,12 +200,22 @@ function pageload() {
         // $numgen = seoLinkDecode($numgen);
 
         $numgen = seoNumGet();
+        $commaddr = $idcache[$numgen - 1] ?? '';
+        $queryString = $_SERVER['QUERY_STRING'] ?? '';
+        $bytepos = $query['?'.explode("&", $queryString)[0]] ?? -1;
+        $line = readPageRecord($commaddr, $bytepos);
+        if($line === false) {
+            $ispageexist = false;
+            $errmsg = pnotfound();
+            return false;
+        }
 
         $txtpath = $txtnamebuf[$numgen - 1];
 
-        $permalinkButton = $idcache[$numgen - 1];
-        $permalinkButton = $url."?".$permalinkButton."&amp;permalink=1";
-        $permalinkButton = "<button onclick='copyToClipboard(\"$permalinkButton\");' title='Копировать Постоянную Ссылку'>🔗</button>";
+        $permalink = $url . '?' . $commaddr . '&permalink=1';
+        $copyPermalink = 'copyToClipboard(' . json_encode($permalink, JSON_INVALID_UTF8_SUBSTITUTE) . ')';
+        $copyPermalink = htmlspecialchars($copyPermalink, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+        $permalinkButton = "<button onclick='$copyPermalink' title='Копировать Постоянную Ссылку'>🔗</button>";
 
         array_shift($txtpath);
 
@@ -227,17 +251,7 @@ function pageload() {
             $commpage = "";
         }
 
-        $queryString = $_SERVER['QUERY_STRING'] ?? '';
-        $bytepos = $query['?'.explode("&", $queryString)[0]] ?? 0;
-
-        $file = fopenOrDie("DATABASE/DB/data.html", "rb");
-        fseekOrDie($file, $bytepos);
-
-        $commaddr = freadOrDie($file, 40);
-        $line = fgetsOrDie($file);
-        $dbMtime = filemtimeMy("DATABASE/comments/".$commaddr);
-
-        fclose($file);
+        $dbMtime = sprintf('%.4F', filemtimeMy("DATABASE/comments/".$commaddr));
 
         $line = str_replace("<br!>", "\n", $line);
 
@@ -497,6 +511,7 @@ function pageload() {
 
         if(!isset($safeGet["creply"]) && !isset($safePost["pgcommnum"])) {
 
+            $commentFormRendered = true;
             $tplcomments .= "<br style='clear: both;' id='R' />".
             $commmsg."<br style='clear: both;' /><form method='post'>
             
@@ -520,7 +535,12 @@ function pageload() {
 
             
 
-            $filesource = openFileOrDie("DATABASE/comments/".$commaddr, "rb");
+            try {
+                $filesource = new SafeSplFileObject("DATABASE/comments/".$commaddr, "rb");
+            } catch(RuntimeException $e) {
+                // Страница могла потерять файл комментариев между подсчётом и открытием.
+                return $commentFormRendered;
+            }
 
             $queryString = $_SERVER['QUERY_STRING'] ?? '';
             $queryBase = explode("&", $queryString)[0];
@@ -601,8 +621,9 @@ function pageload() {
                 $commreplyact = filter_filename($commreplyact);
                 $commreplyactarr = explode("-", $commreplyact);
 
-                if(isset($commreplyactarr[0], $commreplyactarr[1], $commreplyactarr[2])) { 
+                if(isset($commreplyactarr[0], $commreplyactarr[1], $commreplyactarr[2])) {
 
+                    $commentFormRendered = true;
                     $tplcomments .= "<br style='clear: both;' id='R' />".
                     $commmsg."<br style='clear: both;' /><form method='post'>
                     
@@ -613,6 +634,7 @@ function pageload() {
 
             } elseif(isset($safePost["pgcommnum"])) {
 
+                $commentFormRendered = true;
                 $tplcomments .= "<br style='clear: both;' id='R' />".
                 $commmsg."<br style='clear: both;' /><form method='post'>
                 
@@ -623,6 +645,7 @@ function pageload() {
             }
         }
     }
+    return $commentFormRendered;
 }
 
 function commentRemove() {
@@ -653,41 +676,26 @@ function commentRemove() {
 
         /// $pgcommnum = abs($pgcommnum);
 
-        if(in_array($commaddr, $idcache, true)) {
-
-
-            $check = openFileOrDie("DATABASE/comments/".$commaddr, 'rb');
-
-            $check->seekOrDie($pgcommnum + 1);
-
-            $check = null;
-
-
-            $commdataline = "";
+        if($pgcommnum >= 0 && in_array($commaddr, $idcache, true)
+            && prepareCommentWrite($commaddr, failureStatus: $failureStatus)) {
 
             ///$commpage = ceil(($pgcommnum + 1) / 8) - 1; // Используем номер строки для вычисления страницы
 
             /// То-же самое, но проще.
             $commpage = intdiv($pgcommnum, 8); // при 0-based индексе
 
-            dbprepApnd("DATABASE/comments/".$commaddr);
-
             $filesource = openFileOrDie("DATABASE/comments/".$commaddr . ".src." . getmypid(), 'rb');
 
-            // Переходим к нужной строке
-            $filesource->seekOrDie($pgcommnum);
-
-            /*
-            if($filesource->eof()) {
-                die();
+            $filesource->seek($pgcommnum);
+            $commdataline = $filesource->current();
+            $commdatarr = is_string($commdataline) ? explode("<$commid>", $commdataline) : [];
+            if(count($commdatarr) !== 3) {
+                $filesource = null;
+                cancelDatabaseWrite("DATABASE/comments/".$commaddr);
+                $errmsg = pnotfound();
+                return;
             }
-            */
-
-            // Получаем текущую строку и её номер
-            $commdataline = $filesource->current(); // Читаем строку
-
-            $commdatarr = (array)explode("<$commid>",$commdataline);
-            $commdatarr[2] = str_replace("<$commid />", "", $commdatarr[2] ?? "");
+            $commdatarr[2] = str_replace("<$commid />", "", $commdatarr[2]);
 
             
             $commdataline = $commdatarr[0]."DEL".$commdatarr[2];
@@ -718,6 +726,7 @@ function commentRemove() {
 
                 $PosMark = $filesource->ftell();
 
+                $filedest->fflushOrDie();
                 $filedest = null;
                 
                 $filesource = null;
@@ -731,6 +740,7 @@ function commentRemove() {
                     $filedest->fwriteOrDie($line);
                 }
 
+                $filedest->fflushOrDie();
                 $filedest = null;
                 
                 $filesource = null;
@@ -746,6 +756,9 @@ function commentRemove() {
 
         } else {
 
+            if(($failureStatus ?? null) === 500) {
+                return reportDatabaseWriteFailure('');
+            }
             $errmsg = pnotfound();
 
         }
@@ -754,7 +767,7 @@ function commentRemove() {
 
 function pageEdit() {
 
-    global $content, $query, $errmsg, $head, $body, /* $apiKeyTinyMCE,*/ $mainPageTitle, $url, $checkpermission, $ispageexist, $csrf;
+    global $content, $query, $idcache, $errmsg, $head, $body, /* $apiKeyTinyMCE,*/ $mainPageTitle, $url, $checkpermission, $ispageexist, $csrf, $chTimeDB;
 
     if( $checkpermission < 3 ) {
 
@@ -771,6 +784,16 @@ function pageEdit() {
         $errmsg = pnotfound();
 
     } else {
+
+        $queryString = $_SERVER['QUERY_STRING'] ?? '';
+        $bytepos = $query['?'.explode("&", $queryString)[0]] ?? -1;
+        $pageId = $idcache[seoNumGet() - 1] ?? '';
+        $line = readPageRecord($pageId, $bytepos);
+        if($line === false) {
+            $ispageexist = false;
+            $errmsg = pnotfound();
+            return;
+        }
 
         $head .= "<script src='SYSTEM/JSLIB/ckeditor/ckeditor.js'></script>";
         $body .= "
@@ -1104,14 +1127,10 @@ function pageEdit() {
 
                 </script>";
 
-        $queryString = $_SERVER['QUERY_STRING'] ?? '';
-        $bytepos = $query['?'.explode("&", $queryString)[0]] ?? 0;
-
-        $dbMtime = filemtimeMy("DATABASE/DB/data.html");
-
         $content .= "<form method='post'>
         
-        <input type='hidden' name='dbtimestamp' value='$dbMtime' />
+        <input type='hidden' name='dbtimestamp' value='".sprintf('%.4F', $chTimeDB)."' />
+        <input type='hidden' name='pageid' value='$pageId' />
 
         <input type='hidden' name='csrf' value='$csrf' />
         
@@ -1123,15 +1142,6 @@ function pageEdit() {
         <p><strong>{{download|DATABASE/fupload/Example.zip}}</strong>&nbsp;&mdash; Используйте это для вставки URL загрузок.</p>
         <p>Для вставки Тире используйте \" -- \" (без кавычек, с пробелами по краям)</p>
         <p><strong>{{lambda}} FROG!!!</strong></p>";
-
-        $file = fopenOrDie("DATABASE/DB/data.html", "rb");
-        
-        fseekOrDie($file, $bytepos+40);
-            
-        $line = fgetsOrDie($file);
-        // $line = preg_replace("/(<\/head[1-6]>)/", "$1\n", $line);
-        
-        fclose($file);
 
         $line = str_replace("<!2!>", "<!2!>\n", $line);
 
@@ -1181,7 +1191,7 @@ function pageEdit() {
         $content .= "<div class='el-in-line'><input type='submit' value='💾 Отправить' />
 
             <a href='?".$queryBase."&amp;leaveedit=1&amp;csrf=$csrf'>Отменить ⬅️</a>
-            <a href='?".$queryBase."&amp;pagedel=1&amp;csrf=$csrf' id='pagedelbutton'>❌ Удалить страницу</a>
+            <a href='?".$queryBase."&amp;pagedel=1&amp;pageid=$pageId&amp;csrf=$csrf' id='pagedelbutton'>❌ Удалить страницу</a>
 
             </div></fieldset></form>";
 
@@ -1251,6 +1261,12 @@ function addPage() {
 
     } else {
 
+        $anchor = seoNumGet();
+        $anchorId = $idcache[$anchor - 1] ?? null;
+        if($anchorId === null || (isset($safeGet['pageid']) && $safeGet['pageid'] !== $anchorId)) {
+            return reportPageWriteFailure();
+        }
+
         $seoPgIndex = 1;
 
         while(array_key_exists($seoPgIndex, $seoNumEncode)) {
@@ -1272,16 +1288,29 @@ function addPage() {
 
             $line = $idKey."<head1>New</head1>$seoPgIndex<!1!>".$time."<!2!><br!><br!><p>Чтобы показать заказчику эскизы сайта, нужно где-то найти тексты и картинки. Как правило, ни того, ни другого в момент показа эскизов у дизайнера нету.</p><br!><br!><p>Что же делает дизайнер? Он делает рыбу.</p><br!><br!><p>Рыбу можно вставлять, использовать, вешать, заливать, показывать, запихивать... Словом, с ней можно делать что угодно, лишь бы эскиз был максимально похож на готовую работу.</p><br!><br!><p>Если в качестве рыбных картинок использовать цветные прямоугольники, а вместо текста слова «тут будет текст тут будет текст тут будет текст тут будет текст», эскиз будет выглядеть неестественно.</p><br!><br!><p>Очень часто рыба становится частью готового сайта — так она нравится клиенту.</p><br!><br!><p>Рыба — это креатив чистой воды®</p><br!><br!><br!><p><img src='DATABASE/DB/ryba.jpg' alt='Рыба на подносе'></p><span class='big'><strong>Из жизни рыбы:</strong></span><br!><br!><p>Во время создания серии сайтов для Яндекса было решено придумать каждому проекту по слогану. Для проекта Почта.Яндекса был придуман рыбный слоган «Посылают все!», который успешно использовался и после открытия сайта.</p><br!><br!><p>На сайте компании «Арсеналъ» был сделан рыбный текст для графического заголовка: «Лучшее российское программное обеспечение». Эта фраза висела на сайте компании несколько лет и осталась даже при смене дизайна.</p><br!><br!><p>Для презентационного сайта о пластиковых карточках «VISA-Альфамобиль» вместо рубрик было написано: «во-первых», «во-вторых», «и, конечно», «а еще», «кроме того», «да что там». Все эти надписи сохранились в готовом сайте и висят там до сих пор.</p><br!><br!><p>А уж как часто рыбные картинки остаются жить в открытых сайтах… вы даже не представляете!</p>\n";
 
-            dbprepApnd("DATABASE/DB/data.html");
+            if(!preparePageWrite()) return false;
 
-            $filedest = openFileOrDie("DATABASE/DB/data.html.new." . getmypid(), 'ab');
+            $database = 'DATABASE/DB/data.html';
+            $source = fopenOrDie($database . '.src.' . getmypid(), 'rb');
+            $stat = @fstat($source);
+            $written = false;
+            if($stat !== false) {
+                $end = $stat['size'];
+                if($end === 0 || (@fseek($source, -1, SEEK_END) === 0 && ($lastByte = @fread($source, 1)) !== false)) {
+                    if($end > 0 && $lastByte !== "\n") {
+                        $line = "\n" . $line;
+                    }
+                    $written = rewritePageSnapshot($source, $end, $end,
+                        static fn($target): bool => @fwrite($target, $line) === strlen($line));
+                }
+            }
+            fclose($source);
+            if(!$written) {
+                cancelDatabaseWrite($database);
+                return reportPageWriteFailure(500);
+            }
 
-            $filedest->fwriteOrDie($line);
-
-            $filedest = null;
-            
-
-            if(!dbdone("DATABASE/DB/data.html", "БАЗА ДАННЫХ БЫЛА ИЗМЕНЕНА ИЛИ ЗАБЛОКИРОВАНА ВНЕШНИМ ПРОЦЕССОМ")) return false;
+            if(!dbdone($database, "БАЗА ДАННЫХ БЫЛА ИЗМЕНЕНА ИЛИ ЗАБЛОКИРОВАНА ВНЕШНИМ ПРОЦЕССОМ")) return false;
 
             mylog("<em style='color:DarkGreen'>В конец добавлена страница. (".$_SESSION["username"].").</em>");
 
@@ -1289,7 +1318,7 @@ function addPage() {
 
             // $newpageaddr = seoLinkDecode($newpageaddr) + 1;
 
-            $newpageaddr = seoNumGet() + 1;
+            $newpageaddr = count($idcache) + 1;
         
             /// unlockByName($_SESSION['username'] ?? ""); ///
 
@@ -1312,52 +1341,37 @@ function addPage() {
             $numlvl[0] = (int)($numlvl[0] ?? 0);
 
             $numlvl[1] = (int)($numlvl[1] ?? 0);
+            if($numlvl[0] !== $anchor) {
+                return reportPageWriteFailure();
+            }
 
             $line = $idKey."<head".$numlvl[1].">New</head".$numlvl[1].">$seoPgIndex<!1!>$time<!2!><br!><br!><p>Чтобы показать заказчику эскизы сайта, нужно где-то найти тексты и картинки. Как правило, ни того, ни другого в момент показа эскизов у дизайнера нету.</p><br!><br!><p>Что же делает дизайнер? Он делает рыбу.</p><br!><br!><p>Рыбу можно вставлять, использовать, вешать, заливать, показывать, запихивать... Словом, с ней можно делать что угодно, лишь бы эскиз был максимально похож на готовую работу.</p><br!><br!><p>Если в качестве рыбных картинок использовать цветные прямоугольники, а вместо текста слова «тут будет текст тут будет текст тут будет текст тут будет текст», эскиз будет выглядеть неестественно.</p><br!><br!><p>Очень часто рыба становится частью готового сайта — так она нравится клиенту.</p><br!><br!><p>Рыба — это креатив чистой воды®</p><br!><br!><br!><p><img src='DATABASE/DB/ryba.jpg' alt='Рыба на подносе'></p><span class='big'><strong>Из жизни рыбы:</strong></span><br!><br!><p>Во время создания серии сайтов для Яндекса было решено придумать каждому проекту по слогану. Для проекта Почта.Яндекса был придуман рыбный слоган «Посылают все!», который успешно использовался и после открытия сайта.</p><br!><br!><p>На сайте компании «Арсеналъ» был сделан рыбный текст для графического заголовка: «Лучшее российское программное обеспечение». Эта фраза висела на сайте компании несколько лет и осталась даже при смене дизайна.</p><br!><br!><p>Для презентационного сайта о пластиковых карточках «VISA-Альфамобиль» вместо рубрик было написано: «во-первых», «во-вторых», «и, конечно», «а еще», «кроме того», «да что там». Все эти надписи сохранились в готовом сайте и висят там до сих пор.</p><br!><br!><p>А уж как часто рыбные картинки остаются жить в открытых сайтах… вы даже не представляете!</p>\n";
 
             if(sanCheckAdd($numlvl[0], $numlvl[1])) {
 
-                dbprepApnd("DATABASE/DB/data.html");
+                if(!preparePageWrite()) return false;
 
-                $filesource = openFileOrDie("DATABASE/DB/data.html.src." . getmypid(), 'rb');
-
-                $filesource->seekOrDie($numlvl[0]);
-
-                $firstChunkEnd = $filesource->ftell();
-
-                $file = fopenOrDie("DATABASE/DB/data.html.new." . getmypid(), "r+b");
-                ftruncateOrDie($file,$firstChunkEnd);
-                fclose($file);
-
-                $filedest = openFileOrDie("DATABASE/DB/data.html.new." . getmypid(), 'ab');
-
-                $filedest->fwriteOrDie($line);
-
-
-                if(catTailAvailable()) {
-
-                    $PosMark = $filesource->ftell();
-
-                    $filedest = null;
-                    
-                    $filesource = null;
-
-                    concater("DATABASE/DB/data.html.new." . getmypid(), "DATABASE/DB/data.html.src." . getmypid(), $PosMark);
-
-                } else { 
-
-                    while($line = $filesource->freadOrDie(256*1024)) {
-
-                        $filedest->fwriteOrDie($line);
-                    }
-
-                    $filedest = null;
-                        
-                    $filesource = null;
+                $database = 'DATABASE/DB/data.html';
+                $source = fopenOrDie($database . '.src.' . getmypid(), 'rb');
+                $record = pageInSnapshot($source, $anchor - 1);
+                if($record === null) {
+                    fclose($source);
+                    cancelDatabaseWrite($database);
+                    return reportPageWriteFailure();
                 }
-                
 
-                if(!dbdone("DATABASE/DB/data.html", "БАЗА ДАННЫХ БЫЛА ИЗМЕНЕНА ИЛИ ЗАБЛОКИРОВАНА ВНЕШНИМ ПРОЦЕССОМ")) return false;
+                if(!str_ends_with($record['line'], "\n")) {
+                    $line = "\n" . $line;
+                }
+                $written = rewritePageSnapshot($source, $record['end'], $record['end'],
+                    static fn($target): bool => @fwrite($target, $line) === strlen($line));
+                fclose($source);
+                if(!$written) {
+                    cancelDatabaseWrite($database);
+                    return reportPageWriteFailure(500);
+                }
+
+                if(!dbdone($database, "БАЗА ДАННЫХ БЫЛА ИЗМЕНЕНА ИЛИ ЗАБЛОКИРОВАНА ВНЕШНИМ ПРОЦЕССОМ")) return false;
 
                 mylog("<em style='color:DarkGreen'>В середине меню добавлена страница. (".$_SESSION["username"].").</em>");
 
@@ -1425,163 +1439,77 @@ function logout() {
 }
 
 function movePageDown() {
-
-    global $safeGet, $errmsg, $checkpermission;
-    
-    if( $checkpermission < 3 ) {
-
-        $errmsg = pforbidden();
-
-        $errmsg .= "<p class='big'>Только <strong>редакторы</strong> и <strong>администраторы</strong> это могут делать.</p>";
-
-    } elseif(isDbLocked() && !isLockedBy($_SESSION['username'])) {
-
-        $errmsg = plocked();
-
-    } else {
-
-        $pg2mv = (int)$safeGet["pgmovedown"] - 1;
-
-        if(sanCheckDown()) {
-
-            dbprepApnd("DATABASE/DB/data.html");
-
-            $filesource = openFileOrDie("DATABASE/DB/data.html.src." . getmypid(), 'rb');
-
-            $filesource->seekOrDie($pg2mv);
-
-            $firstChunkEnd = $filesource->ftell();
-
-            $file = fopenOrDie("DATABASE/DB/data.html.new." . getmypid(), "r+b");
-            ftruncateOrDie($file,$firstChunkEnd);
-            fclose($file);
-
-            $filedest = openFileOrDie("DATABASE/DB/data.html.new." . getmypid(), 'ab');
-
-            $prevline = $filesource->fgetsOrDie();
-            $nextline = $filesource->fgetsOrDie();
-
-            $filedest->fwriteOrDie($nextline.$prevline);
-
-
-            if(catTailAvailable()) {
-
-                $PosMark = $filesource->ftell();
-
-                $filedest = null;
-                
-                $filesource = null;
-
-                concater("DATABASE/DB/data.html.new." . getmypid(), "DATABASE/DB/data.html.src." . getmypid(), $PosMark);
-
-            } else { 
-                
-                while($line = $filesource->freadOrDie(256*1024)) {
-
-                    $filedest->fwriteOrDie($line);
-                }
-
-                $filedest = null;
-                    
-                $filesource = null;
-            }
-            
-
-            if(!dbdone("DATABASE/DB/data.html", "БАЗА ДАННЫХ БЫЛА ИЗМЕНЕНА ИЛИ ЗАБЛОКИРОВАНА ВНЕШНИМ ПРОЦЕССОМ")) return false;
-        
-            /// unlockByName($_SESSION['username'] ?? ""); ///
-
-            mylog("<em style='color:DarkMagenta'>Страница опущена вниз. (".$_SESSION["username"].").</em>");
-
-            refreshhandle(0, "?nredir=".((int)$safeGet["pgmovedown"] + 1));
-
-        } else {
-
-            refreshhandle(4, "?nredir=".(int)$safeGet["pgmovedown"], false);
-        }
-    }
-        
-    unlockByName($_SESSION['username'] ?? "dummy");
+    movePageById('pgmovedown', 1);
 }
 
 function movePageUp() {
-    
-    global $safeGet, $errmsg, $checkpermission;
+    movePageById('pgmoveup', -1);
+}
 
-    if( $checkpermission < 3 ) {
+function movePageById(string $action, int $direction): void {
+    global $safeGet, $errmsg, $checkpermission, $idcache;
 
+    if($checkpermission < 3) {
         $errmsg = pforbidden();
-
         $errmsg .= "<p class='big'>Только <strong>редакторы</strong> и <strong>администраторы</strong> это могут делать.</p>";
-
-    } elseif(isDbLocked() && !isLockedBy($_SESSION['username'])) {
-
-        $errmsg = plocked();
-
-    } else {
-
-        $pg2mv = (int)$safeGet["pgmoveup"] - 2;
-
-        if(sanCheckUp()) {
-
-            dbprepApnd("DATABASE/DB/data.html");
-
-            $filesource = openFileOrDie("DATABASE/DB/data.html.src." . getmypid(), 'rb');
-
-            $filesource->seekOrDie($pg2mv);
-
-            $firstChunkEnd = $filesource->ftell();
-
-            $file = fopenOrDie("DATABASE/DB/data.html.new." . getmypid(), "r+b");
-            ftruncateOrDie($file,$firstChunkEnd);
-            fclose($file);
-
-            $filedest = openFileOrDie("DATABASE/DB/data.html.new." . getmypid(), 'ab');
-
-            $prevline = $filesource->fgetsOrDie();
-            $nextline = $filesource->fgetsOrDie();
-
-            $filedest->fwriteOrDie($nextline.$prevline);
-
-
-            if(catTailAvailable()) {
-
-                $PosMark = $filesource->ftell();
-
-                $filedest = null;
-                
-                $filesource = null;
-
-                concater("DATABASE/DB/data.html.new." . getmypid(), "DATABASE/DB/data.html.src." . getmypid(), $PosMark);
-
-            } else {
-
-                while($line = $filesource->freadOrDie(256*1024)) {
-
-                    $filedest->fwriteOrDie($line);
-                }
-
-                $filedest = null;
-                    
-                $filesource = null;
-            }
-            
-
-            if(!dbdone("DATABASE/DB/data.html", "БАЗА ДАННЫХ БЫЛА ИЗМЕНЕНА ИЛИ ЗАБЛОКИРОВАНА ВНЕШНИМ ПРОЦЕССОМ")) return false;
-        
-            /// unlockByName($_SESSION['username'] ?? ""); ///
-
-            mylog("<em style='color:DarkMagenta'>Страница поднята вверх. (".$_SESSION["username"].").</em>");
-
-            refreshhandle(0, "?nredir=".((int)$safeGet["pgmoveup"] - 1));
-
-        } else {
-
-            refreshhandle(4, "?nredir=".(int)$safeGet["pgmoveup"], false);
-        }
+        return;
     }
-        
-    unlockByName($_SESSION['username'] ?? "dummy");
+    if(isDbLocked() && !isLockedBy($_SESSION['username'])) {
+        $errmsg = plocked();
+        return;
+    }
+
+    $id = $safeGet[$action] ?? null;
+    $index = is_string($id) ? array_search($id, $idcache, true) : false;
+    if($index === false) {
+        reportPageWriteFailure();
+        return;
+    }
+
+    $allowed = $direction === 1 ? sanCheckDown($index) : sanCheckUp($index);
+    if(!$allowed) {
+        refreshhandle(4, '?nredir=' . ($index + 1), false);
+        unlockByName($_SESSION['username'] ?? 'dummy');
+        return;
+    }
+    if(!preparePageWrite()) {
+        return;
+    }
+
+    $database = 'DATABASE/DB/data.html';
+    $source = fopenOrDie($database . '.src.' . getmypid(), 'rb');
+    $neighbor = $index + $direction;
+    $left = pageInSnapshot($source, min($index, $neighbor));
+    $right = pageInSnapshot($source, max($index, $neighbor));
+    if($left === null || $right === null || $left['end'] > $right['start']) {
+        fclose($source);
+        cancelDatabaseWrite($database);
+        reportPageWriteFailure();
+        return;
+    }
+
+    $gap = $right['start'] - $left['end'];
+    $rightLine = str_ends_with($right['line'], "\n") ? $right['line'] : $right['line'] . "\n";
+    $written = rewritePageSnapshot($source, $left['start'], $right['end'],
+        static function ($target) use ($source, $left, $rightLine, $gap): bool {
+            return @fwrite($target, $rightLine) === strlen($rightLine)
+                && ($gap === 0 || (@fseek($source, $left['end']) === 0
+                    && @stream_copy_to_stream($source, $target, $gap) === $gap))
+                && @fwrite($target, $left['line']) === strlen($left['line']);
+        });
+    fclose($source);
+    if(!$written) {
+        cancelDatabaseWrite($database);
+        reportPageWriteFailure(500);
+        return;
+    }
+    if(!dbdone($database, "БАЗА ДАННЫХ БЫЛА ИЗМЕНЕНА ИЛИ ЗАБЛОКИРОВАНА ВНЕШНИМ ПРОЦЕССОМ")) {
+        return;
+    }
+
+    $message = $direction === 1 ? 'Страница опущена вниз.' : 'Страница поднята вверх.';
+    mylog("<em style='color:DarkMagenta'>$message (" . $_SESSION['username'] . ").</em>");
+    refreshhandle(0, '?nredir=' . ($neighbor + 1));
 }
 
 function gallery() {
@@ -1725,38 +1653,8 @@ function dlFiles() {
 
     $limit = 50;
 
-    $exts = [
-        // Текстовые и данные
-        'txt', 'csv', 'tsv', 'json', 'xml', 'md', 'log', 'ini', 'yaml', 'yml',
+    $exts = downloadFileExtensions();
 
-        // Дополнительные безопасные текстовые форматы
-        'conf', 'cfg', 'toml', 'properties',
-        'rst', 'adoc', 'org',
-        'diff', 'patch', 'nfo',
-        'tex', 'bib',
-
-        // Документы и офисные файлы
-        'pdf', 'doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx', 'odt', 'ods', 'odp', 'rtf',
-
-        // Электронные книги
-        'epub', 'mobi', 'azw', 'azw3',
-
-        // Архивы и образы
-        'zip', 'rar', '7z', 'tar', 'gz', 'bz2', 'xz', 'lz', 'lzma', 'iso',
-
-        // Игровые и мод-ресурсы
-        'esp', 'esm',
-
-        // Субтитры и прочее медиасопровождение (без видео и изображений)
-        'srt', 'vtt', 'ass', 'ssa', 'sub',
-
-        // Шрифты (если нужны для фронта, но не исполняемы)
-        'ttf', 'otf', 'woff', 'woff2',
-
-        // Базы данных/дампы
-        'sql', 'sqlite', 'db', 'db3',
-    ];
-    
     $pattern = 'DATABASE/fupload/*.{'.implode(',', $exts).'}';
     $files = glob($pattern, GLOB_BRACE) ?: [];
 
@@ -1862,7 +1760,7 @@ function dlFiles() {
 
 function deletePage() {
 
-    global $errmsg, $numcache, $checkpermission, $ispageexist;
+    global $errmsg, $numcache, $checkpermission, $ispageexist, $idcache, $safeGet;
 
     if( $checkpermission < 3 ) {
 
@@ -1889,7 +1787,10 @@ function deletePage() {
 
             $pagedel = seoNumGet();
 
-            $numcache[] = 0;
+            $expectedId = $idcache[$pagedel - 1] ?? null;
+            if($expectedId === null || (isset($safeGet['pageid']) && $safeGet['pageid'] !== $expectedId)) {
+                return reportPageWriteFailure();
+            }
 
             if($pagedel < 3) {
 
@@ -1898,7 +1799,7 @@ function deletePage() {
 
                 refreshhandle(4, "?nredir=".$pagedel, false);
 
-            } elseif($numcache[$pagedel] - $numcache[$pagedel-2] > 1) {
+            } elseif(($numcache[$pagedel] ?? 0) > $numcache[$pagedel - 1]) {
 
                 $errmsg = "<h1>ОШИБКА.</h1><p class='big'><strong>У <em>ВЛОЖЕННОЙ</em> страницы есть потомки.</strong></p>";
                 mylog("<em style='color:DarkBlue'>У ВЛОЖЕННОЙ страницы есть потомки. (".$_SESSION["username"].").</em>");
@@ -1907,104 +1808,30 @@ function deletePage() {
 
             } else {
 
-                dbprepApnd("DATABASE/DB/data.html");
+                if(!preparePageWrite()) return false;
 
-                $filesource = openFileOrDie("DATABASE/DB/data.html.src." . getmypid(), 'rb');
-
-                $filesource->seekOrDie($pagedel - 1);
-
-                $firstChunkEnd = $filesource->ftell();
-
-                $file = fopenOrDie("DATABASE/DB/data.html.new." . getmypid(), "r+b");
-                ftruncateOrDie($file,$firstChunkEnd);
-                fclose($file);
-
-                $pageid = $filesource->freadOrDie(40);
-
-                $filesource->fgetsOrDie();
-
-                /// Убрано отсюда
-                /// $filedest = openFileOrDie("DATABASE/DB/data.html.new." . getmypid(), 'ab');
-
-
-                if(catTailAvailable()) {
-
-                    $PosMark = $filesource->ftell();
-
-                    /// $filedest = null;
-                    
-                    $filesource = null;
-
-                    concater("DATABASE/DB/data.html.new." . getmypid(), "DATABASE/DB/data.html.src." . getmypid(), $PosMark);
-
-                } else {
-
-                    /// Перемещено сюда
-                    $filedest = openFileOrDie("DATABASE/DB/data.html.new." . getmypid(), 'ab');
-
-                    while($line = $filesource->freadOrDie(256*1024)) {
-
-                        $filedest->fwriteOrDie($line);
-                    }
-
-                    $filedest = null;
-                        
-                    $filesource = null;
-                }
-                
-
-                if(!dbdone("DATABASE/DB/data.html", "БАЗА ДАННЫХ БЫЛА ИЗМЕНЕНА ИЛИ ЗАБЛОКИРОВАНА ВНЕШНИМ ПРОЦЕССОМ")) return false;
-
-                if(is_file("DATABASE/comments/".$pageid)) {
-
-                    @unlink("DATABASE/comments/".$pageid);
+                $database = 'DATABASE/DB/data.html';
+                $source = fopenOrDie($database . '.src.' . getmypid(), 'rb');
+                $page = pageInSnapshot($source, $pagedel - 1);
+                if($page === null || $page['id'] !== $expectedId) {
+                    fclose($source);
+                    cancelDatabaseWrite($database);
+                    return reportPageWriteFailure();
                 }
 
-                if(is_file("DATABASE/comments/".$pageid.".bak")) {
-
-                    @unlink("DATABASE/comments/".$pageid.".bak");
+                $written = rewritePageSnapshot($source, $page['start'], $page['end'], static fn($target): bool => true);
+                fclose($source);
+                if(!$written) {
+                    cancelDatabaseWrite($database);
+                    return reportPageWriteFailure(500);
                 }
 
-                if(is_file("DATABASE/comments/".$pageid.".time")) {
+                if(!dbdone($database, "БАЗА ДАННЫХ БЫЛА ИЗМЕНЕНА ИЛИ ЗАБЛОКИРОВАНА ВНЕШНИМ ПРОЦЕССОМ")) return false;
 
-                    @unlink("DATABASE/comments/".$pageid.".time");
+                $pageid = $page['id'];
+                if(!clearPageComments($pageid)) {
+                    error_log('Не удалось очистить комментарии удалённой страницы ' . $pageid);
                 }
-
-                if(is_file("DATABASE/comments/".$pageid.".pages-cache")) {
-
-                    @unlink("DATABASE/comments/".$pageid.".pages-cache");
-                }
-
-                if(is_file("DATABASE/comments/".$pageid.".lock")) {
-
-                    @unlink("DATABASE/comments/".$pageid.".lock");
-                }
-
-                //////////////////////
-
-                if(is_file("DATABASE/comments/".$pageid.".count")) {
-
-                    @unlink("DATABASE/comments/".$pageid.".count");
-                }
-
-                if(is_file("DATABASE/comments/".$pageid.".wait")) {
-
-                    @unlink("DATABASE/comments/".$pageid.".wait");
-                }
-
-                /*
-                if(is_file("DATABASE/comm.count/".$pageid.".bak")) {
-
-                    unlink("DATABASE/comm.count/".$pageid.".bak");
-                }
-
-                if(is_file("DATABASE/comm.count/".$pageid.".time")) {
-
-                    unlink("DATABASE/comm.count/".$pageid.".time");
-                }
-                */
-        
-                /// unlockByName($_SESSION['username'] ?? ""); ///
 
                 mylog("<strong style='color:DarkOrange'>Удалена страница ".$pagedel." (".$_SESSION["username"].").</strong>");
 
@@ -2100,11 +1927,16 @@ function gobyava() {
 
 function editUsers() {
 
-    global $cred, $content, $checkpermission, $errmsg, $mainPageTitle, $csrf;
+    global $cred, $content, $checkpermission, $errmsg, $mainPageTitle, $csrf, $credentialsVersion;
 
     if($checkpermission < 4) {
 
         $errmsg = pforbidden();
+
+    } elseif(!is_string($credentialsVersion)) {
+
+        http_response_code(503);
+        $errmsg = "<h1>ОШИБКА.</h1><p class='big'>Список пользователей временно недоступен для редактирования.</p>";
 
     } else {
 
@@ -2121,13 +1953,17 @@ function editUsers() {
         </ul><br />
         <div id='admUserListGenerator'>";
 
+        $users = [];
         foreach($cred as $username => $data) {
+            if($username === 'dummy') {
+                continue;
+            }
 
-            // Разделяем:
-            // 4<!!!>62c5...  ->  privilege = 4, hash = 62c5...
-            [$privilege, $hash] = explode('<!!!>', $data, 2);
+            [$privilege, $hash] = array_pad(explode('<!!!>', $data, 2), 2, '');
+            $users[] = ['name' => (string)$username, 'level' => (int)$privilege, 'hash' => $hash];
 
-            $username = escape_amp_txtarea($username);
+            $username = htmlspecialchars((string)$username, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+            $hash = htmlspecialchars($hash, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 
             $content .= '<div class="user-form">' . "\n";
 
@@ -2158,26 +1994,18 @@ function editUsers() {
         $content .= '<hr id="insertUserFormBefore" /><div class="el-in-line"><input type="button" value="➕" onclick="addUserForm()" />';
 
 
-        $text = '';
-
-        foreach($cred as $username => $value) {
-
-            $username = escape_amp_txtarea($username);
-
-            $text .= '$cred[\'' . $username . '\'] = "' . $value . "\";\n";
-        }
-
-        $content .= '<form method="post"><textarea name="saveusers" id="generatedUserArrayOutput" style="display: none;">'.$text.'</textarea>
+        $usersJson = htmlspecialchars(json_encode($users, JSON_INVALID_UTF8_SUBSTITUTE), ENT_QUOTES, 'UTF-8');
+        $content .= '<form method="post"><textarea name="saveusers" id="generatedUserArrayOutput" hidden="hidden">'.$usersJson.'</textarea>
 
         <input type="hidden" name="csrf" value="'.$csrf.'" />
+        <input type="hidden" name="usersversion" value="'.$credentialsVersion.'" />
+        <p id="usersNeedAdmin" hidden="hidden">В списке должен остаться хотя бы один администратор.</p>
 
         <input type="submit" id="UserFormBaseSubmit" value="💾" onclick="return confirm(\'Вы уверены?\');" /></form></div></div>
         <br /><br /><br />
         <iframe src="?uhcalc=1" style="width: 100%; height: 50vh; border: none;" onload="PseudoAJAX(this, \'admUserHashCalculator\')">Калькулятор Хэша Пользователя</iframe>
         <div id="admUserHashCalculator"></div>';
         
-        /// $content .= '<textarea>'.$text.'</textarea>';
-
     }
 
 }
