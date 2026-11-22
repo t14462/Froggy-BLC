@@ -6,7 +6,7 @@
 > **Требования (кратко):** PHP **8.3** + браузер с поддержкой **HTML5** и **JavaScript**.
 
 Домашняя страница проекта и подробнее о концепции:  
-https://froggy-blc.com/?Froggy-BLC_(Book-Like_CMS)/1
+https://froggy-blc.com/?Froggy-BLC_(Book-Like_CMS,_Manifesto)/1
 
 ---
 
