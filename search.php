@@ -66,12 +66,17 @@ declare(strict_types=1);
                 http_response_code(429);
             } else {
                 require_once __DIR__ . '/SYSTEM/modules/search-cache.php';
+                // Служебный символ отмечает в кэше дефис, который участвует в типографском тире.
+                $proseHyphen = "\x1F";
+                $proseDash = $proseHyphen . $proseHyphen;
                 // Одни правила совпадений для отбора статей, фрагментов и подсветки.
                 usort($segments, static fn($a, $b) => mb_strlen($b, 'UTF-8') <=> mb_strlen($a, 'UTF-8'));
                 $expressions = [];
                 foreach($segments as $segment) {
                     $expression = strtr(preg_quote($segment, '~'), [
                         'е' => '[её]', 'ё' => '[её]', 'Е' => '[её]', 'Ё' => '[её]',
+                        '\-' => '[' . $proseHyphen . '-]',
+                        '—' => '(?:—|' . $proseDash . ')',
                     ]);
                     // Объединяем повторы без учёта регистра, сохраняя исходное выражение.
                     $key = mb_convert_case($expression, MB_CASE_FOLD_SIMPLE, 'UTF-8');
@@ -81,7 +86,7 @@ declare(strict_types=1);
                 $patterns = array_map(static fn($expression) => '~'.$expression.'~iu', $expressions);
                 $pattern = '~(' . implode('|', $expressions) . ')~iu';
 
-                $plainText = static function(string $html): string {
+                $plainText = static function(string $html) use ($proseHyphen, $proseDash): string {
                     // Разметка статей уже очищена HTML Purifier.
                     // XHTML 1.1: https://www.w3.org/TR/xhtml11/doctype.html
                     // Строчные теги и пустые служебные элементы не разрывают слова.
@@ -97,7 +102,9 @@ declare(strict_types=1);
                     // hr html p pre; dd dl dt li ol ul; caption colgroup table tbody td tfoot th thead tr;
                     // button fieldset form input legend optgroup option select textarea; img object noscript.
                     // Аннотации Ruby (rp rt rtc) отделяются от основного текста. Неизвестные теги — тоже.
-                    $html = str_replace("<br!>", " ", $html);
+                    // Сохраняем переносы до распознавания типографского тире.
+                    $html = str_replace(['<br!>', $proseHyphen], ["\n", ' '], $html);
+                    $codeTags = [];
                     // Читаем разметку и текст одним проходом: > в атрибуте не завершает тег,
                     // а теги внутри комментариев и CDATA не меняют границы слов.
                     $text = preg_replace_callback(<<<'REGEX'
@@ -109,16 +116,29 @@ declare(strict_types=1);
     (?=[\s/>]) (?: [^<>"']++ | "[^"]*" | '[^']*' )*+ >
 | [^<]+ | < ~six
 REGEX,
-                        static function(array $match) use ($joinedTags): string {
+                        static function(array $match) use ($joinedTags, &$codeTags, $proseDash): string {
                             $tag = strtolower($match['tag'] ?? '');
                             if($tag !== '') {
+                                if($tag === 'code' || $tag === 'pre') {
+                                    if($match[0][1] === '/') {
+                                        $level = array_search($tag, array_reverse($codeTags, true), true);
+                                        if($level !== false) {
+                                            $codeTags = array_slice($codeTags, 0, $level);
+                                        }
+                                    } elseif(preg_match('~/\s*>\z~', $match[0]) !== 1) {
+                                        $codeTags[] = $tag;
+                                    }
+                                }
                                 return isset($joinedTags[$tag]) ? '' : ' ';
                             }
                             if(strncasecmp($match[0], '<![CDATA[', 9) === 0) {
                                 // CDATA содержит буквальный текст, включая < и &.
                                 return htmlspecialchars($match['cdata'], ENT_NOQUOTES | ENT_SUBSTITUTE, 'UTF-8');
                             }
-                            return $match[0][0] === '<' && $match[0] !== '<' ? '' : $match[0];
+                            if($match[0][0] === '<' && $match[0] !== '<') {
+                                return '';
+                            }
+                            return $codeTags === [] ? str_replace(' -- ', ' ' . $proseDash . ' ', $match[0]) : $match[0];
                         },
                         $html
                     );
@@ -136,11 +156,11 @@ REGEX,
                     return [$plainText($header[3]), $plainText($parts[1]), $header[1]];
                 };
 
-                $highlight = static function(string $text) use ($pattern, $escape): string {
+                $highlight = static function(string $text) use ($pattern, $escape, $proseHyphen): string {
                     $parts = preg_split($pattern, $text, -1, PREG_SPLIT_DELIM_CAPTURE);
                     $html = '';
                     foreach($parts ?: [$text] as $index => $part) {
-                        $part = $escape($part);
+                        $part = $escape(str_replace($proseHyphen, '-', $part));
                         $html .= $index % 2 ? '<mark>'.$part.'</mark>' : $part;
                     }
                     return $html;

@@ -884,7 +884,11 @@ $replacementDLCNT = static function ($m) {
     $raw = trim($m[1] ?? '');
     $file = basename(str_replace('\\', '/', $raw));
     if(!isDownloadFilename($file) || !is_file("DATABASE/fupload/$file")) {
-        $file = filter_filename($raw, failOnInvalid: false);
+        // Кнопка в списке файлов копирует имя в URL-кодировке.
+        $decoded = rawurldecode($file);
+        $file = $decoded !== $file && isDownloadFilename($decoded) && is_file("DATABASE/fupload/$decoded")
+            ? $decoded
+            : filter_filename($raw, failOnInvalid: false);
     }
 
     if (!isDownloadFilename($file)) {

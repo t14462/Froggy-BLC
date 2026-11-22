@@ -134,7 +134,7 @@ function filter_filename(string $filename, bool $failOnInvalid = true, ?callable
         [\x00-\x1F]         |  # control
         [\x7F\xA0\xAD]      |  # DEL, NBSP, SHY
         [#\[\]@!$&\'()+,;=] |  # URI reserved
-        [{}^\~`]               # URL-unsafe
+        [{}%^\~`]              # URL-unsafe
     ~xu', '-', $filename);
 
     $filename = str_replace(' ', '_', $filename);

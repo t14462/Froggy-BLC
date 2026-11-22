@@ -12,6 +12,9 @@ RewriteRule ^DATABASE/fupload/[^/.][^/]*\.(?:txt|csv|tsv|json|xml|md|log|ini|yam
 # --- Запрещаем всё остальное в /DATABASE/ ---
 RewriteRule ^DATABASE(?:/|$) - [F,NC]
 
+# --- Закрываем каталоги демонстрационных примеров CKEditor ---
+RewriteRule ^SYSTEM/JSLIB/ckeditor/(?:samples|plugins/[^/]+/samples)(?:/|$) - [F,NC]
+
 # --- Разрешаем /SYSTEM/JSLIB/ и всё её содержимое ---
 RewriteRule ^SYSTEM/JSLIB/ - [L]
 
