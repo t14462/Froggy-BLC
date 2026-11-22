@@ -166,29 +166,7 @@ if($menuCache !== false) {
         $i = $i + 6;
     }
 
-    $queryString = $_SERVER['QUERY_STRING'] ?? '';
-    $queryBase = explode("&", $queryString)[0];
-
-    if(in_array('?'.$queryBase, $pgaddrcache, true)) {
-        $ispageexist = true;
-    } else {
-        $ispageexist = false;
-    }
-
     $out = $menuCache;
-
-    if($ispageexist) {
-
-        $tmp = $queryBase;
-
-        $out = str_replace("<a href='?$tmp'", "<a href='?$tmp' class='active' aria-current='page'", $out);
-
-        unset($tmp);
-
-        // $out = preg_replace("/<a>(.+?)<\/a>/u", "<strong>$1</strong>", $out);
-    }
-
-    $menubar = $out;
 
 } else {
 
@@ -401,31 +379,29 @@ if($menuCache !== false) {
     ########################################
     ########################################
 
-    $queryString = $_SERVER['QUERY_STRING'] ?? '';
-    $queryBase = explode("&", $queryString)[0];
-
-    if(in_array('?'.$queryBase, $pgaddrcache, true)) {
-        $ispageexist = true;
-    } else {
-        $ispageexist = false;
-    }
-
-    if($ispageexist) {
-
-        $tmp = $queryBase;
-
-        $out = str_replace("<a href='?$tmp'", "<a href='?$tmp' class='active' aria-current='page'", $out);
-
-        unset($tmp);
-
-        // $out = preg_replace("/<a>(.+?)<\/a>/u", "<strong>$1</strong>", $out);
-    }
-
     $out = "<nav itemscope='itemscope' itemtype='https://schema.org/SiteNavigationElement'>".$out.$addlasth1."</nav>";
 
-    $menubar = $out;
-
 }
+
+$requestParts = explode('&', $_SERVER['QUERY_STRING'] ?? '', 2);
+$pageAddress = '?' . $requestParts[0];
+
+if(!isset($query[$pageAddress])) {
+    $canonicalAddress = $pgaddrcache[seoNumGet() - 1] ?? null;
+    // Адресная строка браузера может декодировать часть символов заголовка.
+    if($canonicalAddress !== null
+        && array_map('rawurldecode', explode('/', $pageAddress))
+            === array_map('rawurldecode', explode('/', $canonicalAddress))) {
+        $requestParts[0] = substr($canonicalAddress, 1);
+        $_SERVER['QUERY_STRING'] = implode('&', $requestParts);
+        $pageAddress = $canonicalAddress;
+    }
+}
+
+$ispageexist = isset($query[$pageAddress]);
+$menubar = $ispageexist
+    ? str_replace("<a href='$pageAddress'", "<a href='$pageAddress' class='active' aria-current='page'", $out)
+    : $out;
 
 function sitemapflush() {
 
