@@ -128,7 +128,6 @@ if(in_array($methods, ['POST', 'GET'], true)) {
             htmlSpecialCharsField($safePost, 'username');
             htmlSpecialCharsField($safePost, 'rusername');
             htmlSpecialCharsField($safePost, 'uhusername');
-            htmlSpecialCharsField($safePost, 'visitor');
 
             break;
 

@@ -975,15 +975,17 @@ function normalizeCommentDraft(string $text): string {
 }
 
 function commentAuthorMarkup(string $visitor, int $permission, array $credentials): string {
-    $visitor = mb_substr($visitor, 0, 50);
-    $validVisitor = filterUsername($visitor) && !array_key_exists($visitor, $credentials);
-    if($validVisitor) {
-        $_SESSION['visitor'] = $visitor;
-    }
     if($permission) {
         return "👤<strong class='a$permission'> " . $_SESSION['username'] . "</strong>";
     }
-    return $validVisitor ? "👤<b> $visitor</b>" : "👤<b> Аноним</b>";
+
+    $visitor = validateVisitorName($visitor, $credentials, truncate: true);
+    if($visitor !== null) {
+        set_cookie('visitor', $visitor, time() + 365 * 24 * 60 * 60);
+        $_COOKIE['visitor'] = $visitor;
+    }
+
+    return "👤<b> ".($visitor ?? 'Аноним')."</b>";
 }
 
 function checkCommentLength(string $draft): bool {

@@ -184,7 +184,7 @@ function purgelog() {
 /** Загружает страницу и возвращает true, если на ней выведена форма комментария. */
 function pageload(): bool {
 
-    global $safeGet, $safePost, $content, $query, $txtnamebuf, $errmsg, $commmsg, $txtpath, $tplcomments, $mainPageTitle, $ispageexist, $checkpermission, $patternYT, $replacementYT, $patternVimeo, $replacementVimeo, $patternDM, $replacementDM, $commRecov, $metaDescription, $url, $idcache, $head, $patternDLCNT, $replacementDLCNT, $csrf;
+    global $safeGet, $safePost, $content, $query, $txtnamebuf, $errmsg, $commmsg, $txtpath, $tplcomments, $mainPageTitle, $ispageexist, $checkpermission, $patternYT, $replacementYT, $patternVimeo, $replacementVimeo, $patternDM, $replacementDM, $commRecov, $metaDescription, $url, $idcache, $head, $patternDLCNT, $replacementDLCNT, $csrf, $cred;
 
     $commentFormRendered = false;
 
@@ -239,10 +239,9 @@ function pageload(): bool {
 
         if($checkpermission) {
             $visitor3 = "readonly='readonly' value='".$_SESSION["username"]."'";
-        } elseif(isset($_SESSION["visitor"]) /* && !array_key_exists($_SESSION["visitor"], $cred) && filterUsername($_SESSION["visitor"]) */ ) {
-            $visitor3 = "value='".$_SESSION["visitor"]."'";
         } else {
-            $visitor3 = "value='Аноним'";
+            $visitor = validateVisitorName($_COOKIE['visitor'] ?? null, $cred) ?? 'Аноним';
+            $visitor3 = "value='$visitor'";
         }
 
         if(isset($safeGet["commpage"])) {

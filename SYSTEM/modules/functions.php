@@ -1056,6 +1056,21 @@ function filterUsername(string $username): bool {
     /// return true;
 }
 
+function validateVisitorName(mixed $value, array $credentials, bool $truncate = false): ?string {
+    if(!is_string($value) || !mb_check_encoding($value, 'UTF-8')) {
+        return null;
+    }
+
+    $visitor = htmlspecialchars($value, ENT_QUOTES | ENT_HTML401 | ENT_SUBSTITUTE, 'UTF-8', false);
+    if($truncate) {
+        $visitor = mb_substr($visitor, 0, 50);
+        // Убираем остаток HTML-сущности, если обрезка пришлась на её середину.
+        $visitor = preg_replace('/&[^;]*\z/', '', $visitor) ?? '';
+    }
+
+    return filterUsername($visitor) && !array_key_exists($visitor, $credentials) ? $visitor : null;
+}
+
 /**
  * Запоминает хеш CAPTCHA среди последних 32 значений для текущего IP.
  * true — новый хеш сохранён; false — хеш уже использован.
