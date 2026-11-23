@@ -32,12 +32,16 @@ if(!$cacheIsCurrent && $canWriteNavigationCache) {
     refreshCaches();
 }
 
-$chTimeMenu = filemtimeMy("DATABASE/DB/MenuCache.txt");
-$menuMtime = @filemtime("DATABASE/DB/MenuCache.txt");
-$menuIsCurrent = $chTimeMenu >= $chTimeDB && $menuMtime !== false && time() - $menuMtime <= 10799;
+$menuCacheFile = 'DATABASE/DB/MenuCache.txt';
+$menuCacheVersion = '<!-- MenuCache v2 -->';
+$chTimeMenu = filemtimeMy($menuCacheFile);
+$menuMtime = @filemtime($menuCacheFile);
+$menuIsCurrent = $chTimeMenu >= $chTimeDB && $menuMtime !== false
+    && time() - $menuMtime <= 10799
+    && @file_get_contents($menuCacheFile, false, null, 0, strlen($menuCacheVersion)) === $menuCacheVersion;
 
 if(!$menuIsCurrent && $canWriteNavigationCache && $menuMtime !== false) {
-    @unlink("DATABASE/DB/MenuCache.txt");
+    @unlink($menuCacheFile);
 }
 
 /*
@@ -93,10 +97,10 @@ if($checkpermission < 2 && $cacheIsCurrent && $menuIsCurrent
     $cachedSeo = @unserialize((string)@file_get_contents('DATABASE/DB/SEO-Cache.txt'), ['allowed_classes' => false]);
 
     if(isValidNavigationCache($mydump2, $cachedSeo)) {
-        $menuCache = @file_get_contents('DATABASE/DB/MenuCache.txt');
+        $menuCache = @file_get_contents($menuCacheFile);
     }
 
-    if($menuCache === false || $menuCache === '') {
+    if($menuCache === false || !str_starts_with($menuCache, $menuCacheVersion)) {
         $menuCache = false;
         if($canWriteNavigationCache) {
             refreshCaches();
@@ -256,8 +260,6 @@ if($menuCache !== false) {
 
             } else {
 
-                $i = $prev - $num;
-
                 #array_splice($txtarray, $num, $prev);
                 array_splice($txtarray, $num, $prev+1);
                 $txtarray[] = $line2;
@@ -283,32 +285,9 @@ if($menuCache !== false) {
                     $addlasth1 = " <a class='menu-icon big addpglast' style='clear: both' href='$addr&amp;addpage=last&amp;pageid=$iddump&amp;csrf=$csrf' title='Добавить раздел'>+</a>";
                 }
 
-                switch ($i) {
-                    case 0:
-                        $out .= "</li>";
-                        $mCACHE .= "</li>";
-                        break;
-                    case 1:
-                        $out .= "</li></ul>";
-                        $mCACHE .= "</li></ul>";
-                        break;
-                    case 2:
-                        $out .= "</li></ul></li></ul>";
-                        $mCACHE .= "</li></ul></li></ul>";
-                        break;
-                    case 3:
-                        $out .= "</li></ul></li></ul></li></ul>";
-                        $mCACHE .= "</li></ul></li></ul></li></ul>";
-                        break;
-                    case 4:
-                        $out .= "</li></ul></li></ul></li></ul></li></ul>";
-                        $mCACHE .= "</li></ul></li></ul></li></ul></li></ul>";
-                        break;
-                    case 5:
-                        $out .= "</li></ul></li></ul></li></ul></li></ul></li></ul>";
-                        $mCACHE .= "</li></ul></li></ul></li></ul></li></ul></li></ul>";
-                        break;
-                }
+                $closingTags = str_repeat("</li></ul>", $prev - $num)."</li>";
+                $out .= $closingTags;
+                $mCACHE .= $closingTags;
 
                 $gCC = getCommCount($iddump);
 
@@ -351,9 +330,9 @@ if($menuCache !== false) {
     }
     $file = null;
 
-    $out .= str_repeat("</li></ul>", $num);
-
-    $mCACHE .= str_repeat("</li></ul>", $num);
+    $closingTags = $num > 0 ? str_repeat("</li></ul>", $num) : "</ul>";
+    $out .= $closingTags;
+    $mCACHE .= $closingTags;
 
     ########################################
     ########################################
@@ -367,11 +346,11 @@ if($menuCache !== false) {
         writeNavigationCache("DATABASE/DB/SEO-Cache.txt", serialize($seoNumEncode), $chTimeDB);
     }
 
-    if($canWriteNavigationCache && !is_file("DATABASE/DB/MenuCache.txt")) {
+    if($canWriteNavigationCache && !is_file($menuCacheFile)) {
 
         $mCACHE = "<nav itemscope='itemscope' itemtype='https://schema.org/SiteNavigationElement'>".$mCACHE."</nav>";
 
-        writeNavigationCache("DATABASE/DB/MenuCache.txt", $mCACHE);
+        writeNavigationCache($menuCacheFile, $menuCacheVersion."\n".$mCACHE);
     }
 
     ########################################
