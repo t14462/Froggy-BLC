@@ -1598,7 +1598,7 @@ function registerp() {
     registerg();
 }
 
-// Функция для обработки POST запроса и сохранения выбранного шаблона в сессии
+// Сохраняет выбранный шаблон в cookie.
 function saveTplSess() {
 
     global $safePost;
@@ -1611,8 +1611,6 @@ function saveTplSess() {
 
     // Если шаблон отправлен через POST и он существует в списке шаблонов
     if(isset($safePost['selected_template']) && in_array($safePost['selected_template'], $templates, true)) {
-        // Сохраняем выбранный шаблон в сессии
-        // $_SESSION['selected_template'] = $safePost['selected_template'];
         set_cookie("selected_template", $safePost['selected_template'], time() + (10 * 365 * 24 * 60 * 60));
     }
 
