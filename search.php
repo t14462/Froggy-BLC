@@ -7,8 +7,8 @@ declare(strict_types=1);
     $perPage = 12;
     $searchResultPages = 2; // Затем — страница с предложением уточнить запрос.
     $context = 360; // Запас контекста с каждой стороны делится между фрагментами.
-    $snippetMaxFragments = 4;
-    $searchRequestLimit = 12;
+    $snippetMaxFragments = 3;
+    $searchRequestLimit = 9;
     $searchRequestWindow = 60;
 
     $escape = static fn(string $text): string => htmlspecialchars($text, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
