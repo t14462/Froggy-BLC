@@ -1,6 +1,9 @@
 <?php
 
 declare(strict_types=1);
+
+define('SECURE_ACCESS', true);
+
     // Настройки поиска.
     $searchMinLength = 3;
     $searchMaxLength = 200;

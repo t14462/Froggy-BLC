@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Froggy\Search;
 
+if(!defined('SECURE_ACCESS')) { die('Direct access not permitted'); }
+
 // При изменении формата или правил очистки текста увеличьте версию кэша.
 const SEARCH_CACHE_VERSION = 5;
 const SEARCH_CACHE_HEADER_BYTES = 256;

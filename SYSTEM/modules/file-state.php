@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+if(!defined('SECURE_ACCESS')) { die('Direct access not permitted'); }
+
 /** @return resource|false */
 function lockStateFile(string $path, int $mode, string $openMode = 'c+b') {
     $lock = @fopen($path, $openMode);

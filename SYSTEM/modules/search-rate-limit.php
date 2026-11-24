@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Froggy\Search;
 
+if(!defined('SECURE_ACCESS')) { die('Direct access not permitted'); }
+
 require_once __DIR__ . '/file-state.php';
 
 /**
