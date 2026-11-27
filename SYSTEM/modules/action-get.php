@@ -418,9 +418,6 @@ function pageload(): bool {
 
         }
 
-        // Генератор Обёртки из Alt
-        $html = wrap_images_with_figure($html);
-
         $html = replaceParagraphs($html);
 
         $html = convert_infoboxes_to_aside($html);
@@ -429,6 +426,9 @@ function pageload(): bool {
 
         // Шаблон ЦИТАТА
         $html = convertQuotBlocks($html);
+
+        // Генератор Обёртки из Alt
+        $html = wrap_images_with_figure($html);
 
         $html = parseSpoilers($html);
 

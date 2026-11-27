@@ -1027,13 +1027,13 @@ function formatCommentForStorage(string $draft, bool $allowHtml): string {
     $purifier = new HTMLPurifier($config);
     $text = escape_amp_txtarea($purifier->purify($text));
     $html = str_get_html($text, false, true, 'UTF-8', false) or die('XSS?.. Пустой или битый HTML.');
-    $html = wrap_images_with_figure($html);
-    $html = replaceBr($html);
     $html = replaceParagraphs($html);
     $html = addClassToAllUl($html, 'ul-fix');
     $html = convert_infoboxes_to_aside($html);
+    $html = replaceBr($html);
     $html = replaceSemanticSpans($html);
     $html = convertQuotBlocks($html);
+    $html = wrap_images_with_figure($html);
     $html = parseSpoilers($html);
     $text = $html->save();
     $html->clear();

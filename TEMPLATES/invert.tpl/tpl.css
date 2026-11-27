@@ -1343,10 +1343,17 @@ iframe[src$="visitors.php"] {
     font-size: 1.25rem;
 }
 
-.infobox img, .ibox-blue img, .ibox-green img, .ibox-red img {
+.infobox img, .ibox-blue img, .ibox-green img, .ibox-red img, .my-blockquote blockquote img {
 
     float: left !important;
     clear: left !important;
+}
+
+.my-blockquote figcaption img {
+
+    float: none !important;
+    clear: none !important;
+    vertical-align: middle;
 }
 
 .infobox, .ibox-blue, .ibox-green, .ibox-red {

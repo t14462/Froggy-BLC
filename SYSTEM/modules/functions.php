@@ -2417,7 +2417,7 @@ function convertQuotBlocks(simple_html_dom $html): simple_html_dom {
 
     $allowedTagsFigcaption = '<strong><em><small><mark><del><ins><sub><sup>' .
                             '<span><code><kbd><samp><var><dfn><abbr><time><q><cite>' .
-                            '<a><bdi><bdo><wbr><br>';
+                            '<a><bdi><bdo><wbr><br><img>';
 
     foreach (iterator_to_array($html->find('div.my-quot'), false) as $quotBlock) {
     // foreach ($html->find('div.my-quot') as $quotBlock) {
