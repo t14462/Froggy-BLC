@@ -4032,16 +4032,26 @@ function extractKwd(string $title): string
     }
 
     $tags = array_map(
-        static fn(string $tag): string => htmlspecialchars(
-            $tag,
-            ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML5,
-            'UTF-8',
-            false
-        ),
+        static function(string $tag): string {
+            $tag = html_entity_decode(
+                $tag,
+                ENT_QUOTES | ENT_HTML5,
+                'UTF-8'
+            );
+
+            $tag = mb_strtolower($tag, 'UTF-8');
+
+            return htmlspecialchars(
+                $tag,
+                ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML5,
+                'UTF-8',
+                true
+            );
+        },
         $tags
     );
 
-    return strtolower( ' (<span class="tag" itemprop="keywords">' . join('</span>, <span class="tag" itemprop="keywords">', $tags) . '</span>)' );
+    return ' (<span class="tag" itemprop="keywords">' . join('</span>, <span class="tag" itemprop="keywords">', $tags) . '</span>)';
 }
 
 
@@ -4073,16 +4083,26 @@ function extractKwd2(string $title): string
     }
 
     $tags = array_map(
-        static fn(string $tag): string => htmlspecialchars(
-            $tag,
-            ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML5,
-            'UTF-8',
-            false
-        ),
+        static function(string $tag): string {
+            $tag = html_entity_decode(
+                $tag,
+                ENT_QUOTES | ENT_HTML5,
+                'UTF-8'
+            );
+
+            $tag = mb_strtolower($tag, 'UTF-8');
+
+            return htmlspecialchars(
+                $tag,
+                ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML5,
+                'UTF-8',
+                true
+            );
+        },
         $tags
     );
 
-    return strtolower( ' (<span class="tag">' . join('</span>, <span class="tag">', $tags) . '</span>)' );
+    return ' (<span class="tag">' . join('</span>, <span class="tag">', $tags) . '</span>)';
 }
 
 
