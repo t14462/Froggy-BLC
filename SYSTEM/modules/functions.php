@@ -2481,104 +2481,72 @@ function parseSpoilers(simple_html_dom $html): simple_html_dom {
     return $html;
 }
 
+/** Обрабатывает исходный HTML один раз при выводе статьи или перед записью комментария. */
 function wrap_images_with_figure(simple_html_dom $html): simple_html_dom {
     // Корень домена на диске; каталог установки CMS может быть вложенным.
     $documentRoot = $_SERVER['DOCUMENT_ROOT'] ?? '';
     $root = $documentRoot !== '' ? realpath($documentRoot) : false;
+    $rootPrefix = $root === false ? null : rtrim($root, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
 
     // Каталог URL текущей страницы: /cms/ и /cms/index.php дают /cms/.
-    // Query string с адресом статьи не участвует в разрешении пути.
-    $requestPath = explode('?', $_SERVER['REQUEST_URI'] ?? ($_SERVER['SCRIPT_NAME'] ?? '/'))[0];
+    $requestPath = explode('?', $_SERVER['REQUEST_URI'] ?? ($_SERVER['SCRIPT_NAME'] ?? '/'), 2)[0];
     $pageDirectory = substr($requestPath, 0, (int) strrpos($requestPath, '/') + 1);
 
-    // Безопасный снимок массива элементов.
-    $images = iterator_to_array($html->find('img'), false);
-
-    foreach ($images as $img) {
+    foreach ($html->find('img') as $img) {
         $img->setAttribute('loading', 'eager');
 
-        $src = $img->getAttribute('src') ?? '';
+        $src = $img->getAttribute('src');
+        $src = is_string($src) ? $src : '';
 
-        // Получить путь из src, отбросив query string и #fragment.
-        $url = parse_url(
-            html_entity_decode(
-                $src,
-                ENT_QUOTES | ENT_HTML5,
-                'UTF-8'
-            )
-        );
+        // Разобрать src, чтобы использовать путь для поиска файла на диске.
+        $url = parse_url($src);
+        $urlPath = is_array($url) ? ($url['path'] ?? '') : '';
 
-        // Обрабатывать только локальные пути.
-        if (
-            $root !== false &&
-            is_array($url) &&
-            !isset($url['scheme']) &&
-            !isset($url['host'])
-        ) {
-            $urlPath = $url['path'] ?? '';
-            $path = $urlPath;
+        if ($rootPrefix !== null && $urlPath !== '' && !isset($url['scheme']) && !isset($url['host'])) {
+            $path = rawurldecode(str_starts_with($urlPath, '/') ? $urlPath : $pageDirectory . $urlPath);
+            $file = str_contains($path, "\0") ? false : realpath($rootPrefix . ltrim($path, '/'));
 
-            // Как в браузере: /img.png — от корня домена,
-            // img.png и ../img.png — от каталога текущей страницы.
-            if ($path !== '' && !str_starts_with($path, '/')) {
-                $path = $pageDirectory . $path;
-            }
+            // Читаем размеры только у доступного файла внутри корня сайта.
+            $size = $file !== false && str_starts_with($file, $rootPrefix) && is_file($file) && is_readable($file)
+                ? @getimagesize($file)
+                : false;
+            if ($size !== false && $size[0] > 0 && $size[1] > 0) {
+                $img->setAttribute('loading', 'lazy');
+                if (!$img->hasAttribute('width') && !$img->hasAttribute('height')) {
+                    $img->setAttribute('width', (string) $size[0]);
+                    $img->setAttribute('height', (string) $size[1]);
+                }
 
-            $path = rawurldecode($path);
-
-            if ($path !== '' && !str_contains($path, "\0")) {
-                $prefix = rtrim($root, DIRECTORY_SEPARATOR)
-                    . DIRECTORY_SEPARATOR;
-
-                $file = realpath($prefix . ltrim($path, '/'));
-
-                // Файл должен находиться внутри корня сайта.
-                if (
-                    $file !== false &&
-                    str_starts_with($file, $prefix) &&
-                    is_file($file) &&
-                    is_readable($file)
-                ) {
-
-                    $size = @getimagesize($file);
-
-                    if (
-                        $size !== false &&
-                        $size[0] > 0 &&
-                        $size[1] > 0
-                    ) {
-                        $img->setAttribute('loading', 'lazy');
-                        $img->setAttribute('width', (string) $size[0]);
-                        $img->setAttribute('height', (string) $size[1]);
-
-                        $img->setAttribute(
-                            'src',
-                            $url['path'] . '?' . (int) @filemtime($file)
-                        );
-                    }
+                $version = @filemtime($file);
+                $query = $url['query'] ?? '';
+                // Строка query сохраняется в исходном виде. Проверяем только конфликт имён.
+                @parse_str($query, $parameters);
+                if ($version !== false && !array_key_exists($version, $parameters)) {
+                    $separator = $query === '' || str_ends_with($query, '&') ? '' : '&';
+                    $fragment = isset($url['fragment']) ? '#' . $url['fragment'] : '';
+                    $img->setAttribute('src', $urlPath . '?' . $query . $separator . $version . $fragment);
                 }
             }
         }
 
-        $fname = basename(str_replace('\\', '/', $src));
+        $alt = $img->getAttribute('alt');
+        if (!is_string($alt) || $alt === '') {
+            continue;
+        }
 
-        $alt = mb_superTrim(
-            normalize_entities_my($img->getAttribute('alt') ?? '')
-        );
+        // HTML Purifier может взять basename() полного src до нормализации URL.
+        $filename = basename(str_replace('\\', '/', $urlPath));
+        $filenameAlts = [rawurldecode(basename($src)), rawurldecode($filename)];
 
-        if ($alt !== '' && $alt !== $fname && rawurlencode($alt) !== $fname) {
-            $imgHtml = $img->outertext;
+        $caption = mb_superTrim(htmlspecialchars($alt, ENT_NOQUOTES | ENT_SUBSTITUTE, 'UTF-8'));
+        $captionText = htmlspecialchars_decode($caption, ENT_NOQUOTES);
+        $altVariants = [$alt, $captionText, rawurldecode($alt), rawurldecode($captionText)];
 
-            // $altEscaped = mb_superTrim(htmlspecialchars(strip_tags($alt), ENT_QUOTES | ENT_HTML401 | ENT_SUBSTITUTE, 'UTF-8', false));
-            // $altEscaped = str_ireplace('&amp;@', '&', $altEscaped);
-            // $figureHtml = '<figure class="fig-img clearfix">' . $imgHtml . '<figcaption>' . $altEscaped . '</figcaption></figure>';
-
-            $figureHtml = '<figure class="fig-img clearfix">'
-                . $imgHtml
-                . '<figcaption>' . $alt . '</figcaption>'
+        if ($captionText !== '' && array_intersect($altVariants, $filenameAlts) === []) {
+            $img->outertext = '<figure class="fig-img clearfix">'
+                . $img->outertext
+                . '<figcaption>' . $caption . '</figcaption>'
                 . '</figure>';
-
-            $img->outertext = $figureHtml;
         }
     }
 
@@ -2912,6 +2880,29 @@ function normalize_entities_my(string $text): string {
 function escape_amp_txtarea(string $text): string
 {
     return str_replace("&", "&amp;", $text);
+}
+
+function parseContentHtml(string $escapedHtml): simple_html_dom|false
+{
+    $html = str_get_html($escapedHtml, false, true, 'UTF-8', false);
+    if($html === false) {
+        return false;
+    }
+
+    // Текст остаётся экранированным. Сериализатор сам экранирует значения атрибутов.
+    foreach($html->nodes as $node) {
+        foreach($node->attr as $name => $value) {
+            if(!is_string($value)) {
+                continue;
+            }
+            $node->attr[$name] = html_entity_decode($value, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+            if(($node->_[HDOM_INFO_QUOTE][$name] ?? null) === HDOM_QUOTE_NO) {
+                $node->_[HDOM_INFO_QUOTE][$name] = HDOM_QUOTE_DOUBLE;
+            }
+        }
+    }
+
+    return $html;
 }
 
 // Небольшой генератор ASCII-токена (на случай старых PHP без random_bytes)
@@ -3672,7 +3663,7 @@ function obyava() {
 
         $obstring = escape_amp_txtarea($obstring);
 
-        $html = str_get_html($obstring, false, true, "UTF-8", false);
+        $html = parseContentHtml($obstring);
 
         if($html !== false) {
             $html = replaceSemanticSpans($html);
@@ -4041,9 +4032,10 @@ function extractKwd(string $title): string
 
             $tag = mb_strtolower($tag, 'UTF-8');
 
+            // Оглавление сохраняет числовую сущность апострофа.
             return htmlspecialchars(
                 $tag,
-                ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML5,
+                ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML401,
                 'UTF-8',
                 true
             );

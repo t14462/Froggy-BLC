@@ -1026,7 +1026,7 @@ function formatCommentForStorage(string $draft, bool $allowHtml): string {
 
     $purifier = new HTMLPurifier($config);
     $text = escape_amp_txtarea($purifier->purify($text));
-    $html = str_get_html($text, false, true, 'UTF-8', false) or die('XSS?.. Пустой или битый HTML.');
+    $html = parseContentHtml($text) or die('XSS?.. Пустой или битый HTML.');
     $html = replaceParagraphs($html);
     $html = addClassToAllUl($html, 'ul-fix');
     $html = convert_infoboxes_to_aside($html);
@@ -1661,7 +1661,7 @@ function pobyava() {
             });
 
             try {
-                $html = str_get_html($checkObstring, false, true, "UTF-8", false);
+                $html = parseContentHtml($checkObstring);
 
                 if($html !== false) {
                     $html = replaceSemanticSpans($html);

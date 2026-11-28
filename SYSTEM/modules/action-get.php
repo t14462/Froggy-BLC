@@ -311,7 +311,7 @@ function pageload(): bool {
             $ptitle[2]
         ); */
 
-        $ptitle[2] = escape_amp_txtarea($ptitle[2]);
+        $headline = removeKwd($ptitle[2]) . extractKwd($ptitle[2]);
 
         /* $article = str_ireplace(
             [
@@ -350,8 +350,6 @@ function pageload(): bool {
             $article
         ); */
 
-        $article = escape_amp_txtarea($article);
-
         // $permalinkA = (int)explode("/", $_SERVER['QUERY_STRING'])[0];
 
         // $permalinkA = seoLinkDecode($permalinkA);
@@ -362,18 +360,12 @@ function pageload(): bool {
         $permalinkA = $url."?".$permalinkA."&amp;permalink=1";
         $permalinkA = "<a href='$permalinkA' rel='bookmark' itemprop='url' aria-label='Постоянная ссылка к этому заголовку' title='Постоянная ссылка к этому заголовку'>#</a>";
 
-        if(!$pgtoc) {
-            
-            $content .= "<article itemscope='itemscope' itemtype='https://schema.org/Article'><h1><span itemprop='headline'>".removeKwd($ptitle[2]).extractKwd($ptitle[2])."</span> $permalinkA</h1>\n<section>".$article."</section></article>";
+        $tocPlaceholder = $pgtoc ? "<nav aria-label='Содержание' id='TOC'></nav>\n" : '';
+        $content .= "<article itemscope='itemscope' itemtype='https://schema.org/Article'><h1><span itemprop='headline'>".$headline."</span> $permalinkA</h1>\n<section>".$tocPlaceholder.$article."</section></article>";
 
-            $html = str_get_html($content, false, true, "UTF-8", false) or die("XSS?.. Пустой или битый HTML.");
+        $html = parseContentHtml(escape_amp_txtarea($content)) or die("XSS?.. Пустой или битый HTML.");
 
-        } else {
-
-            // TOC
-            $content .= "<article itemscope='itemscope' itemtype='https://schema.org/Article'><h1><span itemprop='headline'>".removeKwd($ptitle[2]).extractKwd($ptitle[2])."</span> $permalinkA</h1>\n<section><nav aria-label='Содержание' id='TOC'></nav>\n".$article."</section></article>";
-
-            $html = str_get_html($content, false, true, "UTF-8", false) or die("XSS?.. Пустой или битый HTML.");
+        if($pgtoc) {
 
             $toc = '';
             $last_level = 0;
