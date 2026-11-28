@@ -45,11 +45,14 @@ function delimg() {
             return;
         }
 
-        if(deleteStoredFile("DATABASE/gallery/".$filetodel, 'DATABASE/lock/gallery-upload.lock')) {
-            $name = htmlspecialchars($filetodel, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-            mylog("<em style='color:DarkOrange'>Изображение ".$name." успешно удалено. (".$_SESSION["username"].").</em>");
+        if(!deleteStoredFile("DATABASE/gallery/".$filetodel, 'DATABASE/lock/gallery-upload.lock')) {
+            http_response_code(500);
+            $errmsg = "<h1>ОШИБКА.</h1><p class='big'>Не удалось удалить изображение.</p>";
+            return;
         }
 
+        $name = htmlspecialchars($filetodel, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+        mylog("<em style='color:DarkOrange'>Изображение ".$name." успешно удалено. (".$_SESSION["username"].").</em>");
         refreshhandle(0, "?gallery=-1", false);
     }
 }
@@ -1515,6 +1518,7 @@ function gallery() {
     $limit = 12;
 
     $files = glob('DATABASE/gallery/*.{jpg,jpeg,png,gif,webp}', GLOB_BRACE) ?: [];
+    $files = array_filter($files, 'is_file');
 
     usort($files, fn($a, $b) => ((int)@filemtime($a)) <=> ((int)@filemtime($b)));
 
