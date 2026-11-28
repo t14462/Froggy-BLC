@@ -2409,7 +2409,7 @@ function convertQuotBlocks(simple_html_dom $html): simple_html_dom {
     // $html = str_get_html($htmlString);
 
     // ✅ Только контентные теги, без layout, media, JS и пр.
-    $allowedTagsBlockquote = '<p><br><hr><strong><em><small><mark><del><ins><sub><sup>' .
+    $allowedTagsBlockquote = '<p><rich-paragraph><br><hr><strong><em><small><mark><del><ins><sub><sup>' .
                             '<span><code><pre><kbd><samp><var><dfn><abbr><time><q><cite>' .
                             '<ul><ol><li><dl><dt><dd>' .
                             '<table><thead><tbody><tfoot><tr><td><th>' .
