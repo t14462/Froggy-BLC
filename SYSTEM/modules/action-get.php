@@ -74,11 +74,14 @@ function delfile() {
             return;
         }
 
-        if(deleteStoredFile("DATABASE/fupload/".$filetodel, 'DATABASE/lock/file-upload.lock')) {
-            $name = htmlspecialchars($filetodel, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-            mylog("<em style='color:DarkOrange'>Файл ".$name." успешно удалён. (".$_SESSION["username"].").</em>");
+        if(!deleteStoredFile("DATABASE/fupload/".$filetodel, 'DATABASE/lock/file-upload.lock')) {
+            http_response_code(500);
+            $errmsg = "<h1>ОШИБКА.</h1><p class='big'>Не удалось удалить файл.</p>";
+            return;
         }
 
+        $name = htmlspecialchars($filetodel, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+        mylog("<em style='color:DarkOrange'>Файл ".$name." успешно удалён. (".$_SESSION["username"].").</em>");
         refreshhandle(0, "?dlfiles=-1", false);
     }
 }
@@ -1657,6 +1660,7 @@ function dlFiles() {
 
     $pattern = 'DATABASE/fupload/*.{'.implode(',', $exts).'}';
     $files = glob($pattern, GLOB_BRACE) ?: [];
+    $files = array_filter($files, 'is_file');
 
     usort($files, fn($a, $b) => ((int)@filemtime($a)) <=> ((int)@filemtime($b)));
 
@@ -1683,7 +1687,7 @@ function dlFiles() {
         <!-- <input type="hidden" name="fpgnum" value="-1" /> -->
         <div class="el-in-line">
             <label for="upfiledl"><em>ФАЙЛ:</em></label>
-            <input type="file" name="upfiledl" />
+            <input type="file" id="upfiledl" name="upfiledl" />
             <input type="submit" name="submit" value="Upload" />
         </div>
     </form>';
